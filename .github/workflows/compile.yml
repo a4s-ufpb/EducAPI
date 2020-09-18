@@ -1,0 +1,14 @@
+# This workflow will build a Java project with Docker Compose
+
+name: Java CI with Docker Compose
+
+on: [push]
+
+jobs:
+  build:
+    name: Testing the application to see if it'd working 
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build with Docker Compose
+      run: docker-compose up -d
