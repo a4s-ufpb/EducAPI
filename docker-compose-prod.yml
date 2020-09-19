@@ -1,0 +1,43 @@
+version: '3.5'
+
+services:
+
+    educapi:
+        container_name: educapi
+        build:
+            context: .
+        restart: always
+        ports:
+            - "8080:8080"
+        networks:
+            - educapi-network
+        depends_on:
+            - db
+        environment:
+            SPRING_PROFILES_ACTIVE: prod
+            SPRING_DATASOURCE_URL: ${{ secrets.DB_URL }}
+            SPRING_DATASOURCE_USERNAME: ${{ secrets.DB_USER }}
+            SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+            SPRING_JPA_HIBERNATE.DDL-AUTO: update
+
+
+    db:
+        container_name: postgres-educapi
+        image: postgres:12.3
+        restart: always
+        networks:
+            - educapi-network
+        volumes:
+            - postgres-educapi:/data/postgres
+        environment:
+            POSTGRES_USER: ${{ secrets.DB_USER }}
+            POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+            POSTGRES_DB: educapi
+            PGDATA: /data/postgres
+
+volumes:
+    postgres-educapi:
+
+networks: 
+    educapi-network:
+        driver: bridge
