@@ -3,7 +3,9 @@ package br.ufpb.dcx.apps4society.educapi.services;
 import java.util.*;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -121,6 +123,18 @@ public class ChallengeService {
         newObj.setSoundUrl(obj.getSoundUrl());
         newObj.setVideoUrl(obj.getVideoUrl());
         newObj.setImageUrl(obj.getImageUrl());
+    }
+    public ChallengeDTO insert(ChallengeRegisterDTO challengeDTO) throws ChallengeAlreadyExistsException{
+        Optional <Challenge> challengeOptional = challengeRepository.findByWordStartsWithIgnoreCase(challengeDTO.getWord(), );
+
+        if(challengeOptional.isPresent()) {
+            throw new ChallengeAlreadyExistsException("There is already a challenge with this word registered in the system!");
+        }
+        //Caso não há
+        Challenge challenge = challengeDTO.toChallenge();
+
+        challengeRepository.save(challenge);
+        return new ChallengeDTO(challenge);
     }
 
 }
