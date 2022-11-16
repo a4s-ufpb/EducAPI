@@ -6,9 +6,11 @@ import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,8 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Service
 public class ChallengeService {
@@ -125,7 +129,7 @@ public class ChallengeService {
         newObj.setImageUrl(obj.getImageUrl());
     }
     public ChallengeDTO insert(ChallengeRegisterDTO challengeDTO) throws ChallengeAlreadyExistsException{
-        Optional <Challenge> challengeOptional = challengeRepository.findByWordStartsWithIgnoreCase(challengeDTO.getWord(), );
+        Optional <Challenge> challengeOptional = challengeRepository.findByWordStartsWithIgnoreCase(challengeDTO.getWord(), pageable);
 
         if(challengeOptional.isPresent()) {
             throw new ChallengeAlreadyExistsException("There is already a challenge with this word registered in the system!");
@@ -135,6 +139,25 @@ public class ChallengeService {
 
         challengeRepository.save(challenge);
         return new ChallengeDTO(challenge);
+    }
+
+    public ChallengeDTO delete(String word) throws InvalidChallengeException{
+
+        Challenge challenge = findByWordStartsWithIgnoreCase(word, pageable);
+        challengeRepository.deleteById(challenge.getId());
+        return new ChallengeDTO(challenge);
+    }
+    @GetMapping
+    public Page<Challenge> paginaChallenge(@RequestParam String word,
+                                           @RequestParam int pagina,
+                                           @RequestParam int quantidade){
+
+        Pageable pageRequest = PageRequest.of(pagina, quantidade);
+        //Page<Challenge> challenges = challengeRepository.findAll(pageRequest);
+        return challengeRepository.findAll(pageRequest);
+
+        //https://youtu.be/FgNa0ZtbXSI?t=216
+
     }
 
 }
