@@ -7,13 +7,16 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.services.ChallengeService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ChallengeBuilder;
+import br.ufpb.dcx.apps4society.educapi.util.Messages;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ChallengeServiceTest {
 
@@ -39,9 +42,10 @@ public class ChallengeServiceTest {
 
     @Test
     public void insertAChallengeAlreadyExistTest(){
-        Mockito.when()
+        Mockito.when(this.challengeRepository.findByWord(this.challengeRegisterDTO.getWord())).thenReturn(this.challengeOptional);
+        Exception exception = assertThrows(ChallengeAlreadyExistsException.class, () -> {
+            service.insert(this.challengeRegisterDTO);
+        });
+        assertEquals(Messages.USER_ALREADY_EXISTS, exception.getMessage());
     }
-
-
-
 }
