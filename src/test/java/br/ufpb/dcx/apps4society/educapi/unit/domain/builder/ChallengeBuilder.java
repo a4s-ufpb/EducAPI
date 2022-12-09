@@ -46,7 +46,7 @@ public class ChallengeBuilder {
     public Optional<Challenge> buildOptionalUser() {
         return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.soundUrl, this.videoUrl, this.imageUrl));
     }
-    public ChallengeRegisterDTO buildChallengeDTO(){
+    public ChallengeRegisterDTO buildChallengeRegisterDTO(){
         return new ChallengeRegisterDTO(this.word, this.soundUrl, this.videoUrl, this.imageUrl);
     }
 }

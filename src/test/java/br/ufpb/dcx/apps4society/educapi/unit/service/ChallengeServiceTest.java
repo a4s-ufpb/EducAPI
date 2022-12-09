@@ -27,8 +27,8 @@ public class ChallengeServiceTest {
     @InjectMocks
     private ChallengeService service;
 
-    private final ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder.anChallenge().buildChallengeDTO();
-    private final Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().buildChallengeDTO();
+    private final ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder.anChallenge().buildChallengeRegisterDTO();
+    private final Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().buildChallengeRegisterDTO();
 
     @Test
     public void insertAChallengeTest() throws ChallengeAlreadyExistsException{
@@ -44,7 +44,10 @@ public class ChallengeServiceTest {
     public void insertAChallengeAlreadyExistTest(){
         Mockito.when(this.challengeRepository.findByWord(this.challengeRegisterDTO.getWord())).thenReturn(this.challengeOptional);
         Exception exception = assertThrows(ChallengeAlreadyExistsException.class, () -> {
-            service.insert(this.challengeRegisterDTO);
+
+            //OBS: na classe "ChallengeRegisterDTO" não há autor para gerir token nem context para gerir seus id
+            //OBS2: Somente a classe "ChallengeDTO" possui autores e id
+            service.insert(this.challengeRegisterDTO.getAuthor().getToken(), this.challengeRegisterDTO, this.challengeRegisterDTO.getContext());
         });
         assertEquals(Messages.USER_ALREADY_EXISTS, exception.getMessage());
     }
