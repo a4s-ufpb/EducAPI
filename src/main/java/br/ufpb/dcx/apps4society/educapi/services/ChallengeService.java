@@ -128,36 +128,36 @@ public class ChallengeService {
         newObj.setVideoUrl(obj.getVideoUrl());
         newObj.setImageUrl(obj.getImageUrl());
     }
-    public ChallengeDTO insert(ChallengeRegisterDTO challengeDTO) throws ChallengeAlreadyExistsException{
-        Optional <Challenge> challengeOptional = challengeRepository.findByWordStartsWithIgnoreCase(challengeDTO.getWord(), pageable);
-
-        if(challengeOptional.isPresent()) {
-            throw new ChallengeAlreadyExistsException("There is already a challenge with this word registered in the system!");
-        }
-        //Caso não há
-        Challenge challenge = challengeDTO.toChallenge();
-
-        challengeRepository.save(challenge);
-        return new ChallengeDTO(challenge);
-    }
-
-    public ChallengeDTO delete(String word) throws InvalidChallengeException{
-
-        Challenge challenge = findByWordStartsWithIgnoreCase(word, pageable);
-        challengeRepository.deleteById(challenge.getId());
-        return new ChallengeDTO(challenge);
-    }
-    @GetMapping
-    public Page<Challenge> paginaChallenge(@RequestParam String word,
-                                           @RequestParam int pagina,
-                                           @RequestParam int quantidade){
-
-        Pageable pageRequest = PageRequest.of(pagina, quantidade);
-        //Page<Challenge> challenges = challengeRepository.findAll(pageRequest);
-        return challengeRepository.findAll(pageRequest);
-
-        //https://youtu.be/FgNa0ZtbXSI?t=216
-
-    }
+//    public ChallengeDTO insert(ChallengeRegisterDTO challengeDTO) throws ChallengeAlreadyExistsException{
+//        Optional <Challenge> challengeOptional = challengeRepository.findByWord(challengeDTO.getWord());
+//
+//        if(challengeOptional.isPresent()) {
+//            throw new ChallengeAlreadyExistsException("There is already a challenge with this word registered in the system!");
+//        }
+//        //Caso não há
+//        Challenge challenge = challengeDTO.toChallenge();
+//
+//        challengeRepository.save(challenge);
+//        return new ChallengeDTO(challenge);
+//    }
+//
+//    public ChallengeDTO delete(String word) throws InvalidChallengeException{
+//
+//        Challenge challenge = findByWord(word);
+//        challengeRepository.deleteById(challenge.getId());
+//        return new ChallengeDTO(challenge);
+//    }
+//    @GetMapping
+//    public Page<Challenge> paginaChallenge(@RequestParam String word,
+//                                           @RequestParam int pagina,
+//                                           @RequestParam int quantidade){
+//
+//        Pageable pageRequest = PageRequest.of(pagina, quantidade);
+//        //Page<Challenge> challenges = challengeRepository.findAll(pageRequest);
+//        return challengeRepository.findAll(pageRequest);
+//
+//        //https://youtu.be/FgNa0ZtbXSI?t=216
+//
+//    }
 
 }
