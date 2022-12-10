@@ -43,7 +43,7 @@ public class ChallengeBuilder {
         this.imageUrl = imageUrl;
         return this;
     }
-    public Optional<Challenge> buildOptionalUser() {
+    public Optional<Challenge> buildOptionalChallenge() {
         return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.soundUrl, this.videoUrl, this.imageUrl));
     }
     public ChallengeRegisterDTO buildChallengeRegisterDTO(){
