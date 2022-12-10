@@ -39,6 +39,7 @@ public class ChallengeServiceTest {
         assertEquals(response.getSoundUrl(), this.challengeRegisterDTO.getSoundUrl());
         assertEquals(response.getImageUrl(), this.challengeRegisterDTO.getImageUrl());
         assertEquals(response.getVideoUrl(), this.challengeRegisterDTO.getVideoUrl());
+
     }
 
     @Test
