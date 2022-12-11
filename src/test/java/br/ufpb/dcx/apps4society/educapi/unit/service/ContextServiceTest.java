@@ -64,6 +64,7 @@ public class ContextServiceTest {
             service.insert(jwtService.authenticate(userLoginDTO), this.contextRegisterDTO);
         });
 
+
         assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
     }
 
