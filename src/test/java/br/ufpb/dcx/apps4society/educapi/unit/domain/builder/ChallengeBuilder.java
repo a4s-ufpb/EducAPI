@@ -43,6 +43,7 @@ public class ChallengeBuilder {
         this.imageUrl = imageUrl;
         return this;
     }
+    // Optional é utilizado quendo não se sabe que um objeto vai estar no banco de dados(se vai ser utilizado ou nao)
     public Optional<Challenge> buildOptionalChallenge() {
         return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.soundUrl, this.videoUrl, this.imageUrl));
     }
