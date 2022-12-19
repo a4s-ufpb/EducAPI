@@ -41,6 +41,7 @@ public class ContextServiceTest {
 
     private final Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
+
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
 
     @Test
@@ -48,12 +49,12 @@ public class ContextServiceTest {
         //OBS: Construtor precisa de (Token e contextRegisterDTO)
         //OBS2: os tokens são de User, Challenge e context?
         //OBS3: como eu puxo o token pro construtor insert?
-        ContextDTO response = service.insert(jwtService.authenticate(userLoginDTO) , this.contextRegisterDTO);
+        ContextDTO response = service.insert(jwtService.authenticate() , this.contextRegisterDTO);
     }
 
     @Test
     public void insertAContextAlreadyExistTest(){
-        // OBS: Pesquisar o que é ignoreCase
+        // ** IgnoreCase(Define as strings como iguais quando a diferença entre as letras são somente o fato de serem minusculas ou maiusculas **
         // OBS: como vou introduzir o parâmetro pageable? ja que o construtor é (String nome, Pageable pageable)
         Mockito.when(this.contextRepository.findAllByNameStartsWithIgnoreCase(this.contextRegisterDTO.getName())).thenReturn(this.contextOptional);
 
@@ -63,7 +64,6 @@ public class ContextServiceTest {
             //OBS3: como eu puxo o token pro construtor insert?
             service.insert(jwtService.authenticate(userLoginDTO), this.contextRegisterDTO);
         });
-
 
         assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
     }

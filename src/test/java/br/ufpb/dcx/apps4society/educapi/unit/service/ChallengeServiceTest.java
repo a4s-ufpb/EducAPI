@@ -42,9 +42,10 @@ public class ChallengeServiceTest {
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
 
-    private final Optional<Context> ContextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
+    private final Optional<Context> contextRegisterDTO = ContextBuilder.anContext().buildOptionalContext();
     @Test
     public void insertAChallengeTest() throws ChallengeAlreadyExistsException{
+
         // OBS: construtor insert(String token, ChallengeRegisterDTO, Long contextId)
         // OBS2: os tokens são de User, Challenge e context?
         // OBS3: como eu puxo o token pro construtor insert?
