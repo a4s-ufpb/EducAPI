@@ -93,6 +93,7 @@ public class ContextServiceTest {
     public void findContextByCreatorTest(){
         Mockito.when(this.contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(,this.contextRegisterDTO.getName(), pageable?? ));
     }
+
     @Test
     public void validateUserTest(){
         Mockito.when(this.contextRepository.findAllByNameIgnoreCase()this.contextRegisterDTO.getName(), pageable?? ));
