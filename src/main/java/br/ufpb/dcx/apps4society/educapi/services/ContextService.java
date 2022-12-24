@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -40,7 +41,7 @@ public class ContextService {
     }
 
     @Transactional
-    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ObjectNotFoundException, InvalidUserException {
+    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ContextAlreadyExistsException, ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         Context context = contextRegisterDTO.toContext();
