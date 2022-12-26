@@ -1,6 +1,5 @@
 package br.ufpb.dcx.apps4society.educapi.repositories;
 
-import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
