@@ -57,7 +57,7 @@ public class ContextServiceTest {
     @Test
     public void findContextByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException {
 
-        //ADICIONAL: lenient() faz parar de reclamar de "unecessary stubbins"
+        //ADICIONAL: lenient() faz parar de reclamar de 'unecessary stubbins'
         Mockito.lenient().when(this.contextRepository.findContextsByCreator(this.user)).thenReturn(contexts);
 
         for (Context context : contexts) {
