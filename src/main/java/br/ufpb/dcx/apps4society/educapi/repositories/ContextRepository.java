@@ -14,5 +14,4 @@ public interface ContextRepository extends JpaRepository<Context, Long> {
 	Page<Context> findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(String email, String name, Pageable pageable);
 	Page<Context> findAllByCreatorEmailEqualsIgnoreCase(String email, Pageable pageable);
 	Page<Context> findAllByNameStartsWithIgnoreCase(String name, Pageable pageable);
-	Page<Context> findAllByNameIgnoreCase(String name, Pageable pageable);
 }
