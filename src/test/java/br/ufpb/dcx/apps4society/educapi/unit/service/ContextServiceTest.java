@@ -63,7 +63,6 @@ public class ContextServiceTest {
         for (Context context : contexts) {
             assertEquals(this.user, context.getCreator());
         }
-
     }
 //    @Test
 //    public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
