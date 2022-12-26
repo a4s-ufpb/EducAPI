@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.repositories;
 
+import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,5 @@ public interface ContextRepository extends JpaRepository<Context, Long> {
 	Page<Context> findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(String email, String name, Pageable pageable);
 	Page<Context> findAllByCreatorEmailEqualsIgnoreCase(String email, Pageable pageable);
 	Page<Context> findAllByNameStartsWithIgnoreCase(String name, Pageable pageable);
+	Page<Context> findAllByNameIgnoreCase(String name, Pageable pageable);
 }

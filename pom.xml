@@ -160,7 +160,7 @@
 
 				</executions>
 			</plugin>
-			<!--			https://www.youtube.com/watch?v=UZWOb9ce6go-->
+			<!--			https://www.youtube.com/watch?v=UZWOb9ce6go clean e test-->
 		</plugins>
 		<finalName>EducAPI</finalName>
 	</build>

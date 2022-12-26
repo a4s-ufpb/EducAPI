@@ -88,7 +88,7 @@ public class ContextService {
         }
     }
 
-    public List<ContextDTO> findContextsByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
+    public List<ContextDTO> findContextsByCreator(String token) throws  ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
