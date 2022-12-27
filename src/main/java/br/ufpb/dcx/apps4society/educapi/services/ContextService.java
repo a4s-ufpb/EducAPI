@@ -44,7 +44,7 @@ public class ContextService {
     public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ContextAlreadyExistsException, ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        Context context = contextRegisterDTO.toContext();
+        Context context = contextRegisterDTO.contextRegisterDTOToContext();
 
         context.setCreator(user);
         contextRepository.save(context);
@@ -59,7 +59,7 @@ public class ContextService {
             throw new InvalidUserException();
         }
 
-        updateData(newObj, contextRegisterDTO.toContext());
+        updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
         contextRepository.save(newObj);
         return new ContextDTO(newObj);
     }

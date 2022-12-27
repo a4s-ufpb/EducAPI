@@ -49,4 +49,8 @@ public class ContextBuilder {
     public ContextRegisterDTO buildContextRegisterDTO(){ return new ContextRegisterDTO(this.name, this.imageUrl, this.soundUrl, this.videoUrl);
     }
 
+//    public Context buildContextDTO() {
+//        return new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl);
+//    }
+
 }
