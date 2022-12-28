@@ -6,6 +6,8 @@ import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
+import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
@@ -14,8 +16,6 @@ import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
-import br.ufpb.dcx.apps4society.educapi.util.Messages;
-import com.fasterxml.classmate.Annotations;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,19 +40,28 @@ public class ContextServiceTest {
     @Mock
     private ContextRepository contextRepository;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private JWTService jwtService;
+    @Mock
+    private User user = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
+        
     // Classe a qual as injeções dos mocks serão aplicadas
     @InjectMocks
-    private ContextService service;
+    private ContextService service;  
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
-    private final User user = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
-    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
+    private UserLoginDTO userLoginDTO = 
+            UserBuilder.anUser().withEmail(user.getEmail()).withPassword(user.getPassword()).buildUserLoginDTO();
+    
     // Usado nos testes que utilizam busca 'theReturn'
     private final Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
     private final List<Context> contexts = new ArrayList<>();
     private final Pageable pageable = PageRequest.of(0, 20);
+
+    public ContextServiceTest() throws InvalidUserException {
+    }
 
     //https://www.youtube.com/watch?v=AKT9FYJBOEo
 
@@ -71,7 +80,11 @@ public class ContextServiceTest {
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
-        ContextDTO response = service.insert(String.valueOf(this.jwtService.authenticate(userLoginDTO)), this.contextRegisterDTO);
+        //userRepository.save(user);
+        // usuario parece que ta nulo
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);  
+        // authenticate não está gerando token logo loginResponse ta null!
+        ContextDTO response = this.service.insert(loginResponse.getToken(), this.contextRegisterDTO);
 
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
