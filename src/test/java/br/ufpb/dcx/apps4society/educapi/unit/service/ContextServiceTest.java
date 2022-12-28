@@ -60,7 +60,6 @@ public class ContextServiceTest {
     private final List<Context> contexts = new ArrayList<>();
     private final Pageable pageable = PageRequest.of(0, 20);
 
-
     public ContextServiceTest() throws InvalidUserException {
     }
 
