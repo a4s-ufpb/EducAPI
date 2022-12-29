@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -42,29 +43,28 @@ public class ContextServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private JWTService jwtService;
-    @Mock
-    private User user = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
-        
+    private JWTService jwtService;        
     // Classe a qual as injeções dos mocks serão aplicadas
     @InjectMocks
-    private ContextService service;  
+    private ContextService service;
+    @Value("${app.token.key}")
+    private String TOKEN_KEY = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
+    "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
-    private UserLoginDTO userLoginDTO = 
+    
+    private final User user = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
+    private final UserLoginDTO userLoginDTO =
             UserBuilder.anUser().withEmail(user.getEmail()).withPassword(user.getPassword()).buildUserLoginDTO();
+    private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
     
     // Usado nos testes que utilizam busca 'theReturn'
     private final Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
     private final List<Context> contexts = new ArrayList<>();
     private final Pageable pageable = PageRequest.of(0, 20);
 
-    public ContextServiceTest() throws InvalidUserException {
-    }
-
     //https://www.youtube.com/watch?v=AKT9FYJBOEo
-
 
     @Test
     @DisplayName("Teste de encontrar um contexto pelo autor")
@@ -81,11 +81,14 @@ public class ContextServiceTest {
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
+        
+        //Acho que não precisa pq quem vai gerar o token é o insert()
         //userRepository.save(user);
-        // usuario parece que ta nulo
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);  
+
+        LoginResponse loginResponse = jwtService.authenticate(this.userLoginDTO);
         // authenticate não está gerando token logo loginResponse ta null!
-        ContextDTO response = this.service.insert(loginResponse.getToken(), this.contextRegisterDTO);
+        // Para inserir ele precisa de um token gerado previamente
+        ContextDTO response = this.service.insert(TOKEN_KEY, this.contextRegisterDTO);
 
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
@@ -142,5 +145,5 @@ public class ContextServiceTest {
     // No app a procura é feita pelo id e nos testes são feitas por email, author e nome?!
     // OBS: não enganchar e ir fazendo o que da para fazer
     // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
-
+    
 }
