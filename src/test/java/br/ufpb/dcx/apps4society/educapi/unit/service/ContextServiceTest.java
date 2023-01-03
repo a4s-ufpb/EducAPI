@@ -16,6 +16,8 @@ import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.util.Messages;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -48,8 +51,7 @@ public class ContextServiceTest {
     @InjectMocks
     private ContextService service;
     @Value("${app.token.key}")
-    private String TOKEN_KEY = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
-    "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
+    private String TOKEN_KEY = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM";
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
@@ -88,7 +90,7 @@ public class ContextServiceTest {
         LoginResponse loginResponse = jwtService.authenticate(this.userLoginDTO);
         // authenticate não está gerando token logo loginResponse ta null!
         // Para inserir ele precisa de um token gerado previamente
-        ContextDTO response = this.service.insert(TOKEN_KEY, this.contextRegisterDTO);
+        ContextDTO response = this.service.insert(loginResponse.getToken(), this.contextRegisterDTO);
 
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
@@ -96,19 +98,19 @@ public class ContextServiceTest {
         assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
 
     }
-//    @Test
-//    @DisplayName("Teste de inserir um contexto já existente")
-//    public void insertAContextAlreadyExistTest(){
-//        // quando
-//        Mockito.when(this.contextRepository.findAllByNameStartsWithIgnoreCase(this.contextRegisterDTO.getName(), pageable))
-//                .thenReturn((Page<Context>) this.pageable);
-//        // então
-//        Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
-//            service.insert(String.valueOf(this.jwtService.authenticate(userLoginDTO)), this.contextRegisterDTO);
-//        });
-//        // teste
-//        assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
-//    }
+    @Test
+    @DisplayName("Teste de inserir um contexto já existente")
+    public void insertAContextAlreadyExistTest(){
+        // quando
+        Mockito.when(this.contextRepository.findAllByNameStartsWithIgnoreCase(this.contextRegisterDTO.getName(), pageable))
+                .thenReturn((Page<Context>) this.pageable);
+        // então
+        Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
+            service.insert(String.valueOf(this.jwtService.authenticate(userLoginDTO)), this.contextRegisterDTO);
+        });
+        // teste
+        assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
+        }
 //    @Test
 //    @DisplayName("Teste de atualizar um contexto")
 //    public void updateAContextTest(){
@@ -118,27 +120,26 @@ public class ContextServiceTest {
     @DisplayName("Teste de deletar um contexto")
     public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
         //quando
-        Mockito.lenient().when(this.contextRepository.deleteContextById(this.jwtService.authenticate(userLoginDTO), this.context.getId()))
-                .thenReturn(context);
+        //OBS: insert() é para inserir um CONTEXTO logo porisso que ja tem que haver um USER no repositório
+        userRepository.save(user);
+        //OBS: JWTService tem uma String TOKEN_KEY inclusa
+        Mockito.lenient().when(this.contextRepository.deleteContextById(this.jwtService.authenticate(userLoginDTO), this.context.getId())).thenReturn(context);
+        LoginResponse loginResponse = this.jwtService.authenticate(userLoginDTO);
 
         //então
-        service.delete(String.valueOf(this.jwtService.authenticate(userLoginDTO)), this.context.getId());
+        service.delete(loginResponse.getToken(), this.context.getId());
 
         //teste
         assertThrows(ObjectNotFoundException.class, () -> {
             service.find(this.context.getId());
         });
     }
-//    @Test
-//    @DisplayName("Teste de encontrar um contexto por parâmetros")
-//    public void findContextByParametersTest(){
-//        Mockito.when(this.contextRepository.findAllByNameIgnoreCase(this.contextRegisterDTO.getName(), pageable));
-//    }
-//    @Test
-//    @DisplayName("Teste de validar usuário")
-//    public void validateUserTest(){
-//        Mockito.when(this.contextRepository.findAllByNameIgnoreCase(this.contextRegisterDTO.getName(), pageable));
-//    }
+    @Test
+    @DisplayName("Teste de encontrar um contexto por parâmetros")
+    public void findContextByParametersTest(){
+        Mockito.when(this.contextRepository
+                .findAllByNameStartsWithIgnoreCase(this.contextRegisterDTO.getName(), pageable)).thenReturn((Page<Context>) pageable);
+    }
 
     // Não sei se esse é o jeito correto de passa o pageable no construtor
     // os temas sao contexto, q tem um conjunto de challenge q sao palavras
