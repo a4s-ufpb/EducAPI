@@ -75,7 +75,6 @@ public class ContextService {
         return new ContextDTO(context);
     }
 
-
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {
         if (email != null && name != null){
             return contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(email, name, pageable);
