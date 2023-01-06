@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JWTServiceTest {
 
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
-    private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
+    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
     private final String invalidToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
             "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
     @Mock

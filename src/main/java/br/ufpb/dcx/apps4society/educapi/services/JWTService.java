@@ -25,6 +25,10 @@ public class JWTService {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
+    /*public JWTService(){
+        this.TOKEN_KEY = "it's a token key";
+    }*/
+    
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
         Optional<User> userOptional = userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword());
         if (userOptional.isEmpty()){

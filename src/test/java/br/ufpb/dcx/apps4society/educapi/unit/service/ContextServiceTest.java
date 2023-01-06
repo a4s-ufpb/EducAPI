@@ -52,9 +52,10 @@ import java.util.Optional;
 public class ContextServiceTest {    
     
     @Mock
-    UserRepository userRepository;
+    UserRepository userRepository;    
     @InjectMocks
     JWTService jwtService;
+
     @InjectMocks
     UserService userService;
 
@@ -62,6 +63,7 @@ public class ContextServiceTest {
     ContextRepository contextRepository;  
     @InjectMocks
     ContextService contextService;
+    // So falta conseguir injecar o jwtService no userService e contextService
     
     @Value("${app.token.key}")
     private final String TOKEN_KEY = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
@@ -74,8 +76,10 @@ public class ContextServiceTest {
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
 
-    // Usado nos testes que utilizam busca 'theReturn'
-    private final Optional<Context> contextOptional = ContextBuilder.anContext().withId((long) 1).buildOptionalContext();  
+    //private final JWTService jwtServicee = new JWTService();
+
+    // Usado nos testes que utilizam busca 'thenReturn'    
+    Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
 
     private final Pageable pageable = PageRequest.of(0, 20);
@@ -91,7 +95,7 @@ public class ContextServiceTest {
     @DisplayName("Teste de encontrar um contexto pelo autor")
     public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException {
         
-        Mockito.when(this.contextRepository.findContextsByCreator(this.creator)).thenReturn(contexts);
+        Mockito.lenient().when(this.contextRepository.findContextsByCreator(this.creator)).thenReturn(contexts);
 
         for (Context context : contexts) {
             assertEquals(this.creator, context.getCreator());
@@ -103,10 +107,17 @@ public class ContextServiceTest {
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
 
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
+        //userService.jwtService = jwtService;
         LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
         
-        userService.insert(userRegisterDTO);
-        // Não valida o usuário
+        //userService.insert(userRegisterDTO);
+
+        assertNotNull(loginResponse.getToken());
+
+        // parece que ta rolando 3 jwtservices diferentes, 
+        //um injetado e outro dentro do userService e outro dentro do context service
+
+        //contextService.jwtService = jwtService;
         ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);        
 
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
