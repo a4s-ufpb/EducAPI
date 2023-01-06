@@ -106,7 +106,7 @@ public class ContextServiceTest {
         LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
         
         userService.insert(userRegisterDTO);
-        // Não passa
+        // Não valida o usuário
         ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);        
 
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
