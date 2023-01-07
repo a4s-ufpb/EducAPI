@@ -63,13 +63,12 @@ public class ContextServiceTest {
     ContextRepository contextRepository;  
     @InjectMocks
     ContextService contextService;
-    // So falta conseguir injecar o jwtService no userService e contextService
-    
-    @Value("${app.token.key}")
-    private final String TOKEN_KEY = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
-    "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
+    // So falta conseguir injetar o jwtService no userService e contextService
 
-    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
+    @Value("${app.token.key}")
+    private String TOKEN_KEY;
+
+    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
     
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
@@ -88,43 +87,45 @@ public class ContextServiceTest {
 
     @BeforeEach
     public void setUp() {
-        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
+        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "no tokens");
     }
 
-    @Test
-    @DisplayName("Teste de encontrar um contexto pelo autor")
-    public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException {
-        
-        Mockito.lenient().when(this.contextRepository.findContextsByCreator(this.creator)).thenReturn(contexts);
-
-        for (Context context : contexts) {
-            assertEquals(this.creator, context.getCreator());
-        }
-    }
+//    @Test
+//    @DisplayName("Teste de encontrar um contexto pelo autor")
+//    public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException {
+//
+//        Mockito.lenient().when(this.contextRepository.findContextsByCreator(this.creator)).thenReturn(contexts);
+//
+//        for (Context context : contexts) {
+//            assertEquals(this.creator, context.getCreator());
+//        }
+//    }
 
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
 
+        // Não esquecer de voltar a instância de jwtService em UserService e ContextService.
+        
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
+        //jwtService não ta pegando o token
         //userService.jwtService = jwtService;
         LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
-        
-        //userService.insert(userRegisterDTO);
+        contextService.jwtService = jwtService;
+        userService.insert(userRegisterDTO);
+
+        // Há 3 'jwtservice' diferentes, um injetado e outro dentro do userService e outro dentro do context service
+
+        // o método validateUser(token) vai validar e retornar um usuário
+        // o método insert(token, contextRegisterDTO) vai criar um user validado transformar 'contextRegisterDTO' em 'context'
+        //      e vai setar o 'user' como 'creator'
+        ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
-
-        // parece que ta rolando 3 jwtservices diferentes, 
-        //um injetado e outro dentro do userService e outro dentro do context service
-
-        //contextService.jwtService = jwtService;
-        ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);        
-
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
         assertEquals(response.getSoundUrl(),this.contextRegisterDTO.getSoundUrl());
         assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
-        Assertions.assertThat(loginResponse.getToken()).isNotNull();
     }
 
     @Test

@@ -24,7 +24,8 @@ import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundExcept
 public class ContextService {
     
     @Autowired
-    private JWTService jwtService;
+    //private
+    public JWTService jwtService;
 
     @Autowired
     private ContextRepository contextRepository;
