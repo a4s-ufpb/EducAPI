@@ -28,6 +28,10 @@ public class JWTService {
     /*public JWTService(){
         this.TOKEN_KEY = "it's a token key";
     }*/
+    //remover dpois de ocncluir os testes
+    public void setTOKEN_KEY(String token_key){
+        this.TOKEN_KEY = token_key;
+    }
     
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
         Optional<User> userOptional = userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword());

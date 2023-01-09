@@ -104,7 +104,6 @@ public class ContextServiceTest {
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
-
         // Não esquecer de voltar a instância de jwtService em UserService e ContextService.
         
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
@@ -115,10 +114,10 @@ public class ContextServiceTest {
         userService.insert(userRegisterDTO);
 
         // Há 3 'jwtservice' diferentes, um injetado e outro dentro do userService e outro dentro do context service
-
         // o método validateUser(token) vai validar e retornar um usuário
         // o método insert(token, contextRegisterDTO) vai criar um user validado transformar 'contextRegisterDTO' em 'context'
         //      e vai setar o 'user' como 'creator'
+        this.contextService.jwtService.setTOKEN_KEY("Bearer " + loginResponse.getToken());
         ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
