@@ -11,6 +11,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,13 +26,14 @@ public class JWTService {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
-    /*public JWTService(){
-        this.TOKEN_KEY = "it's a token key";
-    }*/
-    //remover dpois de ocncluir os testes
+    // REMOVER NA REFATORAÇÃO setTOKEN_KEY()
     public void setTOKEN_KEY(String token_key){
         this.TOKEN_KEY = token_key;
     }
+
+//    public void initialize(ConfigurableApplicationContext applicationContext){
+//        System.setProperty("app.token.key", "value");
+//    }
     
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
         Optional<User> userOptional = userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword());
@@ -60,7 +62,7 @@ public class JWTService {
         try {
             subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
         }catch (SignatureException error){
-            throw new SecurityException("Token invalid or expired!");
+           throw new SecurityException("Token invalid or expired!");
         }
 
         return Optional.of(subject);

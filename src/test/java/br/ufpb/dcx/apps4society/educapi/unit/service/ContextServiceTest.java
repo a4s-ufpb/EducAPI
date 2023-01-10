@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -86,10 +87,13 @@ public class ContextServiceTest {
     private Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
     @BeforeEach
-    public void setUp() {
-        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "no tokens");
-    }
+    public void setUp() throws InvalidUserException {
+        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
 
+        userService.jwtService = jwtService; // Ser não fizer isso o jwtService do userService da nullPointer
+        contextService.jwtService = jwtService; // Ser não fizer isso o jwtService do contextService da nullPointer
+
+    }
 //    @Test
 //    @DisplayName("Teste de encontrar um contexto pelo autor")
 //    public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException {
@@ -104,27 +108,27 @@ public class ContextServiceTest {
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
-        // Não esquecer de voltar a instância de jwtService em UserService e ContextService.
+        // REMOVER NA REFATORAÇÃO jwtService em UserService e ContextService foi setado como public(Default é private).
+        // REMOVER NA REFATORAÇÃO o header ta sem o "Bearer" || Foi acrescentado o prefixo "Bearer " diretamente no token da classe 'LoginResponse'.
         
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
-        //jwtService não ta pegando o token
-        //userService.jwtService = jwtService;
-        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
-        contextService.jwtService = jwtService;
+        LoginResponse loginResponse = this.contextService.jwtService.authenticate(this.userLoginDTO);
         userService.insert(userRegisterDTO);
 
-        // Há 3 'jwtservice' diferentes, um injetado e outro dentro do userService e outro dentro do context service
-        // o método validateUser(token) vai validar e retornar um usuário
-        // o método insert(token, contextRegisterDTO) vai criar um user validado transformar 'contextRegisterDTO' em 'context'
-        //      e vai setar o 'user' como 'creator'
-        this.contextService.jwtService.setTOKEN_KEY("Bearer " + loginResponse.getToken());
-        ContextDTO response = this.contextService.insert(loginResponse.getToken(), this.contextRegisterDTO);
+        TOKEN_KEY = loginResponse.getToken();
+
+        //Ser não fizer isso dá erro ao validar usuário através do jwtService da classe 'contextService'
+        this.contextService.jwtService.setTOKEN_KEY(TOKEN_KEY);
+
+        ContextDTO response = this.contextService.insert(TOKEN_KEY, this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
         assertEquals(response.getName(),this.contextRegisterDTO.getName());
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
         assertEquals(response.getSoundUrl(),this.contextRegisterDTO.getSoundUrl());
         assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
+
+        // Cada serviço tem um objeto jwt diferente, quando autentica na lasse 'UserService' não autentica automaticamente na classe 'ContextService'
     }
 
     @Test
@@ -204,8 +208,9 @@ public class ContextServiceTest {
 
     // Não sei se esse é o jeito correto de passa o pageable no construtor
     // os temas sao contexto, q tem um conjunto de challenge q sao palavras
-    // No app a procura é feita pelo id e nos testes são feitas por email, author e nome?!
+    // No app a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
     // OBS: não enganchar e ir fazendo o que da para fazer
     // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
-    //https://www.youtube.com/watch?v=AKT9FYJBOEo   
+    //https://www.youtube.com/watch?v=AKT9FYJBOEo
+    //https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
 }
