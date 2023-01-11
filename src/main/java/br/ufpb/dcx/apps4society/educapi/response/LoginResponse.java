@@ -4,7 +4,7 @@ public class LoginResponse {
 
     private String token;
 
-    //Remover o Bearer quando for refatorar, Bearer deve vir de outro local
+    //Remover o "Bearer " quando for refatorar, Bearer deve vir de outro local
     public LoginResponse(String token) {
         this.token = "Bearer " + token;
     }

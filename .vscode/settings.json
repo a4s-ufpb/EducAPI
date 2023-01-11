@@ -1,3 +1,4 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.jdt.ls.java.home": "D:\\Robinson's\\_Desenvolvedor\\jdk-11.0.16.1"
 }

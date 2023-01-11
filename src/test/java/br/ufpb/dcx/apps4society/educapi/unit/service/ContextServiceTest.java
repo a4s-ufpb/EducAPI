@@ -13,7 +13,6 @@ import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidContextException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
@@ -21,7 +20,6 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +29,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -111,7 +108,8 @@ public class ContextServiceTest {
         // REMOVER NA REFATORAÇÃO jwtService em UserService e ContextService foi setado como public(Default é private).
         // REMOVER NA REFATORAÇÃO o header ta sem o "Bearer" || Foi acrescentado o prefixo "Bearer " diretamente no token da classe 'LoginResponse'.
         
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
+        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
+                .thenReturn(this.userOptional);
         LoginResponse loginResponse = this.contextService.jwtService.authenticate(this.userLoginDTO);
         userService.insert(userRegisterDTO);
 
