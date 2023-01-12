@@ -6,6 +6,7 @@ import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.filter.TokenFilter;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
@@ -20,6 +21,7 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,6 +84,10 @@ public class ContextServiceTest {
     private final Pageable pageable = PageRequest.of(0, 20);
     private final List<Context> contexts = new ArrayList<>();
     private Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+    private String tokenFormat(String token){
+        this.TOKEN_KEY = token;
+        return this.TOKEN_KEY;
+    }
 
     @BeforeEach
     public void setUp() throws InvalidUserException {
@@ -106,19 +112,24 @@ public class ContextServiceTest {
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
         // REMOVER NA REFATORAÇÃO jwtService em UserService e ContextService foi setado como public(Default é private).
-        // REMOVER NA REFATORAÇÃO o header ta sem o "Bearer" || Foi acrescentado o prefixo "Bearer " diretamente no token da classe 'LoginResponse'.
         
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
                 .thenReturn(this.userOptional);
         LoginResponse loginResponse = this.contextService.jwtService.authenticate(this.userLoginDTO);
         userService.insert(userRegisterDTO);
 
-        TOKEN_KEY = loginResponse.getToken();
+        this.tokenFormat("Bearer " + loginResponse.getToken());
 
         //Ser não fizer isso dá erro ao validar usuário através do jwtService da classe 'contextService'
         this.contextService.jwtService.setTOKEN_KEY(TOKEN_KEY);
 
-        ContextDTO response = this.contextService.insert(TOKEN_KEY, this.contextRegisterDTO);
+//        String header = "Bearer ";
+//        String token = TOKEN_KEY;
+//        token = TOKEN_KEY.substring(7);
+//        String subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
+//        //insert().validatateUser()
+
+        ContextDTO response = this.contextService.insert(contextService.jwtService.getTOKEN_KEY(), this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
         assertEquals(response.getName(),this.contextRegisterDTO.getName());

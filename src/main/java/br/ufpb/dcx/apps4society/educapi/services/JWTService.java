@@ -26,7 +26,10 @@ public class JWTService {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
-    // REMOVER NA REFATORAÇÃO setTOKEN_KEY()
+    // REMOVER NA REFATORAÇÃO getTOKEN_KEY() e setTOKEN_KEY()
+    public String getTOKEN_KEY(){
+        return this.TOKEN_KEY;
+    }
     public void setTOKEN_KEY(String token_key){
         this.TOKEN_KEY = token_key;
     }
