@@ -33,6 +33,13 @@ public class ContextService {
     @Autowired
     private UserRepository userRepository;
 
+    // para testes com ServicesBuilder
+    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.contextRepository = contextRepository;
+        this.userRepository = userRepository;
+    }
+
     public Context find(Long id) throws ObjectNotFoundException {
 
         Optional<Context> obgOptional = contextRepository.findById(id);

@@ -17,8 +17,10 @@ import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
+import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,33 +49,18 @@ import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ContextServiceTest")
-public class ContextServiceTest {    
-    
-    @Spy
-    UserRepository userRepository;    
-    @InjectMocks
-    JWTService jwtService;
-    @InjectMocks
-    UserService userService;
-    @Mock
-    ContextRepository contextRepository;  
-    @InjectMocks
-    ContextService contextService;
-    // So falta conseguir injetar o jwtService no userService e contextService
-
+public class ContextServiceTest {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
-    
+
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
 
-    //private final JWTService jwtServicee = new JWTService();
-
-    // Usado nos testes que utilizam busca 'thenReturn'    
+    // Usado nos testes que utilizam busca 'thenReturn'
     Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
 
@@ -84,17 +71,47 @@ public class ContextServiceTest {
         this.TOKEN_KEY = "Bearer " + token;
         return this.TOKEN_KEY;
     }
+//    @Spy
+//    UserRepository userRepository;
+//    @InjectMocks
+//    JWTService jwtService;
+//    @InjectMocks
+//    UserService userService;
+//    @Mock
+//    ContextRepository contextRepository;
+//    @InjectMocks
+//    ContextService contextService;
+      // Service tem um JWTService, JWTService tem UserRepository
+//    // So falta conseguir injetar o jwtService no userService e contextService
+
+
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    ContextRepository contextRepository;
+
+    JWTService jwtService = ServicesBuilder.anService().withUserRepository(this.userRepository).buildJwtService();
+
+    @InjectMocks
+    UserService userService = ServicesBuilder.anService()
+            .withJwtService(jwtService)
+            .withUserRepository(userRepository).buildUserService();
+    @InjectMocks
+    ContextService contextService = ServicesBuilder.anService()
+            .withJwtService(jwtService)
+            .withContextRepository(contextRepository)
+            .withUserRepository(userRepository).buildContextService();
 
     @BeforeEach
     public void setUp() throws InvalidUserException {
 
+        jwtService.setUserRepository(userRepository);
+//
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
+        //ReflectionTestUtils.setField(jwtService.userRepository, this.userRepository);
 
-//        ReflectionTestUtils.setField(userService.jwtService, "TOKEN_KEY", "it's a token key");
-//        ReflectionTestUtils.setField(contextService.jwtService, "TOKEN_KEY", "it's a token key");
-
-        userService.jwtService = jwtService; // Ser não fizer isso o jwtService do userService da nullPointer
-        contextService.jwtService = jwtService; // Ser não fizer isso o jwtService do contextService da nullPointer
+//        userService.jwtService = jwtService; // Ser não fizer isso o jwtService do userService da nullPointer
+//        contextService.jwtService = jwtService; // Ser não fizer isso o jwtService do contextService da nullPointer
 
     }
 //    @Test
@@ -113,18 +130,16 @@ public class ContextServiceTest {
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
 
         Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
-        LoginResponse loginResponse = this.contextService.jwtService.authenticate(this.userLoginDTO);
+        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
         userService.insert(userRegisterDTO);
-        String bearedToken = this.tokenBearerFormat(loginResponse.getToken());
-
         // Talvez esteja dando erro de assinatura pq estou colocando o token arbitrariamente
-        this.contextService.jwtService.setTOKEN_KEY(TOKEN_KEY);
+
 //        String header = "Bearer ";
 //        String token = TOKEN_KEY;
 //        token = TOKEN_KEY.substring(7);
 //        String subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
-//        //insert().validatateUser()
-        // o insert(token, ...) esta sendo comparado com o token do contextService.jwtService
+        String bearedToken = this.tokenBearerFormat(loginResponse.getToken());
+        this.jwtService.setTOKEN_KEY(TOKEN_KEY);
         ContextDTO response = this.contextService.insert(bearedToken, this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
@@ -132,7 +147,7 @@ public class ContextServiceTest {
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
         assertEquals(response.getSoundUrl(),this.contextRegisterDTO.getSoundUrl());
         assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
-
+        // o insert(token, ...) esta sendo comparado com o token do contextService.jwtService
         // Cada serviço tem um objeto jwt diferente, quando autentica na lasse 'UserService' não autentica automaticamente na classe 'ContextService'
     }
 

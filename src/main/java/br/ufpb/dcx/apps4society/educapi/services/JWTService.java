@@ -21,10 +21,15 @@ import java.util.Optional;
 public class JWTService {
 
     @Autowired
-    private UserRepository userRepository;
+    //private
+    public UserRepository userRepository;
 
     @Value("${app.token.key}")
     private String TOKEN_KEY;
+
+    public JWTService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     // REMOVER NA REFATORAÇÃO getTOKEN_KEY() e setTOKEN_KEY()
     public String getTOKEN_KEY(){
@@ -32,6 +37,10 @@ public class JWTService {
     }
     public void setTOKEN_KEY(String token_key){
         this.TOKEN_KEY = token_key;
+    }
+
+    public void setUserRepository(UserRepository userRepository){
+        this.userRepository = userRepository;
     }
 
 //    public void initialize(ConfigurableApplicationContext applicationContext){

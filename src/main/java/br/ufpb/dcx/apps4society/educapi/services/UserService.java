@@ -26,6 +26,12 @@ public class UserService {
 	@Autowired
 	private UserRepository userRepository;
 
+	// para testes com ServicesBuilder
+	public UserService(JWTService jwtService, UserRepository userRepository) {
+		this.jwtService = jwtService;
+		this.userRepository = userRepository;
+	}
+
 	public User find(String token) throws InvalidUserException {
 		Optional<String> userEmail = jwtService.recoverUser(token);
 
