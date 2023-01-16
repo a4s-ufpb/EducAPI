@@ -9,6 +9,7 @@ import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +57,15 @@ public class ContextService {
         Context context = contextRegisterDTO.contextRegisterDTOToContext();
 
         context.setCreator(user);
+
+        // Início de trecho a verificar necessidade
+        Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(user.getName());
+
+        if (contextOptional.isPresent()){
+            throw new ContextAlreadyExistsException("There is already a context with this name registered in the system!");
+        }
+        // Fim de trecho a verificar necessidade
+
         contextRepository.save(context);
         return new ContextDTO(context);
     }
@@ -111,7 +121,8 @@ public class ContextService {
         newObj.setVideoUrl(obj.getVideoUrl());
     }
 
-    private User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
+    //private
+    public User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
         Optional<String> userEmail = jwtService.recoverUser(token);
         if (userEmail.isEmpty()) {
             throw new InvalidUserException();

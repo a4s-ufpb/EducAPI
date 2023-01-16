@@ -5,19 +5,18 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ServicesBuilder {
 
     @Autowired
-    //private
-    public JWTService jwtService;
-
-    @Autowired
     private ContextRepository contextRepository;
-
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JWTService jwtService;
 
     public static ServicesBuilder anService(){
         return new ServicesBuilder();

@@ -30,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,48 +51,14 @@ import java.util.Optional;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ContextServiceTest")
 public class ContextServiceTest {
-    @Value("${app.token.key}")
-    private String TOKEN_KEY;
-
-    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
-    private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
-
-    private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
-    private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
-    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
-
-    // Usado nos testes que utilizam busca 'thenReturn'
-    Optional<Context> contextOptional = ContextBuilder.anContext().buildOptionalContext();
-    private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
-
-    private final Pageable pageable = PageRequest.of(0, 20);
-    private final List<Context> contexts = new ArrayList<>();
-    private Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-    private String tokenBearerFormat(String token){
-        this.TOKEN_KEY = "Bearer " + token;
-        return this.TOKEN_KEY;
-    }
-//    @Spy
-//    UserRepository userRepository;
-//    @InjectMocks
-//    JWTService jwtService;
-//    @InjectMocks
-//    UserService userService;
-//    @Mock
-//    ContextRepository contextRepository;
-//    @InjectMocks
-//    ContextService contextService;
-      // Service tem um JWTService, JWTService tem UserRepository
-//    // So falta conseguir injetar o jwtService no userService e contextService
-
 
     @Mock
     UserRepository userRepository;
     @Mock
     ContextRepository contextRepository;
 
+    @InjectMocks
     JWTService jwtService = ServicesBuilder.anService().withUserRepository(this.userRepository).buildJwtService();
-
     @InjectMocks
     UserService userService = ServicesBuilder.anService()
             .withJwtService(jwtService)
@@ -102,16 +69,32 @@ public class ContextServiceTest {
             .withContextRepository(contextRepository)
             .withUserRepository(userRepository).buildContextService();
 
+    @Value("${app.token.key}")
+    private String TOKEN_KEY;
+
+    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
+    private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
+
+    private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
+    private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
+    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
+
+    private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(creator).buildOptionalContext();
+    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
+
+    private final Pageable pageable = PageRequest.of(0, 20);
+    private final List<Context> contexts = new ArrayList<>();
+    private Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+
+    private String tokenBearerFormat(String token){
+        this.TOKEN_KEY = "Bearer " + token;
+        return this.TOKEN_KEY;
+    }
+
     @BeforeEach
-    public void setUp() throws InvalidUserException {
+    public void setUp() {
 
-        jwtService.setUserRepository(userRepository);
-//
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
-        //ReflectionTestUtils.setField(jwtService.userRepository, this.userRepository);
-
-//        userService.jwtService = jwtService; // Ser não fizer isso o jwtService do userService da nullPointer
-//        contextService.jwtService = jwtService; // Ser não fizer isso o jwtService do contextService da nullPointer
 
     }
 //    @Test
@@ -124,12 +107,14 @@ public class ContextServiceTest {
 //            assertEquals(this.creator, context.getCreator());
 //        }
 //    }
-
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException, UserAlreadyExistsException {
 
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
+        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
+                .thenReturn(this.userOptional);
+        Mockito.when(this.contextRepository.findContextByNameIgnoreCase(this.creator.getName())).thenReturn(this.contextOptional);
+
         LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
         userService.insert(userRegisterDTO);
         // Talvez esteja dando erro de assinatura pq estou colocando o token arbitrariamente
@@ -140,6 +125,20 @@ public class ContextServiceTest {
 //        String subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
         String bearedToken = this.tokenBearerFormat(loginResponse.getToken());
         this.jwtService.setTOKEN_KEY(TOKEN_KEY);
+
+        String bearer = TOKEN_KEY.substring(0,7);
+        String header = TOKEN_KEY.substring(7,27);
+        String payload = TOKEN_KEY.substring(28,86);
+        String signature = TOKEN_KEY.substring(87);
+
+        byte[] bearerByte = TOKEN_KEY.substring(0,7).getBytes();
+        byte[] headerByte = TOKEN_KEY.substring(7,27).getBytes();
+        byte[] payloadByte = TOKEN_KEY.substring(28,86).getBytes();
+        byte[] signatureByte = TOKEN_KEY.substring(87).getBytes();
+
+        String subject;
+        subject = Jwts.parser().setSigningKey(bearer).parseClaimsJws(loginResponse.getToken()).getBody().getSubject();
+
         ContextDTO response = this.contextService.insert(bearedToken, this.contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
@@ -147,6 +146,7 @@ public class ContextServiceTest {
         assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
         assertEquals(response.getSoundUrl(),this.contextRegisterDTO.getSoundUrl());
         assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
+        Mockito.when(this.contextService.validateUser(this.TOKEN_KEY)).thenReturn(this.creator);
         // o insert(token, ...) esta sendo comparado com o token do contextService.jwtService
         // Cada serviço tem um objeto jwt diferente, quando autentica na lasse 'UserService' não autentica automaticamente na classe 'ContextService'
     }

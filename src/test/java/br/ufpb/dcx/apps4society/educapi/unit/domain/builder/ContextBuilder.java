@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 
 import java.util.Optional;
@@ -13,6 +14,7 @@ public class ContextBuilder {
     private String imageUrl = "imageUrl";
     private String soundUrl = "soundUrl";
     private String videoUrl = "videoUrl";
+    private User creator;
 
     public static ContextBuilder anContext(){
         return new ContextBuilder();
@@ -42,12 +44,19 @@ public class ContextBuilder {
         this.videoUrl = videoUrl;
         return this;
     }
+
+    public ContextBuilder withCreator(User creator) {
+        this.creator = creator;
+        return this;
+    }
     // Optional é utilizado quando não se sabe que um objeto vai estar no banco de dados(se vai ser utilizado ou nao)
     public Optional<Context> buildOptionalContext(){ return Optional.ofNullable(new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl));
     }
 
     public ContextRegisterDTO buildContextRegisterDTO(){ return new ContextRegisterDTO(this.name, this.imageUrl, this.soundUrl, this.videoUrl);
     }
+
+
 
 //    public Context buildContextDTO() {
 //        return new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl);
