@@ -40,7 +40,7 @@ public class TokenFilter extends GenericFilterBean {
         }
 
         String token = header.substring(TOKEN_INDEX);
-        //String token = header.substring(0, TOKEN_INDEX);
+
         try {
             Jwts.parser().setSigningKey(this.TOKEN_KEY).parseClaimsJws(token).getBody();
         }catch (SignatureException | ExpiredJwtException | MalformedJwtException | PrematureJwtException

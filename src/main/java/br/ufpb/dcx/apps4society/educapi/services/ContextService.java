@@ -59,7 +59,7 @@ public class ContextService {
         context.setCreator(user);
 
         // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(user.getName());
+        Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(context.getName());
 
         if (contextOptional.isPresent()){
             throw new ContextAlreadyExistsException("There is already a context with this name registered in the system!");

@@ -61,6 +61,7 @@ public class JWTService {
                 .setSubject(userLoginDTO.getEmail())
                 .signWith(SignatureAlgorithm.HS512, TOKEN_KEY)
                 .setExpiration(new Date(System.currentTimeMillis() + 30 * 60 * 1000)).compact();
+
     }
 
     public Optional<String> recoverUser(String header){
