@@ -46,9 +46,6 @@ public class ChallengeServiceTest {
 //    @Test
 //    public void insertAChallengeTest() throws ChallengeAlreadyExistsException{
 //
-//        // OBS: construtor insert(String token, ChallengeRegisterDTO, Long contextId)
-//        // OBS2: os tokens são de User, Challenge e context?
-//        // OBS3: como eu puxo o token pro construtor insert?
 //        ChallengeDTO response = service.insert(jwtService.authenticate(this.userLoginDTO), this.challengeRegisterDTO);
 //
 //        assertEquals(response.getWord(), this.challengeRegisterDTO.getWord());
@@ -61,10 +58,7 @@ public class ChallengeServiceTest {
 //    public void insertAChallengeAlreadyExistTest(){
 //        Mockito.when(this.challengeRepository.findByWord(this.challengeRegisterDTO.getWord())).thenReturn(this.challengeOptional);
 //        Exception exception = assertThrows(ChallengeAlreadyExistsException.class, () -> {
-//
-//            //OBS: Construtor precisa de (Token e contextRegisterDTO)
-//            //OBS2: os tokens são de User, Challenge e context?
-//            //OBS3: como eu puxo o token pro construtor insert?
+
 //            service.insert(jwtService.authenticate(userLoginDTO), this.challengeRegisterDTO, this.challengeRegisterDTO.getContext());
 //        });
 //        assertEquals(Messages.CHALLENGE_ALREADY_EXISTS, exception.getMessage());

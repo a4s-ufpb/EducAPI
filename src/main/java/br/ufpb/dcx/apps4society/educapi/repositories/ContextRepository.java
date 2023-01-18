@@ -20,6 +20,6 @@ public interface ContextRepository extends JpaRepository<Context, Long> {
 
 //	Page<Context> findContextsByParams(String email, String name, Pageable pageable);
 //	Context deleteContextById(LoginResponse token, Long id);
-    Context insert(String token, ContextRegisterDTO contextRegisterDTO);
+//	Context insert(String token, ContextRegisterDTO contextRegisterDTO);
 	Optional<Context> findContextByNameIgnoreCase(String name);
 }
