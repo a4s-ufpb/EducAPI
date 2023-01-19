@@ -39,12 +39,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
 import java.util.Optional;
+
+import javax.management.Query;
+import javax.persistence.EntityManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,9 +62,11 @@ public class ContextServiceTest {
     UserRepository userRepository;
     @Mock
     ContextRepository contextRepository;
+    @Mock
+    User user;
 
     @InjectMocks
-    JWTService jwtService = ServicesBuilder.anService().withUserRepository(this.userRepository).buildJwtService();
+    JWTService jwtService = ServicesBuilder.anService().withUserRepository(userRepository).buildJwtService();
     @InjectMocks
     UserService userService = ServicesBuilder.anService()
             .withJwtService(jwtService)
@@ -83,13 +89,13 @@ public class ContextServiceTest {
     private Optional<Context> contextOptional = ContextBuilder.anContext().withCreator(creator).buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
 
-    private final Pageable pageable = PageRequest.of(0, 20);
-    private final List<Context> contexts = new ArrayList<>();
-    private Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+    public Pageable pageable = PageRequest.of(0, 20);
+    List<Context> contexts = new ArrayList<>();
+    Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
     private String tokenBearerFormat(String token){
-        this.TOKEN_KEY = "Bearer " + token;
-        return this.TOKEN_KEY;
+        TOKEN_KEY = "Bearer " + token;
+        return TOKEN_KEY;
     }
 
     @BeforeEach
@@ -102,34 +108,34 @@ public class ContextServiceTest {
 //    @DisplayName("Teste de encontrar um contexto pelo autor")
 //    public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 //
-//        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
-//        Mockito.when(this.userRepository.findByEmail(this.userLoginDTO.getEmail())).thenReturn(this.userOptional);
-//        //Mockito.when(this.contextRepository.findContextsByCreator(this.creator)).thenReturn(contexts);
+//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+//        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+//        //Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
 //
-//        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
-//        String bearedToken = this.tokenBearerFormat(loginResponse.getToken());
-//        this.contextService.insert(bearedToken, this.contextRegisterDTO);
-//        this.contextService.insert(bearedToken, this.contextRegisterDTO);
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+//        String bearedToken = tokenBearerFormat(loginResponse.getToken());
+//        contextService.insert(bearedToken, contextRegisterDTO);
+//        contextService.insert(bearedToken, contextRegisterDTO);
 //
-//        assertEquals(contextRepository.getOne(1L).getCreator(), this.creator);
-//        assertEquals(contextRepository.getOne(2L).getCreator(), this.creator);
+//        assertEquals(contextRepository.getOne(1L).getCreator(), creator);
+//        assertEquals(contextRepository.getOne(2L).getCreator(), creator);
 //
 //    }
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
 
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
-        Mockito.when(this.userRepository.findByEmail(this.userLoginDTO.getEmail())).thenReturn(this.userOptional);
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
 
-        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
-        ContextDTO response = this.contextService.insert(tokenBearerFormat(loginResponse.getToken()), this.contextRegisterDTO);
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        ContextDTO response = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
-        assertEquals(response.getName(),this.contextRegisterDTO.getName());
-        assertEquals(response.getImageUrl(),this.contextRegisterDTO.getImageUrl());
-        assertEquals(response.getSoundUrl(),this.contextRegisterDTO.getSoundUrl());
-        assertEquals(response.getVideoUrl(),this.contextRegisterDTO.getVideoUrl());
+        assertEquals(response.getName(),contextRegisterDTO.getName());
+        assertEquals(response.getImageUrl(),contextRegisterDTO.getImageUrl());
+        assertEquals(response.getSoundUrl(),contextRegisterDTO.getSoundUrl());
+        assertEquals(response.getVideoUrl(),contextRegisterDTO.getVideoUrl());
 
     }
 
@@ -137,15 +143,15 @@ public class ContextServiceTest {
     @DisplayName("Teste de inserir um contexto já existente")
     public void insertAContextAlreadyExistTest() throws InvalidUserException {
 
-        Mockito.when(contextRepository.findContextByNameIgnoreCase(this.context.getName())).thenReturn(contextOptional);
-        Mockito.when(this.userRepository.findByEmail(this.userLoginDTO.getEmail())).thenReturn(this.userOptional);
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
-                .thenReturn(this.userOptional);
+        Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(contextOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword()))
+                .thenReturn(userOptional);
 
-        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
         Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
-            contextService.insert(tokenBearerFormat(loginResponse.getToken()), this.contextRegisterDTO);
+            contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         });
         assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
         assertEquals(contextRepository.findContextByNameIgnoreCase("Context"), contextOptional);
@@ -156,14 +162,14 @@ public class ContextServiceTest {
 //    @DisplayName("Teste de atualizar um contexto")
 //    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 //
-//        //Mockito.when(this.contextRepository.findContextByNameIgnoreCase(this.context.getName())).thenReturn(contextOptional);
-//        Mockito.when(this.userRepository.findByEmail(this.userLoginDTO.getEmail())).thenReturn(this.userOptional);
+//        //Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(contextOptional);
+//        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
 //        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
 //
-//        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 //        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-//        //assertEquals(this.contextRegisterDTO, this.contextOptional.get().getId());
-//        assertEquals(contextRepository.findById(1L), this.contextOptional);
+//        //assertEquals(contextRegisterDTO, contextOptional.get().getId());
+//        assertEquals(contextRepository.findById(1L), contextOptional);
 //        contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO, 1L);
 //
 //    }
@@ -172,39 +178,49 @@ public class ContextServiceTest {
 //    @DisplayName("Teste de deletar um contexto")
 //    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
 //
-//        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
-//        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
+//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 //
 //        contextService.insert(loginResponse.getToken(), contextRegisterDTO);
-//        Mockito.when(this.contextRepository.findById(this.context.getId())).thenReturn(this.contextOptional);
+//        Mockito.when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
 //
-//        contextService.delete(loginResponse.getToken(), this.context.getId());
+//        contextService.delete(loginResponse.getToken(), context.getId());
 //
-//        Mockito.verify(this.contextRepository.findById(this.context.getId()));
+//        Mockito.verify(contextRepository.findById(context.getId()));
 //        assertThrows(ObjectNotFoundException.class, () -> {
-//            contextService.find(this.context.getId());
+//            contextService.find(context.getId());
 //        });
 //    }
+
+    public Page<Context> getContexts(String email, String nome, Pageable pageable){
+        
+        //pageable = PageRequest.of(0, 20);
+        //List<Context> contexts = new ArrayList<>();
+        //Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+        
+        return contextService.findContextsByParams(email, nome, pageable);
+    }
 
     @Test
     @DisplayName("Teste de encontrar um contexto por parâmetros")
     public void findContextsByParamsTest() throws UserAlreadyExistsException, InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
 
-        Mockito.when(this.userRepository.findByEmail(this.userLoginDTO.getEmail())).thenReturn(this.userOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(creator.getEmail(), creator.getName(), pageable))
-                .thenReturn(this.page);
+        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(user.getEmail(), user.getName(), pageable))
+        .thenReturn(page);
 
-        LoginResponse loginResponse = this.jwtService.authenticate(this.userLoginDTO);
-        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-
-        //creator do contextOptional ta nulo
-        page = contextService.findContextsByParams(this.contextOptional.get().getCreator().getEmail(), this.contextOptional.get().getName(), pageable);
-
-        assertEquals(this.contextRepository.findAll(), page);
-        assertNotNull(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable));
-        assertNotNull(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable));
-        assertNotNull(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable));
+        //LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        //contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);        
+        
+        // Não esta gerando o page, contextService está retornando nulo
+        Page<Context> page = contextService.findContextsByParams(userOptional.get().getEmail(), userOptional.get().getName(), pageable);
+        Page<Context> pageResponse = getContexts(contextOptional.get().getCreator().getEmail(), contextOptional.get().getName(), pageable);
+        
+        assertEquals(contextRepository.findAll(), pageResponse);
+        assertNotNull(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable()));
+        assertNotNull(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageResponse.getPageable()));
+        assertNotNull(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageResponse.getPageable()));
     }
 
     public void template(){
