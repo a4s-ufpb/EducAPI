@@ -202,7 +202,6 @@ public class ContextServiceTest {
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
 
         Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-        List<Context> contexts = new ArrayList<>(C)
 
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
@@ -221,6 +220,7 @@ public class ContextServiceTest {
         Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
         // O page não adiciona objetos no content e da UNKNOWN instance
+        //https://stackoverflow.com/questions/26720768/spring-data-pageimpl-not-returning-page-with-the-correct-size
         Page<Context> pageSoParaTest =
                 contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable());
 
