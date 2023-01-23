@@ -33,10 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -82,15 +79,19 @@ public class ContextServiceTest {
     private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withName("Context2").buildContextRegisterDTO();
     private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
+    private final User creator2 = UserBuilder.anUser().withName("User2").withEmail("user2@educapi.com").buildUserRegisterDTO().userRegisterDtoToUser();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
 
     private Optional<Context> contextOptional = ContextBuilder.anContext().withCreator(creator).buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
+    private final Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
 
-    // **Captar com variável de ambiente**
-    public Pageable pageable = PageRequest.of(0, 20);
+    // **Captar como variável de ambiente**
+    String field = "name";
+    public Pageable pageable = PageRequest.of(0, 20, Sort.by(field).ascending());
     public List<Context> contexts = new ArrayList<>();
-    //Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+    public Page<Context> page;
 
     private String tokenBearerFormat(String token){
         TOKEN_KEY = "Bearer " + token;
@@ -201,32 +202,47 @@ public class ContextServiceTest {
     @DisplayName("Teste de encontrar um contexto por parâmetros")
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
 
-        Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
 
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+
+        contexts.add(contextDTO.contextDTOToContext());
+
+        //TODO: contextos estão sem autores, talvez o pensamento de salvamento de contexto esteja errada
+        // Primariamente quando salva um contexto ele vai estar no contextRepository e não em uma lista que setei manualmente
+
+        Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+        page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+
+        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
         Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(creator.getEmail(), creator.getName(), pageable))
                 .thenReturn(page);
         Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable)).thenReturn(page);
         Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase(creator.getName(), pageable)).thenReturn(page);
-        Mockito.when(contextRepository.findAll()).thenReturn(contexts);
 
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        ContextDTO contextDTO2 = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        contexts.add(contextDTO.contextDTOToContext());
-        contexts.add(contextDTO2.contextDTOToContext());
-        Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-
-        // O page não adiciona objetos no content e da UNKNOWN instance
-        //https://stackoverflow.com/questions/26720768/spring-data-pageimpl-not-returning-page-with-the-correct-size
-        Page<Context> pageSoParaTest =
+        Page<Context> debugPage1 =
                 contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable());
-
-        assertNotNull(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(
-                "user@educapi.com", "User", pageResponse.getPageable()));
-
+//        Mockito.when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
+//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
+//        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+//        ContextDTO contextDTO2 = contextService.insert(tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO2);
+//        contexts.add(contextDTO2.contextDTOToContext());
+//
+//        Page<Context> pageResponse2 = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+//        Page<Context> page2 = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+//
+//        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(creator2.getEmail(), creator2.getName(), pageable))
+//                .thenReturn(page2);
+//        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator2.getEmail(), pageable)).thenReturn(page2);
+//        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase(creator2.getName(), pageable)).thenReturn(page2);
+//        Mockito.when(contextRepository.findAll()).thenReturn(contexts);
+//
+//
+//        Page<Context> debugPage2 =
+//                contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user2@educapi.com", "User2", pageResponse2.getPageable());
+        assertNotNull(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable()));
         assertEquals(pageResponse, contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageResponse.getPageable()));
         assertEquals(pageResponse, contextRepository.findAllByNameStartsWithIgnoreCase("User", pageResponse.getPageable()));
         assertNotNull(contextRepository.findAll());
