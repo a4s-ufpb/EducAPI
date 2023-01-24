@@ -77,9 +77,12 @@ public class ContextServiceTest {
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
     private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withName("Context2").buildContextRegisterDTO();
-    private final Context context = ContextBuilder.anContext().buildContextRegisterDTO().contextRegisterDTOToContext();
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
     private final User creator2 = UserBuilder.anUser().withName("User2").withEmail("user2@educapi.com").buildUserRegisterDTO().userRegisterDtoToUser();
+    private Context context = ContextBuilder.anContext().withCreator(creator).buildContext();
+            //.buildContextRegisterDTO().contextRegisterDTOToContext();
+//    private Context context2 = ContextBuilder.anContext().withCreator(creator).buildContextDTO().contextDTOToContext();
+//    private ContextDTO contextDTO = ContextBuilder.anContext().withName("ContextDTO").buildContextDTO();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
 
@@ -91,7 +94,13 @@ public class ContextServiceTest {
     String field = "name";
     public Pageable pageable = PageRequest.of(0, 20, Sort.by(field).ascending());
     public List<Context> contexts = new ArrayList<>();
-    public Page<Context> page;
+    public Page<Context> pageResponse;
+
+    @Autowired
+    LoginResponse loginResponse;
+
+    //@Autowired
+    //ContextRegisterDTO contextRegisterDTO;
 
     private String tokenBearerFormat(String token){
         TOKEN_KEY = "Bearer " + token;
@@ -205,46 +214,26 @@ public class ContextServiceTest {
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
 
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-
         contexts.add(contextDTO.contextDTOToContext());
 
-        //TODO: contextos estão sem autores, talvez o pensamento de salvamento de contexto esteja errada
-        // Primariamente quando salva um contexto ele vai estar no contextRepository e não em uma lista que setei manualmente
+        //TODO: A primeira vista, quando salva um contexto ele vai estar no contextRepository e não em uma lista que setei manualmente
+        // O mesmo contexto que contem um autor, quando dentro de uma Page o autor se apresenta nulo, Verificar o meu raciocínio para inserção de contextos        //
+        // Esse segundo trecho de Mockito aparentemente tá autoacoplado
 
         Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-        page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
         // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
-        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(creator.getEmail(), creator.getName(), pageable))
-                .thenReturn(page);
-        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable)).thenReturn(page);
-        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase(creator.getName(), pageable)).thenReturn(page);
+        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
+                .thenReturn(pageResponse);
+        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenReturn(pageResponse);
+        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(pageResponse);
 
-        Page<Context> debugPage1 =
-                contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable());
-//        Mockito.when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
-//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
-//        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
-//        ContextDTO contextDTO2 = contextService.insert(tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO2);
-//        contexts.add(contextDTO2.contextDTOToContext());
-//
-//        Page<Context> pageResponse2 = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-//        Page<Context> page2 = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-//
-//        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(creator2.getEmail(), creator2.getName(), pageable))
-//                .thenReturn(page2);
-//        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator2.getEmail(), pageable)).thenReturn(page2);
-//        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase(creator2.getName(), pageable)).thenReturn(page2);
-//        Mockito.when(contextRepository.findAll()).thenReturn(contexts);
-//
-//
-//        Page<Context> debugPage2 =
-//                contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user2@educapi.com", "User2", pageResponse2.getPageable());
-        assertNotNull(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageResponse.getPageable()));
-        assertEquals(pageResponse, contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageResponse.getPageable()));
-        assertEquals(pageResponse, contextRepository.findAllByNameStartsWithIgnoreCase("User", pageResponse.getPageable()));
+        assertEquals(pageResponse, contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(
+                context.getCreator().getEmail(), context.getCreator().getName(), pageResponse.getPageable()));
+        assertEquals(pageResponse, contextRepository.findAllByCreatorEmailEqualsIgnoreCase(context.getCreator().getEmail(), pageResponse.getPageable()));
+        assertEquals(pageResponse, contextRepository.findAllByNameStartsWithIgnoreCase(context.getCreator().getName(), pageResponse.getPageable()));
         assertNotNull(contextRepository.findAll());
 
     }

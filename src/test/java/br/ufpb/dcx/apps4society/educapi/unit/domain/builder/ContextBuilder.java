@@ -2,6 +2,7 @@ package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 
 import java.util.Optional;
@@ -56,10 +57,12 @@ public class ContextBuilder {
     public ContextRegisterDTO buildContextRegisterDTO(){ return new ContextRegisterDTO(this.name, this.imageUrl, this.soundUrl, this.videoUrl);
     }
 
+    public Context buildContext(){
+        return new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl, this.creator);
+    }
 
-
-//    public Context buildContextDTO() {
-//        return new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl);
+//    public ContextDTO buildContextDTO() {
+//        return new ContextDTO(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl);
 //    }
 
 }
