@@ -79,10 +79,8 @@ public class ContextServiceTest {
     private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withName("Context2").buildContextRegisterDTO();
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
     private final User creator2 = UserBuilder.anUser().withName("User2").withEmail("user2@educapi.com").buildUserRegisterDTO().userRegisterDtoToUser();
-    private Context context = ContextBuilder.anContext().withCreator(creator).buildContext();
+    private Context context = ContextBuilder.anContext().buildContext();
             //.buildContextRegisterDTO().contextRegisterDTOToContext();
-//    private Context context2 = ContextBuilder.anContext().withCreator(creator).buildContextDTO().contextDTOToContext();
-//    private ContextDTO contextDTO = ContextBuilder.anContext().withName("ContextDTO").buildContextDTO();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
 
@@ -98,9 +96,6 @@ public class ContextServiceTest {
 
     @Autowired
     LoginResponse loginResponse;
-
-    //@Autowired
-    //ContextRegisterDTO contextRegisterDTO;
 
     private String tokenBearerFormat(String token){
         TOKEN_KEY = "Bearer " + token;
@@ -182,31 +177,41 @@ public class ContextServiceTest {
 //
 //    }
 //
-//    @Test
-//    @DisplayName("Teste de deletar um contexto")
-//    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
-//
-//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-//
-//        contextService.insert(loginResponse.getToken(), contextRegisterDTO);
-//        Mockito.when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
-//
-//        contextService.delete(loginResponse.getToken(), context.getId());
-//
+    @Test
+    @DisplayName("Teste de deletar um contexto")
+    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
+
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
+        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        context = contextDTO.contextDTOToContext();
+        context.setId(1L);
+        creator.setId(1L);
+        context.setCreator(creator);
+        contexts.add(context);
+        // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
+
+        Mockito.when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
+
+        // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO DELETE()
+        contextService.delete(tokenBearerFormat(loginResponse.getToken()), context.getId());
+        int idToRemove = Math.toIntExact(context.getId())-1;
+        contexts.remove(idToRemove);
+        // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO DELETE()
+
+        //Em resumo, era para retornar nulo mas ta retornando o contextOptional do Mockito através do ID
+        assertEquals(null, contextRepository.findById(context.getId()));
+
 //        Mockito.verify(contextRepository.findById(context.getId()));
 //        assertThrows(ObjectNotFoundException.class, () -> {
 //            contextService.find(context.getId());
 //        });
-//    }
-//
-//    public Page<Context> getContexts(String email, String nome, Pageable pageable){
-//
-//        pageable = PageRequest.of(0, 20);
-//        List<Context> contexts = new ArrayList<>();
-//        Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-//        contextService.findContextsByParams(email, nome, pageable);//        return page;
-//    }
+    }
+
     @Test
     @DisplayName("Teste de encontrar um contexto por parâmetros")
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
@@ -216,11 +221,12 @@ public class ContextServiceTest {
 
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        contexts.add(contextDTO.contextDTOToContext());
 
-        //TODO: A primeira vista, quando salva um contexto ele vai estar no contextRepository e não em uma lista que setei manualmente
-        // O mesmo contexto que contem um autor, quando dentro de uma Page o autor se apresenta nulo, Verificar o meu raciocínio para inserção de contextos        //
-        // Esse segundo trecho de Mockito aparentemente tá autoacoplado
+        // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
+        context = contextDTO.contextDTOToContext();
+        context.setCreator(creator);
+        contexts.add(context);
+        // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
 
         Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
@@ -249,11 +255,12 @@ public class ContextServiceTest {
         // InjectMock Classe a qual as injeções dos mocks serão aplicadas***
     }
 
-    // Não sei se esse é o jeito correto de passa o pageable no construtor
     // os temas sao contexto, q tem um conjunto de challenge q sao palavras
-    // No app a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
+    // Na API a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
     // OBS: não enganchar e ir fazendo o que da para fazer
     // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
+    // OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
+
     //https://www.youtube.com/watch?v=AKT9FYJBOEo
     //https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
     //https://www.youtube.com/watch?v=E5nStRSgMaw sobre geração dos ids e levantamento do springtest com banco de dados
