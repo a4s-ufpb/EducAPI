@@ -102,6 +102,17 @@ public class ContextServiceTest {
         return TOKEN_KEY;
     }
 
+    private Context contextIdGenerator(Context contextTemp){
+        if(contexts.isEmpty()){
+            contextTemp.setId(1L);
+        }
+        int intId = contexts.size()+1;
+        Long longId = new Long(intId);
+        contextTemp.setId(longId);
+
+        return contextTemp;
+    }
+
     @BeforeEach
     public void setUp() {
 
@@ -189,13 +200,13 @@ public class ContextServiceTest {
         // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         context = contextDTO.contextDTOToContext();
-        context.setId(1L);
+        //context.setId(1L);
         creator.setId(1L);
         context.setCreator(creator);
-        contexts.add(context);
+        contexts.add(contextIdGenerator(context));
         // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
 
-        Mockito.when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
         // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO DELETE()
         contextService.delete(tokenBearerFormat(loginResponse.getToken()), context.getId());
@@ -204,12 +215,17 @@ public class ContextServiceTest {
         // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO DELETE()
 
         //Em resumo, era para retornar nulo mas ta retornando o contextOptional do Mockito através do ID
-        assertEquals(null, contextRepository.findById(context.getId()));
 
-//        Mockito.verify(contextRepository.findById(context.getId()));
-//        assertThrows(ObjectNotFoundException.class, () -> {
-//            contextService.find(context.getId());
-//        });
+        Context contextResponse =  contextService.find(context.getId());
+
+        assertThrows(ObjectNotFoundException.class, () -> {
+            contextService.find(2L);
+        });
+
+        assertNotEquals(contextResponse, contexts.get(Math.toIntExact(context.getId())-1));
+        assertEquals(null, contexts.get(Math.toIntExact(context.getId())-1));
+
+
     }
 
     @Test
