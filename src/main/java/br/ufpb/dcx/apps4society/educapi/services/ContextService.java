@@ -7,9 +7,7 @@ import java.util.stream.Collectors;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 
 @Service
 public class ContextService {
@@ -90,6 +87,15 @@ public class ContextService {
         if (!context.getCreator().equals(user)) {
             throw new InvalidUserException();
         }
+
+        // Início de trecho a verificar necessidade
+        Optional<Context> contextOptional = contextRepository.findById(context.getId());
+
+        if (!contextOptional.isPresent()){
+            throw new ObjectNotFoundException();
+        }
+        // Fim de trecho a verificar necessidade
+
         contextRepository.deleteById(id);
         return new ContextDTO(context);
     }
