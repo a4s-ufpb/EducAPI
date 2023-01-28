@@ -207,7 +207,6 @@ public class ContextServiceTest {
         // * Teve que ser feito para contornar o problema da não associação do context com seu criador *
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
-        Mockito.when(contextRepository.findContextByNameIgnoreCase("Context")).thenReturn(contextOptional);
         Optional<Context> contextResponse =  contextRepository.findById(1L);
         assertEquals(contexts.get(0), contextResponse.get());
 
