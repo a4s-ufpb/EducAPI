@@ -124,7 +124,7 @@ public class ContextService {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
-        if(contextListByCreator.isEmpty()){
+        if(contextListByCreator.isEmpty()) {
             throw new ObjectNotFoundException();
         }
 

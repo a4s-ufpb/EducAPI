@@ -137,20 +137,21 @@ public class ContextServiceTest {
 
     }
 
-//    @Test
-//    @DisplayName("Teste de encontrar contextos inexistentes")
-//    public void findInexistentContextsByCreatorTest() throws InvalidUserException, NoContextsFound {
-//
-//        //Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenThrow(new NoContextsFound("Error occurred"));
-//        Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenReturn(contexts);
-//
-//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-//
-//        Exception exception = assertThrows(NoContextsFound.class,() -> {
-//            contextRepository.findContextsByCreator(creator);
-//        });
-//        assertEquals(Messages.NO_CONTEXTS_FOUND, exception.getMessage());
-//    }
+    @Test
+    @DisplayName("Teste de encontrar contextos inexistentes")
+    public void findInexistentContextsByCreatorTest() throws InvalidUserException {
+
+        //Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenThrow(new ObjectNotFoundException());
+        Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        //contexts = contextRepository.findContextsByCreator(creator);
+
+        // Não está identificando a lista contexts como uma lista vazia
+        Exception exception = assertThrows(ObjectNotFoundException.class,() -> {
+            contextRepository.findContextsByCreator(creator);
+        });
+    }
 
     @Test
     @DisplayName("Teste de inserir um contexto")
@@ -222,7 +223,7 @@ public class ContextServiceTest {
     }
     @Test
     @DisplayName("Teste de deletar um contexto")
-    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
+    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
@@ -271,7 +272,7 @@ public class ContextServiceTest {
         contexts.add(context);
         // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
 
-        Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+        pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
         // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
         Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
@@ -287,22 +288,24 @@ public class ContextServiceTest {
 
     }
 
-//    @Test
-//    @DisplayName("Teste de encontrar contextos inexistentes")
-//    public void findContextsThatNotExists() {
-//
-//        Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-//
-//        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
-//        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
-//                .thenReturn(Page.empty());
-//        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenThrow(new NoContextsFound("asd"));
-//        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(Page.empty());
-//
-//        Exception exception = assertThrows(NoContextsFound.class,() -> {
-//            contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable);
-//        });
-//    }
+    @Test
+    @DisplayName("Teste de encontrar contextos inexistentes")
+    public void findContextsThatNotExists() {
+
+        pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+
+        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
+        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
+                .thenReturn(Page.empty());
+        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenThrow(new NoContextsFound("asd"));
+        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(Page.empty());
+
+        Exception exception = assertThrows(NoContextsFound.class,() -> {
+            contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable);
+        });
+
+        // OBS: para abranger o maximo tem que pegar os optionais quando é presente e quando não é
+    }
 
     public void template(){
         // *** Arrange(new, sets, mockito.when...thenReturn())
@@ -321,6 +324,7 @@ public class ContextServiceTest {
     // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
     // OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
     // OBS3: Talvez uma boa prática seria conseguir alguma forma de mockar o repository.save(x)
+    // OBS4: Ajuste do setUp() para ver se é possível atualizar os mockito constantemente para evitar ter que colocá-los no meio dos testes
 
     //https://www.youtube.com/watch?v=AKT9FYJBOEo
     //https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
