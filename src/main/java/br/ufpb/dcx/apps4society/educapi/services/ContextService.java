@@ -75,6 +75,14 @@ public class ContextService {
             throw new InvalidUserException();
         }
 
+        // Início de trecho a verificar necessidade
+        Optional<Context> contextOptional = contextRepository.findById(newObj.getId());
+
+        if (!contextOptional.isPresent()){
+            throw new ObjectNotFoundException();
+        }
+        // Fim de trecho a verificar necessidade
+
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
         contextRepository.save(newObj);
         return new ContextDTO(newObj);
@@ -116,6 +124,9 @@ public class ContextService {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
+        if(contextListByCreator.isEmpty()){
+            throw new ObjectNotFoundException();
+        }
 
         return contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
     }

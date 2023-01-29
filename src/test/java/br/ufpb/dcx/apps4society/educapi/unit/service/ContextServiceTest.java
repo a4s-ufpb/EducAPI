@@ -5,7 +5,6 @@ import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
-import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
@@ -18,9 +17,6 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.crypto.MacProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,24 +24,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.*;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
 import java.util.Optional;
-
-import javax.management.Query;
-import javax.persistence.EntityManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doThrow;
@@ -76,24 +65,27 @@ public class ContextServiceTest {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
-    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
-    private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withName("Context2").buildContextRegisterDTO();
     private final User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
+
     private final User creator2 = UserBuilder.anUser().withName("User2").withEmail("user2@educapi.com").buildUserRegisterDTO().userRegisterDtoToUser();
+
+    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
+    private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withId(1L).withName("Context2").buildContextRegisterDTO();
     private Context context = ContextBuilder.anContext().buildContext();
-            //.buildContextRegisterDTO().contextRegisterDTOToContext();
+    private Context context2 = ContextBuilder.anContext().buildContext();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
 
-    private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(creator).buildOptionalContext();
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
     private final Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
 
+    private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(userOptional.get()).buildOptionalContext();
+
     // **Captar como variável de ambiente**
-    String field = "name";
-    public Pageable pageable = PageRequest.of(0, 20, Sort.by(field).ascending());
-    public List<Context> contexts = new ArrayList<>();
+    private List<Context> contexts = new ArrayList<>();
+    public List<Context> contextListByCreator = new ArrayList<>();
     public Page<Context> pageResponse;
+    public Pageable pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
     @Autowired
     LoginResponse loginResponse;
@@ -120,23 +112,32 @@ public class ContextServiceTest {
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
 
     }
-//    @Test
-//    @DisplayName("Teste de encontrar um contexto pelo autor")
-//    public void findContextsByCreatorTest() throws InvalidContextException, ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
-//
-//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-//        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-//        //Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
-//
-//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-//        String bearedToken = tokenBearerFormat(loginResponse.getToken());
-//        contextService.insert(bearedToken, contextRegisterDTO);
-//        contextService.insert(bearedToken, contextRegisterDTO);
-//
-//        assertEquals(contextRepository.getOne(1L).getCreator(), creator);
-//        assertEquals(contextRepository.getOne(2L).getCreator(), creator);
-//
-//    }
+    @Test
+    @DisplayName("Teste de encontrar um contexto pelo autor")
+    public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
+
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        Context contextResponse = contextDTO.contextDTOToContext();
+        contextResponse.setCreator(creator);
+        ContextDTO contextDTO2 = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
+        Context contextResponse2 = contextDTO2.contextDTOToContext();
+        contextResponse2.setCreator(creator);
+
+        contexts.add(contextResponse);
+        contexts.add(contextResponse2);
+
+        Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
+        contextListByCreator = contextRepository.findContextsByCreator(creator);
+
+        assertEquals(contextResponse.getCreator(), contextListByCreator.get(0).getCreator());
+        assertEquals(contextResponse2.getCreator(), contextListByCreator.get(1).getCreator());
+
+    }
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
@@ -173,22 +174,34 @@ public class ContextServiceTest {
         assertEquals(contextRepository.findContextByNameIgnoreCase("Context"), contextOptional);
 
     }
-//    @Test
-//    @DisplayName("Teste de atualizar um contexto")
-//    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
-//
-//        //Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(contextOptional);
-//        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-//        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-//
-//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-//        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-//        //assertEquals(contextRegisterDTO, contextOptional.get().getId());
-//        assertEquals(contextRepository.findById(1L), contextOptional);
-//        contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO, 1L);
-//
-//    }
-//
+
+    @Test
+    @DisplayName("Teste de atualizar um contexto")
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
+
+        //Mockito.when(contextRepository.save(context)).thenReturn(contextOptional);
+        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        contextDTO.setId(1L);
+
+        Context contextResponse = contextDTO.contextDTOToContext();
+        contextResponse = contextIdGenerator(contextResponse);
+
+        //assertEquals(contextResponse, contextOptional.get());
+        //assertEquals(contextResponse, contextRepository.findById(1L).get());
+
+        // No insert() é criado um novo usuário(é o conteúdo de um userOptional)
+        // No find() é retornado um context com outro usuário(é o conteúdo de um contextOptional)
+        ContextDTO updatedContextDTO = contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);
+
+        assertNotEquals(contextDTO, updatedContextDTO);
+
+    }
+
     @Test
     @DisplayName("Teste de deletar um contexto")
     public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
