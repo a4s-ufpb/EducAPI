@@ -21,9 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,7 +69,7 @@ public class ContextServiceTest {
 
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().withId(1L).buildContextRegisterDTO();
     private final ContextRegisterDTO contextRegisterDTO2 = ContextBuilder.anContext().withId(1L).withName("Context2").buildContextRegisterDTO();
-    private Context context = ContextBuilder.anContext().buildContext();
+    private Context context = ContextBuilder.anContext().withCreator(creator).buildContext();
     private Context context2 = ContextBuilder.anContext().buildContext();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
@@ -109,15 +107,15 @@ public class ContextServiceTest {
     @BeforeEach
     public void setUp() {
 
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        //Métodos de origem devem estar com optional.isPresent() implementados, quando buscar pelo 'Long', ele retorna optional ou empty.
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
 
     }
     @Test
-    @DisplayName("Teste de encontrar um contexto pelo autor")
+    @DisplayName("Teste de encontrar contextos pelo autor")
     public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
-
-        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
@@ -138,6 +136,22 @@ public class ContextServiceTest {
         assertEquals(contextResponse2.getCreator(), contextListByCreator.get(1).getCreator());
 
     }
+
+//    @Test
+//    @DisplayName("Teste de encontrar contextos inexistentes")
+//    public void findInexistentContextsByCreatorTest() throws InvalidUserException, NoContextsFound {
+//
+//        //Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenThrow(new NoContextsFound("Error occurred"));
+//        Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenReturn(contexts);
+//
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+//
+//        Exception exception = assertThrows(NoContextsFound.class,() -> {
+//            contextRepository.findContextsByCreator(creator);
+//        });
+//        assertEquals(Messages.NO_CONTEXTS_FOUND, exception.getMessage());
+//    }
+
     @Test
     @DisplayName("Teste de inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
@@ -161,9 +175,6 @@ public class ContextServiceTest {
     public void insertAContextAlreadyExistTest() throws InvalidUserException {
 
         Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(contextOptional);
-        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword()))
-                .thenReturn(userOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
@@ -179,9 +190,6 @@ public class ContextServiceTest {
     @DisplayName("Teste de atualizar um contexto")
     public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
-        //Mockito.when(contextRepository.save(context)).thenReturn(contextOptional);
-        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
@@ -191,24 +199,30 @@ public class ContextServiceTest {
         Context contextResponse = contextDTO.contextDTOToContext();
         contextResponse = contextIdGenerator(contextResponse);
 
-        //assertEquals(contextResponse, contextOptional.get());
-        //assertEquals(contextResponse, contextRepository.findById(1L).get());
-
-        // No insert() é criado um novo usuário(é o conteúdo de um userOptional)
-        // No find() é retornado um context com outro usuário(é o conteúdo de um contextOptional)
         ContextDTO updatedContextDTO = contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);
 
+        assertEquals(contextResponse, contextOptional.get());
+        assertEquals(contextResponse, contextRepository.findById(1L).get());
         assertNotEquals(contextDTO, updatedContextDTO);
 
     }
 
     @Test
+    @DisplayName("Teste de atualizar um contexto inexistente")
+    public void updateAInexistentContextTest() throws InvalidUserException {
+
+        Mockito.when(contextRepository.findById(ArgumentMatchers.any())).thenReturn(Optional.empty());
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        Exception exception = assertThrows(ObjectNotFoundException.class,() -> {
+            contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);;
+        });
+
+    }
+    @Test
     @DisplayName("Teste de deletar um contexto")
     public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException, UserAlreadyExistsException {
-
-        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        //Métodos de origem devem estar com optional.isPresent() implementados, quando buscar pelo 'Long', ele retorna optional ou empty.
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
@@ -231,11 +245,22 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Teste de encontrar um contexto por parâmetros")
-    public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
+    @DisplayName("Teste de atualizar um contexto inexistente")
+    public void deleteAInexistentContextTest() throws InvalidUserException {
 
-        Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
+        Mockito.when(contextRepository.findById(ArgumentMatchers.any())).thenReturn(Optional.empty());
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        Exception exception = assertThrows(ObjectNotFoundException.class,() -> {
+            contextService.delete(tokenBearerFormat(loginResponse.getToken()), 1L);;
+        });
+
+    }
+
+    @Test
+    @DisplayName("Teste de encontrar contextos por parâmetros")
+    public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
 
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
@@ -262,6 +287,23 @@ public class ContextServiceTest {
 
     }
 
+//    @Test
+//    @DisplayName("Teste de encontrar contextos inexistentes")
+//    public void findContextsThatNotExists() {
+//
+//        Page<Context> pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+//
+//        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
+//        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
+//                .thenReturn(Page.empty());
+//        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenThrow(new NoContextsFound("asd"));
+//        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(Page.empty());
+//
+//        Exception exception = assertThrows(NoContextsFound.class,() -> {
+//            contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable);
+//        });
+//    }
+
     public void template(){
         // *** Arrange(new, sets, mockito.when...thenReturn())
         // Then(buscar, salvar, inserir, deletar)
@@ -278,9 +320,10 @@ public class ContextServiceTest {
     // OBS: não enganchar e ir fazendo o que da para fazer
     // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
     // OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
+    // OBS3: Talvez uma boa prática seria conseguir alguma forma de mockar o repository.save(x)
 
     //https://www.youtube.com/watch?v=AKT9FYJBOEo
     //https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
     //https://www.youtube.com/watch?v=E5nStRSgMaw sobre geração dos ids e levantamento do springtest com banco de dados
-    //https://www.youtube.com/watch?v=R3ItceaMwnw testar controller
+    //https://www.youtube.com/watch?v=R3ItceaMwnw testar controller(teste de integração)
 }
