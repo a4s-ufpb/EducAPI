@@ -76,7 +76,7 @@ public class ContextService {
         }
 
         // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findById(newObj.getId());
+        Optional<Context> contextOptional = contextRepository.findById(id);
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
@@ -95,7 +95,6 @@ public class ContextService {
         if (!context.getCreator().equals(user)) {
             throw new InvalidUserException();
         }
-
         // Início de trecho a verificar necessidade
         Optional<Context> contextOptional = contextRepository.findById(context.getId());
 
@@ -138,7 +137,6 @@ public class ContextService {
         newObj.setVideoUrl(obj.getVideoUrl());
     }
 
-    //private
     public User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
         Optional<String> userEmail = jwtService.recoverUser(token);
         if (userEmail.isEmpty()) {
