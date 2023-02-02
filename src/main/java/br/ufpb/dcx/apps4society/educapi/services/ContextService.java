@@ -70,11 +70,6 @@ public class ContextService {
     public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        Context newObj = find(id);
-        if (!newObj.getCreator().equals(user)) {
-            throw new InvalidUserException();
-        }
-
         // Início de trecho a verificar necessidade
         Optional<Context> contextOptional = contextRepository.findById(id);
 
@@ -82,6 +77,12 @@ public class ContextService {
             throw new ObjectNotFoundException();
         }
         // Fim de trecho a verificar necessidade
+
+        Context newObj = find(id);
+        if (!newObj.getCreator().equals(user)) {
+            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
+                    + newObj.getName() + ".");
+        }
 
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
         contextRepository.save(newObj);
@@ -91,17 +92,19 @@ public class ContextService {
     public ContextDTO delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        Context context = find(id);
-        if (!context.getCreator().equals(user)) {
-            throw new InvalidUserException();
-        }
         // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findById(context.getId());
+        Optional<Context> contextOptional = contextRepository.findById(id);
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
         }
         // Fim de trecho a verificar necessidade
+
+        Context context = find(id);
+        if (!context.getCreator().equals(user)) {
+            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
+                    + context.getName() + ".");
+        }
 
         contextRepository.deleteById(id);
         return new ContextDTO(context);
@@ -137,7 +140,7 @@ public class ContextService {
         newObj.setVideoUrl(obj.getVideoUrl());
     }
 
-    public User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
+    private User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
         Optional<String> userEmail = jwtService.recoverUser(token);
         if (userEmail.isEmpty()) {
             throw new InvalidUserException();

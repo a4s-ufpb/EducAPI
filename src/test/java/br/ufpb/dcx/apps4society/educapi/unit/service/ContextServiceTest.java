@@ -17,6 +17,7 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,7 @@ import java.util.Optional;
 
 import static java.beans.Beans.isInstanceOf;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
+import static org.assertj.core.error.ShouldBeInstance.shouldBeInstance;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -119,6 +121,7 @@ public class ContextServiceTest {
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
 
     }
+
     @Test
     @DisplayName("Teste de encontrar contextos pelo autor")
     public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
@@ -219,7 +222,7 @@ public class ContextServiceTest {
 
     @Test
     @DisplayName("Teste de atualizar um contexto inválido")
-    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException {
+    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException, ContextAlreadyExistsException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
@@ -228,21 +231,19 @@ public class ContextServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         InvalidUserException throwable = catchThrowableOfType(() ->
                 contextService.update(tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO, 1L), InvalidUserException.class);
-
-        // POR ALGUM MOTIVO O OBJECTNOTFOUNDEXCPETION NÃO TA CONTANDO COMO ABRANGIDO...
         ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
-                contextService.update(tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO2, 2L), ObjectNotFoundException.class);
+                contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 2L), ObjectNotFoundException.class);
 
-        //String message = throwable.getMessage();
-        //assertEquals(message, "Object not found! Id: 1, Type: br.ufpb.dcx.apps4society.educapi.domain.Context");
-        //assertEquals(contextResponse.get().getCreator(), contextOptional);
+        String messageResponse = throwable.getMessage();
+        assertEquals(messageResponse, "User: " + userOptional2.get().getName() + " is not the owner of the context: "
+                + contextRegisterDTO.getName() + ".");
 
-        //String message2 = throwable2.getMessage();
-        //assertEquals(message, "Object not found! Id: 1, Type: br.ufpb.dcx.apps4society.educapi.domain.Context");
-        //assertEquals(contextResponse.get().getCreator(), Optional.empty());
+        String messageResponse2 = throwable2.getMessage();
+        assertNull(messageResponse2);
 
     }
     @Test
@@ -271,15 +272,29 @@ public class ContextServiceTest {
 
     @Test
     @DisplayName("Teste de atualizar um contexto inválido")
-    public void deleteAInvalidContextTest() throws InvalidUserException {
+    public void deleteAInvalidContextTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
 
-        Mockito.when(contextRepository.findById(1L)).thenReturn(Optional.empty());
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        Mockito.lenient().when(contextRepository.findById(2L)).thenReturn(Optional.empty());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
-        Exception exception = assertThrows(ObjectNotFoundException.class,() -> {
-            contextService.delete(tokenBearerFormat(loginResponse.getToken()), 1L);
-        });
+        InvalidUserException throwable = catchThrowableOfType(() ->
+                contextService.delete(tokenBearerFormat(loginResponse2.getToken()), 1L), InvalidUserException.class);
+
+        ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
+                contextService.delete(tokenBearerFormat(loginResponse.getToken()), 2L), ObjectNotFoundException.class);
+
+        String messageResponse = throwable.getMessage();
+        String messageResponse2 = throwable2.getMessage();
+        assertEquals(messageResponse, "User: " + userOptional2.get().getName() + " is not the owner of the context: "
+                + contextOptional.get().getName() + ".");
+
+        assertNull(messageResponse2);
 
     }
     
