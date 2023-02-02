@@ -81,8 +81,8 @@ public class ContextServiceTest {
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
 
-    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private final Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
+    private Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
+    private Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
 
     private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(userOptional.get()).buildOptionalContext();
 
@@ -123,6 +123,19 @@ public class ContextServiceTest {
     }
 
     @Test
+    @DisplayName("Teste de encontrar contextos")
+    public void findTest() throws ObjectNotFoundException {
+
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(Optional.empty());
+
+        ObjectNotFoundException throwable = catchThrowableOfType(() ->
+                contextService.find(1L), ObjectNotFoundException.class);
+
+        String messageResponse = throwable.getMessage();
+        assertEquals(messageResponse, "Object not found! Id: " + 1L + ", Type: br.ufpb.dcx.apps4society.educapi.domain.Context");
+    }
+
+    @Test
     @DisplayName("Teste de encontrar contextos pelo autor")
     public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
@@ -152,8 +165,9 @@ public class ContextServiceTest {
 //
 //        //Mockito.when(contextRepository.findContextsByCreator(ArgumentMatchers.any())).thenThrow(new ObjectNotFoundException());
 //        Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
+//        Mockito.when(contextRepository.findContextsByCreator(creator2)).thenReturn(contexts);
 //
-//        //LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 //        //contexts = contextRepository.findContextsByCreator(creator);
 //
 //        List<Context> contextResponse = contexts;
@@ -163,6 +177,30 @@ public class ContextServiceTest {
 //            contextRepository.findContextsByCreator(creator);
 //        });
 //    }
+
+    @Test
+    @DisplayName("Teste de procurar contextos com criador inválido")
+    public void findContextsByInvalidCreatorTest() throws InvalidUserException {
+
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        Mockito.lenient().when(contextRepository.findById(2L)).thenReturn(Optional.empty());
+
+        UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO3);
+
+        userLoginDTO.setEmail("");
+
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
+        ObjectNotFoundException throwable = catchThrowableOfType(() ->
+                contextService.findContextsByCreator(tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
+
+//        String messageResponse = throwable.getMessage();
+//        assertEquals(messageResponse, "User: " + userOptional2.get().getName() + " is not the owner of the context: "
+//                + contextOptional.get().getName() + ".");
+    }
 
     @Test
     @DisplayName("Teste de inserir um contexto")
@@ -293,7 +331,6 @@ public class ContextServiceTest {
         String messageResponse2 = throwable2.getMessage();
         assertEquals(messageResponse, "User: " + userOptional2.get().getName() + " is not the owner of the context: "
                 + contextOptional.get().getName() + ".");
-
         assertNull(messageResponse2);
 
     }
