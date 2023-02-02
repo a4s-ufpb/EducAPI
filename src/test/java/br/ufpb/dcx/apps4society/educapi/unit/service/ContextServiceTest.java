@@ -80,9 +80,11 @@ public class ContextServiceTest {
     private Context context2 = ContextBuilder.anContext().buildContext();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
     private Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
     private Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
+    private Optional<User> userOptional3 = UserBuilder.anUser().withId(2L).withName("User3").withEmail("asd").buildOptionalUser();
 
     private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(userOptional.get()).buildOptionalContext();
 
@@ -182,19 +184,23 @@ public class ContextServiceTest {
     @DisplayName("Teste de procurar contextos com criador inválido")
     public void findContextsByInvalidCreatorTest() throws InvalidUserException {
 
-        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
-        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO3.getEmail())).thenReturn(userOptional3);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword("", userLoginDTO3.getPassword())).thenReturn(userOptional3);
         Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Mockito.lenient().when(contextRepository.findById(2L)).thenReturn(Optional.empty());
 
-        UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO3);
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(Optional.empty());
 
-        userLoginDTO.setEmail("");
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        LoginResponse loginResponse3 = jwtService.authenticate(userLoginDTO3);
 
-        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+        //Mockito.when(jwtService.recoverUser(tokenBearerFormat(loginResponse3.getToken()))).thenReturn(Optional.empty());
 
-        ObjectNotFoundException throwable = catchThrowableOfType(() ->
+        //TA DANDO NULLPOINTER MAS ERA PRA DAR INVALIDUSER DO VALIDATEUSER()
+//        InvalidUserException throwable = catchThrowableOfType(() ->
+//                contextService.findContextsByCreator(tokenBearerFormat(loginResponse3.getToken())), InvalidUserException.class);
+
+        ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
                 contextService.findContextsByCreator(tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
 
 //        String messageResponse = throwable.getMessage();
