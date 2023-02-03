@@ -9,11 +9,14 @@ import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
+
+import java.nio.channels.UnsupportedAddressTypeException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -31,6 +34,9 @@ public class JWTService {
     }
     
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
+
+
+
         Optional<User> userOptional = userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword());
         if (userOptional.isEmpty()){
             throw new InvalidUserException();
@@ -61,6 +67,17 @@ public class JWTService {
            throw new SecurityException("Token invalid or expired!");
         }
 
+        if(!emailValidator(subject)){
+            return Optional.empty();
+        }
+
         return Optional.of(subject);
     }
+
+    public boolean emailValidator(String email){
+        boolean valid = EmailValidator.getInstance().isValid(email);
+        return valid;
+    }
 }
+
+
