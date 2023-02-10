@@ -176,7 +176,7 @@
 
 				</executions>
 			</plugin>
-			<!--			https://www.youtube.com/watch?v=UZWOb9ce6go clean e test-->
+			<!--			https://www.youtube.com/watch?v=UZWOb9ce6go clean e test | vscode "mvn clean test"-->
 		</plugins>
 		<finalName>EducAPI</finalName>
 	</build>

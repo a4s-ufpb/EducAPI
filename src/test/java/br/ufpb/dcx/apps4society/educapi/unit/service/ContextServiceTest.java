@@ -83,17 +83,16 @@ public class ContextServiceTest {
 
     // **Captar como variável de ambiente**
     private List<Context> contexts = new ArrayList<>();
-    public List<ContextDTO> contextListByCreator = new ArrayList<>();
+    public List<Context> contextListByCreator = new ArrayList<>();
+    public List<ContextDTO> contextDTOListByCreator = new ArrayList<>();
     public Page<Context> pageResponse;
+    public Page<Context> pageResponse2;
+    public Page<Context> pageResponse3;
+    public Page<Context> pageResponse4;
     public Pageable pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
     @Autowired
     LoginResponse loginResponse;
-
-    private String tokenBearerFormat(String token){
-        TOKEN_KEY = "Bearer " + token;
-        return TOKEN_KEY;
-    }
 
     private Context contextIdGenerator(Context contextTemp){
         if(contexts.isEmpty()){
@@ -134,38 +133,29 @@ public class ContextServiceTest {
     @DisplayName("Encontrar contextos por criador")
     public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
-        // REDUNDANTE Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(Optional.empty());
-
-        // No passo a passo existe o context porém não sei como capturar ele para os testes
-        Mockito.when(contextRepository.save(context)).thenReturn(context);
+        Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contextListByCreator);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-
-        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        Context contextResponse = contextDTO.contextDTOToContext();
         creator.setId(1L);
+
+        ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        Context contextResponse = contextDTO.contextDTOToContext();
         contextResponse.setCreator(creator);
-        ContextDTO contextDTO2 = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
+        contextListByCreator.add(context);
+
+        ContextDTO contextDTO2 = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
         Context contextResponse2 = contextDTO2.contextDTOToContext();
         contextResponse2.setCreator(creator);
+        contextListByCreator.add(context2);
 
-        contexts.add(context);
-        contexts.add(context2);
+        contextDTOListByCreator = contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken()));
+        contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
 
-        Mockito.lenient().when(contextRepository.findContextsByCreator(creator)).thenReturn(contexts);
+        assertEquals(creator, contextListByCreator.get(0).getCreator());
+        assertEquals(context.getName(), contextDTOListByCreator.get(0).getName());
 
-        // User não está sendo o mesmo que o creator
-        contextListByCreator = contextService.findContextsByCreator(tokenBearerFormat(loginResponse.getToken()));
-
-        // contextListByCreator é uma lista de Context mas essa ultima linha converte para uma lista de ContextDTO
-        // pois em uma lista de exibição só é necessário exibir o básico de um contexto
-        contexts.stream().map(ContextDTO::new).collect(Collectors.toList());
-
-        //assertEquals(creator, contextListByCreator.get(0).getCreator());
-        assertEquals(context.getName(), contextListByCreator.get(0).getName());
-
-        //assertEquals(creator, contextListByCreator.get(1).getCreator());
-        assertEquals(context2.getName(), contextListByCreator.get(1).getName());
+        assertEquals(creator, contextListByCreator.get(1).getCreator());
+        assertEquals(context2.getName(), contextDTOListByCreator.get(1).getName());
 
     }
 
@@ -181,7 +171,7 @@ public class ContextServiceTest {
                 .thenReturn(Optional.empty());
 
         ObjectNotFoundException throwable = catchThrowableOfType(() ->
-                contextService.findContextsByCreator(tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
+                contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
 
     }
 
@@ -200,10 +190,13 @@ public class ContextServiceTest {
                 .thenReturn(Optional.empty());
 
         InvalidUserException throwable = catchThrowableOfType(() ->
-                contextService.findContextsByCreator(tokenBearerFormat(loginResponse3.getToken())), InvalidUserException.class);
+                contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse3.getToken())), InvalidUserException.class);
 
         ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
-                contextService.findContextsByCreator(tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
+                contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
+
+        SecurityException throwable3 = catchThrowableOfType(() ->
+                contextService.findContextsByCreator((loginResponse3.getToken())), SecurityException.class);
 
     }
 
@@ -215,7 +208,7 @@ public class ContextServiceTest {
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-        ContextDTO response = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        ContextDTO response = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         assertNotNull(loginResponse.getToken());
         assertEquals(response.getName(),contextRegisterDTO.getName());
@@ -234,7 +227,7 @@ public class ContextServiceTest {
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
         Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
-            contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+            contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         });
         assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
         assertEquals(contextRepository.findContextByNameIgnoreCase("Context"), contextOptional);
@@ -248,13 +241,13 @@ public class ContextServiceTest {
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         contextDTO.setId(1L);
 
         Context contextResponse = contextDTO.contextDTOToContext();
         contextResponse = contextIdGenerator(contextResponse);
 
-        ContextDTO updatedContextDTO = contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);
+        ContextDTO updatedContextDTO = contextService.update(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);
 
         assertEquals(contextResponse, contextOptional.get());
         assertEquals(contextResponse, contextRepository.findById(1L).get());
@@ -274,12 +267,12 @@ public class ContextServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
-        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         InvalidUserException throwable = catchThrowableOfType(() ->
-                contextService.update(tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO, 1L), InvalidUserException.class);
+                contextService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO, 1L), InvalidUserException.class);
         ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
-                contextService.update(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 2L), ObjectNotFoundException.class);
+                contextService.update(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 2L), ObjectNotFoundException.class);
 
         String messageResponse = throwable.getMessage();
         assertEquals(messageResponse, "User: " + userOptional2.get().getName() + " is not the owner of the context: "
@@ -295,7 +288,7 @@ public class ContextServiceTest {
     public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         context = contextDTO.contextDTOToContext();
         creator.setId(1L);
         context.setCreator(creator);
@@ -307,7 +300,7 @@ public class ContextServiceTest {
         Optional<Context> contextResponse =  contextRepository.findById(1L);
         assertEquals(contexts.get(0), contextResponse.get());
 
-        contextService.delete(tokenBearerFormat(loginResponse.getToken()), 1L);
+        contextService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L);
         Mockito.when(contextRepository.findById(1L)).thenReturn(Optional.empty());
         Optional<Context> contextResponse2 = contextRepository.findById(1L);
         assertEquals(Optional.empty(), contextResponse2);
@@ -325,13 +318,13 @@ public class ContextServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
-        contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         InvalidUserException throwable = catchThrowableOfType(() ->
-                contextService.delete(tokenBearerFormat(loginResponse2.getToken()), 1L), InvalidUserException.class);
+                contextService.delete(jwtService.tokenBearerFormat(loginResponse2.getToken()), 1L), InvalidUserException.class);
 
         ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
-                contextService.delete(tokenBearerFormat(loginResponse.getToken()), 2L), ObjectNotFoundException.class);
+                contextService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), 2L), ObjectNotFoundException.class);
 
         String messageResponse = throwable.getMessage();
         String messageResponse2 = throwable2.getMessage();
@@ -346,48 +339,36 @@ public class ContextServiceTest {
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
 
         loginResponse = jwtService.authenticate(userLoginDTO);
-        ContextDTO contextDTO = contextService.insert(tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
+        ContextDTO contextDTO2 = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
 
         // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
         context = contextDTO.contextDTOToContext();
         context.setCreator(creator);
         contexts.add(context);
+
+        context2 = contextDTO.contextDTOToContext();
+        context2.setCreator(creator2);
+        contexts.add(context2);
         // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
 
-        pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-
-        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
         Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
-                .thenReturn(pageResponse);
-        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenReturn(pageResponse);
-        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(pageResponse);
+                .thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
+        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
+        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
+
+        pageResponse = contextService.findContextsByParams("user@educapi.com", "User", pageable);
+        pageResponse2 = contextService.findContextsByParams("user@educapi.com", null, pageable);
+        pageResponse3 = contextService.findContextsByParams( null, "User", pageable);
+        pageResponse4 = contextService.findContextsByParams(null, null, pageable);
 
         assertEquals(pageResponse, contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(
                 context.getCreator().getEmail(), context.getCreator().getName(), pageResponse.getPageable()));
-        assertEquals(pageResponse, contextRepository.findAllByCreatorEmailEqualsIgnoreCase(context.getCreator().getEmail(), pageResponse.getPageable()));
-        assertEquals(pageResponse, contextRepository.findAllByNameStartsWithIgnoreCase(context.getCreator().getName(), pageResponse.getPageable()));
+        assertEquals(pageResponse2, contextRepository.findAllByCreatorEmailEqualsIgnoreCase(context.getCreator().getEmail(), pageResponse.getPageable()));
+        assertEquals(pageResponse3, contextRepository.findAllByNameStartsWithIgnoreCase(context.getCreator().getName(), pageResponse.getPageable()));
         assertNotNull(contextRepository.findAll());
 
     }
-
-//    @Test
-//    @DisplayName("Encontrar contextos inexistentes por parâmetros")
-//    public void findContextsByParamsThatNotExists() {
-//
-//        pageResponse = new PageImpl<>(contexts, pageable, pageable.getPageSize());
-//
-//        // OBS: O retorno Mockito deve estar após as mudanças acontecerem senão as pages ficam com UNKNOWN instances
-//        Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
-//                .thenReturn(Page.empty());
-//        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenThrow(new NoContextsFound("asd"));
-//        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(Page.empty());
-//
-//        Exception exception = assertThrows(NoContextsFound.class,() -> {
-//            contextRepository.findAllByCreatorEmailEqualsIgnoreCase(creator.getEmail(), pageable);
-//        });
-//
-//        // OBS: para abranger o maximo tem que pegar os optionais quando é presente e quando não é
-//    }
 
     public void template(){
         // *** Arrange(new, sets, mockito.when...thenReturn())

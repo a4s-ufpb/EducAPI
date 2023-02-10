@@ -35,8 +35,6 @@ public class JWTService {
     
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
 
-
-
         Optional<User> userOptional = userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword());
         if (userOptional.isEmpty()){
             throw new InvalidUserException();
@@ -63,15 +61,19 @@ public class JWTService {
 
         try {
             subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
+            if(!emailValidator(subject)){
+                return Optional.empty();
+            }
         }catch (SignatureException error){
            throw new SecurityException("Token invalid or expired!");
-        }
-
-        if(!emailValidator(subject)){
-            return Optional.empty();
-        }
+        }        
 
         return Optional.of(subject);
+    }    
+
+    public String tokenBearerFormat(String token){
+        String bearedToken = "Bearer " + token;
+        return bearedToken;
     }
 
     public boolean emailValidator(String email){

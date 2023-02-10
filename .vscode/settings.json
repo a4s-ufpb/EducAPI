@@ -1,4 +1,9 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.jdt.ls.java.home": "D:\\Robinson's\\_Desenvolvedor\\jdk-11.0.16.1"
+    "java.jdt.ls.java.home": "D:\\Robinson's\\_Desenvolvedor\\jdk-11.0.16.1",
+    "editor.tokenColorCustomizations": {
+        "comments": "",
+        "textMateRules": []
+    },
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
