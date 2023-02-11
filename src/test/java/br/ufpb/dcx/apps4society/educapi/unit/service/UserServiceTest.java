@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.P
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import org.springframework.data.domain.*;
 
 import java.util.ArrayList;
@@ -38,20 +39,12 @@ import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
-
-    // @Mock
-    // private UserRepository userRepository;
-
-    // @Mock
-    // private JWTService jwtService;
-
-    // @InjectMocks
-    // private UserService userService;
 
     @Mock
     UserRepository userRepository;
@@ -70,11 +63,14 @@ public class UserServiceTest {
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
-    private Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
-    private Optional<User> userOptional3 = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginDTO3.getEmail()).buildOptionalUser();    
+    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
+    private final Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
+    private final Optional<User> userOptional3 = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginDTO3.getEmail()).buildOptionalUser();    
 
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
+    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withId(2L).withName("User2").buildUserRegisterDTO();
+
+    private List<User> users = new ArrayList<>();
 
     @BeforeEach
     public void setUp(){
@@ -101,20 +97,21 @@ public class UserServiceTest {
     @Test
     public void findInvalidUserTest() throws InvalidUserException{
 
-    // Mockito.lenient().when(userRepository.findByEmail("")).thenReturn(Optional.empty());
     Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(userOptional3);
-
-    //Não gerou o token de usuário com email vazio
+    
     LoginResponse loginResponse = jwtService.authenticate(userLoginDTO3);
 
-        InvalidUserException throwable = catchThrowableOfType(() ->
-                userService.find(jwtService.tokenBearerFormat(TOKEN_KEY)), InvalidUserException.class);
+    InvalidUserException throwable = catchThrowableOfType(() ->
+            userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
+
+    assertNotNull(loginResponse.getToken());
+
     }
 
     @Test
     public void insertAUserTest() throws UserAlreadyExistsException {
 
-        Mockito.when(userRepository.findByEmail("user@educapi.com")).thenReturn(Optional.empty());
+        Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(Optional.empty());
 
         UserDTO response = userService.insert(this.userRegisterDTO);
 
@@ -134,20 +131,65 @@ public class UserServiceTest {
         assertEquals(Messages.USER_ALREADY_EXISTS, exception.getMessage());
     }
 
-    // public void updateUserTest(){
+    @Test
+    public void updateUserTest() throws InvalidUserException, UserAlreadyExistsException {
 
-    // }
+        Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(Optional.empty());
 
-    // public void deleteUserTest(){
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        UserDTO userDTO = userService.insert(this.userRegisterDTO);
+
+        Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(userOptional);
+
+        UserDTO userDTO2 = userService.update(jwtService.tokenBearerFormat(loginResponse.getToken()), userRegisterDTO2);
+
+        assertNotNull(userDTO2);
+        assertNotEquals(userDTO, userDTO2);
+
+    }
+
+    @Test
+    public void deleteUserTest() throws InvalidUserException, UserAlreadyExistsException{
         
-    // }
+        // Seria bom adaptar esses optionais de uma forma que tirasse esse Mockito do "meio" do teste
+        // O problema se dá pelo fato de não existir um objeto no banco de dados para realizar a remoção
+        Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(Optional.empty());
 
-    // public void findAllUsersTest(){
-        
-    // }
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        UserDTO userDTOResponse = userService.insert(this.userRegisterDTO);
 
-    // public void findPageOfUsersTest(){
+        Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(userOptional);
+
+        userService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()));
+
+        InvalidUserException throwable = catchThrowableOfType(() ->
+                userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
+
+        assertNotNull(userDTOResponse);
+
+    }
+
+    @Test
+    public void findAllUsersTest(){  
+
+        // User user = userRegisterDTO.userRegisterDtoToUser();
+        // User user2 = userRegisterDTO2.userRegisterDtoToUser();
+        // users.add(user);
+        // users.add(user2);
+
+        // Mockito.when(userRepository.findAll()).thenReturn(users);
+
+        // List<User> usersList = userRepository.findAll();
+
+        // assertEquals(users, usersList);    
+        // assertEquals(user, usersList.get(0));
+        // assertEquals(user2, usersList.get(1));    
+
+    }
+
+    @Test
+    public void findPageOfUsersTest(){
     
-    // }
+    }
         
 }
