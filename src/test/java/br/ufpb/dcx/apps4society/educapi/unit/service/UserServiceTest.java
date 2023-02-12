@@ -1,8 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.unit.service;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
@@ -12,11 +10,9 @@ import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
-import ch.qos.logback.core.Context;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +22,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import org.springframework.data.domain.*;
 
 import java.util.ArrayList;
@@ -59,18 +53,19 @@ public class UserServiceTest {
     @Value("${app.token.key}")
     private String TOKEN_KEY;
 
-    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
-    private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
-    private final UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();    
+    private final UserLoginDTO userLoginEmailEmptyDTO = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private final Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
-    private final Optional<User> userOptional3 = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginDTO3.getEmail()).buildOptionalUser();    
+    private final Optional<User> userEmailEmptyOptional = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginEmailEmptyDTO.getEmail()).buildOptionalUser();    
 
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
     private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withId(2L).withName("User2").buildUserRegisterDTO();
 
     private List<User> users = new ArrayList<>();
+
+    public PageRequest pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
+    
 
     @BeforeEach
     public void setUp(){
@@ -81,6 +76,7 @@ public class UserServiceTest {
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
         
     }
+
     @Test
     public void findUserTest() throws InvalidUserException, UserAlreadyExistsException{
 
@@ -97,9 +93,9 @@ public class UserServiceTest {
     @Test
     public void findInvalidUserTest() throws InvalidUserException{
 
-    Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(userOptional3);
+    Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(userEmailEmptyOptional);
     
-    LoginResponse loginResponse = jwtService.authenticate(userLoginDTO3);
+    LoginResponse loginResponse = jwtService.authenticate(userLoginEmailEmptyDTO);
 
     InvalidUserException throwable = catchThrowableOfType(() ->
             userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
@@ -172,24 +168,37 @@ public class UserServiceTest {
     @Test
     public void findAllUsersTest(){  
 
-        // User user = userRegisterDTO.userRegisterDtoToUser();
-        // User user2 = userRegisterDTO2.userRegisterDtoToUser();
-        // users.add(user);
-        // users.add(user2);
+        Mockito.when(userRepository.findAll()).thenReturn(users);
 
-        // Mockito.when(userRepository.findAll()).thenReturn(users);
+        User user = userRegisterDTO.userRegisterDtoToUser();
+        User user2 = userRegisterDTO2.userRegisterDtoToUser();
+        users.add(user);
+        users.add(user2);
 
-        // List<User> usersList = userRepository.findAll();
+        List<User> usersList = userService.findAll();
 
-        // assertEquals(users, usersList);    
-        // assertEquals(user, usersList.get(0));
-        // assertEquals(user2, usersList.get(1));    
+        assertEquals(users, usersList);    
+        assertEquals(user, usersList.get(0));
+        assertEquals(user2, usersList.get(1));    
 
     }
 
     @Test
     public void findPageOfUsersTest(){
-    
+
+        User user = userRegisterDTO.userRegisterDtoToUser();
+        User user2 = userRegisterDTO2.userRegisterDtoToUser();
+        users.add(user);
+        users.add(user2);
+
+        Mockito.lenient().when(userRepository.findAll(pageable)).thenReturn(new PageImpl<>(users, pageable, pageable.getPageSize()));
+
+        Page pageResponse = userService.findPage(pageable.getPageNumber(), pageable.getPageSize(), "name", "ASC");
+
+        assertEquals(pageResponse, userRepository.findAll(pageable));
+        assertEquals(user, pageResponse.getContent().get(0));
+        assertEquals(user2, pageResponse.getContent().get(1));
+
     }
         
 }
