@@ -38,6 +38,10 @@ public class ChallengeService {
     @Autowired
     private ContextRepository contextRepository;
 
+    public ChallengeService(JWTService jwtService2, ChallengeRepository challengeRepository2,
+            ContextRepository contextRepository2, UserRepository userRepository2) {
+    }
+
     public Challenge find(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         Optional<String> usuarioId = jwtService.recoverUser(token);
         if (usuarioId.isEmpty()) {
@@ -128,36 +132,5 @@ public class ChallengeService {
         newObj.setVideoUrl(obj.getVideoUrl());
         newObj.setImageUrl(obj.getImageUrl());
     }
-//    public ChallengeDTO insert(ChallengeRegisterDTO challengeDTO) throws ChallengeAlreadyExistsException{
-//        Optional <Challenge> challengeOptional = challengeRepository.findByWord(challengeDTO.getWord());
-//
-//        if(challengeOptional.isPresent()) {
-//            throw new ChallengeAlreadyExistsException("There is already a challenge with this word registered in the system!");
-//        }
-//        //Caso não há
-//        Challenge challenge = challengeDTO.toChallenge();
-//
-//        challengeRepository.save(challenge);
-//        return new ChallengeDTO(challenge);
-//    }
-//
-//    public ChallengeDTO delete(String word) throws InvalidChallengeException{
-//
-//        Challenge challenge = findByWord(word);
-//        challengeRepository.deleteById(challenge.getId());
-//        return new ChallengeDTO(challenge);
-//    }
-//    @GetMapping
-//    public Page<Challenge> paginaChallenge(@RequestParam String word,
-//                                           @RequestParam int pagina,
-//                                           @RequestParam int quantidade){
-//
-//        Pageable pageRequest = PageRequest.of(pagina, quantidade);
-//        //Page<Challenge> challenges = challengeRepository.findAll(pageRequest);
-//        return challengeRepository.findAll(pageRequest);
-//
-//        //https://youtu.be/FgNa0ZtbXSI?t=216
-//
-//    }
 
 }
