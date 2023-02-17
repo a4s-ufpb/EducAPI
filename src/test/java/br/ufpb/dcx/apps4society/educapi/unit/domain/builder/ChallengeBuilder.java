@@ -10,11 +10,11 @@ import java.util.Optional;
 public class ChallengeBuilder {
 
     private Long id = null;
-    private String word = "palavra_test_ChallengeBuilder";
+    private String word = "word";
     private User creator;
-    private String soundUrl = "soundUrl_StringPadrao_ChallengeBuilder";
-    private String videoUrl = "videoUrl_StringPadrao_ChallengeBuilder";
-    private String imageUrl = "imageUrl_StringPadrao_ChallengeBuilder";
+    private String soundUrl = "soundUrl";
+    private String videoUrl = "videoUrl";
+    private String imageUrl = "imageUrl";
 
     public static ChallengeBuilder anChallenge(){
         return new ChallengeBuilder();

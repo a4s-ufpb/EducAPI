@@ -38,8 +38,12 @@ public class ChallengeService {
     @Autowired
     private ContextRepository contextRepository;
 
-    public ChallengeService(JWTService jwtService2, ChallengeRepository challengeRepository2,
-            ContextRepository contextRepository2, UserRepository userRepository2) {
+    public ChallengeService(JWTService jwtService, ChallengeRepository challengeRepository,
+            ContextRepository contextRepository, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.challengeRepository = challengeRepository;
+        this.contextRepository = contextRepository;
+        this.userRepository = userRepository;
     }
 
     public Challenge find(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
@@ -57,19 +61,29 @@ public class ChallengeService {
     }
 
     @Transactional
-    public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID) throws ObjectNotFoundException, InvalidUserException {
+    public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID) throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException {
         User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(contextID);
         if (contextOptional.isEmpty()) {
             throw new ObjectNotFoundException();
-        }
+        }        
+
         Challenge challenge = obj.toChallenge();
         Context context = contextOptional.get();
+
+        Optional<Challenge> challengeOptional = challengeRepository.findById(challenge.getId());
+        if (!challengeOptional.isEmpty()) {
+            throw new ChallengeAlreadyExistsException();
+        }
+
         challenge.setCreator(user);
         challenge.getContexts().add(context);
 
-        return challengeRepository.save(challenge);
+        //BACKUP: return challengeRepository.save(challenge);
+        challengeRepository.save(challenge);
+        return challenge;
+        //
     }
 
     public List<Challenge> findChallengesByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
