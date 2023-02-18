@@ -28,9 +28,10 @@ public class Challenge implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="challenge_creator")
 	private User creator;
+
+	private String imageUrl;
 	private String soundUrl;
 	private String videoUrl;
-	private String imageUrl;
 
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@ManyToMany
@@ -51,17 +52,17 @@ public class Challenge implements Serializable {
 	 * @param id The id of this Challenge.
 	 * @param word The word.
 	 * @param creator The creator of this Challenge.
-	 * @param soundUrl The soundUrl representing this Challenge.
-	 * @param videoUrl The URL of a video representing this Challenge.
 	 * @param imageUrl The imageUrl representing this Challenge.
+	 * @param soundUrl The soundUrl representing this Challenge.
+	 * @param videoUrl The URL of a video representing this Challenge.	 
 	 */
 	public Challenge(Long id, String word, User creator, String imageUrl, String soundUrl, String videoUrl, List<Context> contexts) {
 		this.id = id;
 		this.word = word;
 		this.creator = creator;
+		this.imageUrl = imageUrl;
 		this.soundUrl = soundUrl;
 		this.videoUrl = videoUrl;
-		this.imageUrl = imageUrl;
 		this.contexts = new HashSet<Context>(contexts);
 	}
 
@@ -71,24 +72,24 @@ public class Challenge implements Serializable {
 	 * @param id The id of this Challenge.
 	 * @param word The word.
 	 * @param creator The creator of this Challenge.
-	 * @param soundUrl The soundUrl representing this Challenge.
-	 * @param videoUrl The URL of a video representing this Challenge.
 	 * @param imageUrl The imageUrl representing this Challenge.
+	 * @param soundUrl The soundUrl representing this Challenge.
+	 * @param videoUrl The URL of a video representing this Challenge.	 
 	 */
 	public Challenge(Long id, String word, User creator, String imageUrl, String soundUrl, String videoUrl) {
 		this.id = id;
 		this.word = word;
 		this.creator = creator;
+		this.imageUrl = imageUrl;
 		this.soundUrl = soundUrl;
 		this.videoUrl = videoUrl;
-		this.imageUrl = imageUrl;
 	}
 
 	public Challenge(String word, String imageUrl, String soundUrl, String videoUrl) {
 		this.word = word;
+		this.imageUrl = imageUrl;
 		this.soundUrl = soundUrl;
 		this.videoUrl = videoUrl;
-		this.imageUrl = imageUrl;
 	}
 	
 	/**

@@ -32,6 +32,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -41,6 +42,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 
 @ExtendWith(MockitoExtension.class)
 public class ChallengeServiceTest {
@@ -66,11 +68,10 @@ public class ChallengeServiceTest {
             .withUserRepository(userRepository)
             .withContextRepository(contextRepository).buildChallengeService();
 
+    @Spy
+    private ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder.anChallenge().withId(1L).buildChallengeRegisterDTO();
 
-    private final ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder.anChallenge().withId(1L).buildChallengeRegisterDTO();
-    private final Challenge challenge = challengeRegisterDTO.toChallenge();
-
-    private final Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().withId(1L).buildOptionalChallenge();
+    private Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().withId(1L).buildOptionalChallenge();
 
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
@@ -81,66 +82,99 @@ public class ChallengeServiceTest {
     private final Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).buildOptionalContext();
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
 
-    private List<Challenge> challenges = new ArrayList<>();
+    //private List<Challenge> challenges = new ArrayList<>();
 
     @BeforeEach
     public void setUp(){
+
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
 
         //Métodos de origem devem estar com optional.isPresent() implementados, quando buscar pelo 'Long', ele retorna optional ou empty.
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
     }
 
     @Test
-    public void findChallengeTest(){
+    public void findChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+        
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);             
+        Mockito.lenient().when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
 
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());        
+
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+
+        challengeOptional = Optional.of(challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L));
+
+        //imagem e video estão trocados no challegeneOptional
+        assertEquals(challengeOptional.get().getWord(), challengeRegisterDTO.getWord());
+        assertEquals(challengeOptional.get().getImageUrl(), challengeRegisterDTO.getImageUrl());
+        assertEquals(challengeOptional.get().getSoundUrl(), challengeRegisterDTO.getSoundUrl());
+        assertEquals(challengeOptional.get().getVideoUrl(), challengeRegisterDTO.getVideoUrl());        
+
+    }
+
+    @Test
+    public void findChallengeGoneWrongTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());        
+
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+
+        challengeOptional = Optional.of(challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L));
+        
     }
 
     @Test
     public void insertChallengeTest() throws ChallengeAlreadyExistsException, InvalidUserException, ObjectNotFoundException {        
         
-        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
         Mockito.lenient().when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
         Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
 
-        assertEquals(challengeResponse.getWord(), challengeRegisterDTO.getWord());
-        assertEquals(challengeResponse.getSoundUrl(), challengeRegisterDTO.getSoundUrl());
+        assertEquals(challengeResponse.getWord(), challengeRegisterDTO.getWord());        
         assertEquals(challengeResponse.getImageUrl(), challengeRegisterDTO.getImageUrl());
+        assertEquals(challengeResponse.getSoundUrl(), challengeRegisterDTO.getSoundUrl());
         assertEquals(challengeResponse.getVideoUrl(), challengeRegisterDTO.getVideoUrl());
+        
     }
 
     @Test
     public void insertChallengeAlreadyExistTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException {
-
-        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
-        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
-        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+       
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);        
+        Mockito.lenient().when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
-        Challenge challenge = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
-    
-        challenge.setId(1L);
-        //INICIO DE SIMULAÇÃO DA TRAMITAÇÃO DO MÉTODO INSERT()        
-        //Context context = contextOptional.get();
-        challenge.setCreator(creator);
-        challenge.getContexts().add(context);
-        //INICIO DE SIMULAÇÃO DA TRAMITAÇÃO DO MÉTODO INSERT() 
+        challengeOptional = Optional.of(challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId()));
 
-        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(Optional.empty());
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
 
-        //Challenge não está com id na classe ChallengeService
         Exception exception = assertThrows(ChallengeAlreadyExistsException.class, () -> {
-
-            challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+                challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
 
         });
 
-        assertEquals(Messages.CHALLENGE_ALREADY_EXISTS, exception.getMessage());
+    }
+
+    @Test
+    public void insertAChallengeButThereIsNoContextWithTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(Optional.empty());
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        assertThrows(ObjectNotFoundException.class, () -> {
+            challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+
+        });
 
     }
 

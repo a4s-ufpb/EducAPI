@@ -370,27 +370,35 @@ public class ContextServiceTest {
 
     }
 
-    public void template(){
-        // *** Arrange(new, sets, mockito.when...thenReturn())
-        // Then(buscar, salvar, inserir, deletar)
-        // Assertions
+    /*
+    public void AAAPatern(){
+        Arrange(new, sets, mockito.when...thenReturn())
+        Act(create, read, update, delete, ...)
+        Assertions
 
-        //ADICIONAL: .lenient() faz parar de reclamar de 'unecessary stubbins'
-        // .thenReturn() é um como se fosse um retorno fake
-        // Mock Instancia com valor nulo
-        // InjectMock Classe a qual as injeções dos mocks serão aplicadas***
+        ADICIONAL: .lenient() faz parar de reclamar de 'unecessary stubbins'
+        .thenReturn() é um como se fosse um retorno fake
+        Mock Instancia com valor nulo
+        InjectMock Classe a qual as injeções dos mocks serão aplicadas***
     }
 
-    // os temas sao contexto, q tem um conjunto de challenge q sao palavras
-    // Na API a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
-    // OBS: não enganchar e ir fazendo o que da para fazer
-    // OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
-    // OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
-    // OBS3: Talvez uma boa prática seria conseguir alguma forma de mockar o repository.save(x)
-    // OBS4: Ajuste do setUp() para ver se é possível atualizar os mockito constantemente para evitar ter que colocá-los no meio dos testes
+    os temas sao contexto, q tem um conjunto de challenge q sao palavras
+    Na API a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
+    OBS: não enganchar e ir fazendo o que da para fazer
+    OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
+    OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
+    OBS3: Talvez uma boa prática seria conseguir alguma forma de mockar o repository.save(x)
+    OBS4: Ajuste do setUp() para ver se é possível atualizar os mockito constantemente para evitar ter que colocá-los no meio dos testes
 
-    //https://www.youtube.com/watch?v=AKT9FYJBOEo
-    //https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
-    //https://www.youtube.com/watch?v=E5nStRSgMaw sobre geração dos ids e levantamento do springtest com banco de dados
-    //https://www.youtube.com/watch?v=R3ItceaMwnw testar controller(teste de integração)
+    https://www.youtube.com/watch?v=AKT9FYJBOEo
+    https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
+    https://www.youtube.com/watch?v=E5nStRSgMaw sobre geração dos ids e levantamento do springtest com banco de dados
+    https://www.youtube.com/watch?v=R3ItceaMwnw testar controller(teste de integração)
+
+    _________________________________________________________________________________________________________________________________________
+    NOVIDADES, dá pra simular as criações de métodos service: save, new, etc, mas tem que criar um @Mock
+    @Spy suporta atributos ;) isso corrige o fato de um objeto @Mock ficar com valores todos nulos
+    PENDENCIA fazer um mock da lista de contextos para das suporte nativo do teste ao save, add, new de contextos
+
+    */
 }

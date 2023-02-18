@@ -71,12 +71,12 @@ public class ChallengeService {
 
         Challenge challenge = obj.toChallenge();
         Context context = contextOptional.get();
-
+        
         Optional<Challenge> challengeOptional = challengeRepository.findById(challenge.getId());
-        if (!challengeOptional.isEmpty()) {
+        if (challengeOptional.isPresent()) {
             throw new ChallengeAlreadyExistsException();
         }
-
+        
         challenge.setCreator(user);
         challenge.getContexts().add(context);
 
