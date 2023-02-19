@@ -25,6 +25,7 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
@@ -69,14 +70,37 @@ public class ChallengeServiceTest {
             .withContextRepository(contextRepository).buildChallengeService();
 
     @Spy
-    private ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder.anChallenge().withId(1L).buildChallengeRegisterDTO();
+    private ChallengeRegisterDTO challengeRegisterDTO = ChallengeBuilder
+            .anChallenge()
+            .withId(1L).buildChallengeRegisterDTO();
+
+    @Spy
+    private ChallengeRegisterDTO challengeRegisterDTO2 = ChallengeBuilder
+            .anChallenge()
+            .withId(1L)
+            .withWord("word2").buildChallengeRegisterDTO();
 
     private Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().withId(1L).buildOptionalChallenge();
 
     private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
+
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser()
+            .withName("user2")
+            .withEmail("educapi2@educapi.com")
+            .withPassword("testpassword2").buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTOEmptyEmail = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
+
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
+    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser()
+            .withName("user2")
+            .withEmail("educapi2@educapi.com")
+            .withPassword("testpassword2").buildUserRegisterDTO();
+    private final UserRegisterDTO userRegisterDTOEmptyEmail = UserBuilder.anUser().withEmail(userLoginDTOEmptyEmail.getEmail()).buildUserRegisterDTO();
+
     private final User creator = userRegisterDTO.userRegisterDtoToUser();
+    private final User creator2 = userRegisterDTO2.userRegisterDtoToUser();
+    private final User creatorWithEmptyEmail = userRegisterDTOEmptyEmail.userRegisterDtoToUser();
 
     private final Context context = ContextBuilder.anContext().withCreator(userOptional.get()).withId(1L).buildContext();
     private final Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).buildOptionalContext();
@@ -108,7 +132,6 @@ public class ChallengeServiceTest {
 
         challengeOptional = Optional.of(challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L));
 
-        //imagem e video estão trocados no challegeneOptional
         assertEquals(challengeOptional.get().getWord(), challengeRegisterDTO.getWord());
         assertEquals(challengeOptional.get().getImageUrl(), challengeRegisterDTO.getImageUrl());
         assertEquals(challengeOptional.get().getSoundUrl(), challengeRegisterDTO.getSoundUrl());
@@ -117,16 +140,36 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void findChallengeGoneWrongTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void findChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException{
+
+        Mockito.lenient().when(userRepository.findByEmail("")).thenReturn(Optional.of(creatorWithEmptyEmail));
+        Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(Optional.of(creatorWithEmptyEmail));
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTOEmptyEmail);
+
+        Exception exception = assertThrows(InvalidUserException.class, () -> {
+
+            challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L);
+
+        });
+
+    }
+
+    @Test
+    public void findNotFoundChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(Optional.empty());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
-        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());        
+        Exception exception = assertThrows(ObjectNotFoundException.class, () -> {
 
-        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+            challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L);
 
-        challengeOptional = Optional.of(challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L));
-        
+        });
+
+        assertEquals(exception.getMessage(), "Object not found! Id: " + 1L + ", Type: " + Challenge.class.getName());
+               
     }
 
     @Test
@@ -179,27 +222,63 @@ public class ChallengeServiceTest {
     }
 
     @Test
+    @Disabled
     public void findChallengesByCreatorTest(){
 
     }
 
     @Test
-    public void updateChallengeTest(){
+    public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+        
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        Mockito.when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+
+        Challenge challengeResponse = challengeService
+                .update(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, context.getId());
+
+        assertEquals("word2", challengeResponse.getWord());
 
     }
 
     @Test
+    public void updateChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        Mockito.when(userRepository.findByEmail("educapi2@educapi.com")).thenReturn(Optional.of(creator2));
+        Mockito.when(userRepository.findByEmailAndPassword("educapi2@educapi.com", "testpassword2"))
+                .thenReturn(Optional.of(creator2));
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        Mockito.when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+
+        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+
+        Exception exception = assertThrows(InvalidUserException.class, () -> {
+
+            challengeService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), challengeRegisterDTO, context.getId());
+
+        });
+
+    }
+
+    @Test
+    @Disabled
     public void deleteChallengeTest(){
         
     }
 
     @Test
-    public void findChallengesByParamsTest(){
-        
-    }
-
-    @Test
-    public void validateUserTest(){
+    @Disabled
+    public void findChallengesByParamsTest(){   
         
     }
 
