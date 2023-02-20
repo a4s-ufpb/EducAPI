@@ -12,9 +12,10 @@ public class ChallengeBuilder {
     private Long id = null;
     private String word = "word";
     private User creator;
+    
+    private String imageUrl = "imageUrl";
     private String soundUrl = "soundUrl";
     private String videoUrl = "videoUrl";
-    private String imageUrl = "imageUrl";
 
     public static ChallengeBuilder anChallenge(){
         return new ChallengeBuilder();
@@ -27,8 +28,12 @@ public class ChallengeBuilder {
         this.word = word;
         return this;
     }
-    public ChallengeBuilder withUser(User creator){
+    public ChallengeBuilder withCreator(User creator){
         this.creator = creator;
+        return this;
+    }
+    public ChallengeBuilder withImageUrl (String imageUrl) {
+        this.imageUrl = imageUrl;
         return this;
     }
     public ChallengeBuilder withSoundUrl (String soundUrl){
@@ -38,16 +43,12 @@ public class ChallengeBuilder {
     public ChallengeBuilder withVideoUrl (String videoUrl) {
         this.videoUrl = videoUrl;
         return this;
-    }
-    public ChallengeBuilder withImageUrl (String imageUrl) {
-        this.imageUrl = imageUrl;
-        return this;
-    }
+    }    
     // Optional é utilizado quendo não se sabe que um objeto vai estar no banco de dados(se vai ser utilizado ou nao)
     public Optional<Challenge> buildOptionalChallenge() {
-        return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.soundUrl, this.videoUrl, this.imageUrl));
+        return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.imageUrl, this.soundUrl, this.videoUrl ));
     }
     public ChallengeRegisterDTO buildChallengeRegisterDTO(){
-        return new ChallengeRegisterDTO(this.word, this.soundUrl, this.videoUrl, this.imageUrl);
+        return new ChallengeRegisterDTO(this.word, this.imageUrl, this.soundUrl, this.videoUrl);
     }
 }

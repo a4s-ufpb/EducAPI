@@ -3,7 +3,6 @@ package br.ufpb.dcx.apps4society.educapi.unit.service;
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
@@ -22,13 +21,12 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ChallengeBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
-import br.ufpb.dcx.apps4society.educapi.util.Messages;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,44 +76,52 @@ public class ChallengeServiceTest {
     private ChallengeRegisterDTO challengeRegisterDTO2 = ChallengeBuilder
             .anChallenge()
             .withId(1L)
-            .withWord("word2").buildChallengeRegisterDTO();
-
-    private Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge().withId(1L).buildOptionalChallenge();
-
-    private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
-
+            .withWord("word2").buildChallengeRegisterDTO();    
+    
+    private final UserLoginDTO userLoginDTOEmptyEmail = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser()
             .withName("user2")
-            .withEmail("educapi2@educapi.com")
+            .withEmail("user2@educapi.com")
             .withPassword("testpassword2").buildUserLoginDTO();
-    private final UserLoginDTO userLoginDTOEmptyEmail = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
 
-    private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
-    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser()
-            .withName("user2")
-            .withEmail("educapi2@educapi.com")
-            .withPassword("testpassword2").buildUserRegisterDTO();
     private final UserRegisterDTO userRegisterDTOEmptyEmail = UserBuilder.anUser().withEmail(userLoginDTOEmptyEmail.getEmail()).buildUserRegisterDTO();
 
-    private final User creator = userRegisterDTO.userRegisterDtoToUser();
-    private final User creator2 = userRegisterDTO2.userRegisterDtoToUser();
-    private final User creatorWithEmptyEmail = userRegisterDTOEmptyEmail.userRegisterDtoToUser();
+    private final Optional<User> userEmptyEmailOptional = UserBuilder.anUser().withId(3L). withName("userWithoutEmail").buildOptionalUser();
+    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
+    private final Optional<User> userOptional2 = UserBuilder.anUser()
+            .withId(2L)
+            .withName("user2")
+            .withEmail("user2@educapi.com")
+            .withPassword("testpassword2").buildOptionalUser();
+
+    private User creator = userOptional.get();    
+    private User creator2 = userOptional2.get();
+
+    private final User userWithEmptyEmail = userEmptyEmailOptional.get();    
+    
+    private Optional<Challenge> challengeOptional = ChallengeBuilder.anChallenge()
+            .withId(1L)
+            .withCreator(creator).buildOptionalChallenge();
+    private Challenge challenge = challengeOptional.get();
+
+    // private User validatedUser = new User();
+    // private Challenge obj = new Challenge();
 
     private final Context context = ContextBuilder.anContext().withCreator(userOptional.get()).withId(1L).buildContext();
-    private final Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).buildOptionalContext();
+    private final Optional<Context> contextOptional = Optional.of(context);
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
 
-    //private List<Challenge> challenges = new ArrayList<>();
+    private List<Challenge> challenges = new ArrayList<>();
 
     @BeforeEach
     public void setUp(){
 
+        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
+
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
-
-        //Métodos de origem devem estar com optional.isPresent() implementados, quando buscar pelo 'Long', ele retorna optional ou empty.
-        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
+        
     }
 
     @Test
@@ -142,8 +148,8 @@ public class ChallengeServiceTest {
     @Test
     public void findChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException{
 
-        Mockito.lenient().when(userRepository.findByEmail("")).thenReturn(Optional.of(creatorWithEmptyEmail));
-        Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(Optional.of(creatorWithEmptyEmail));
+        Mockito.lenient().when(userRepository.findByEmail("")).thenReturn(Optional.of(userWithEmptyEmail));
+        Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(Optional.of(userWithEmptyEmail));
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTOEmptyEmail);
 
@@ -222,8 +228,19 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    @Disabled
-    public void findChallengesByCreatorTest(){
+    public void findChallengesByCreatorTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        Mockito.when(challengeRepository.findChallengesByCreator(creator)).thenReturn(challenges);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
+
+        List<Challenge> challengesResponse = challengeService.findChallengesByCreator(jwtService.tokenBearerFormat(loginResponse.getToken()));
+
+        Assertions.assertFalse(challengesResponse.isEmpty());
 
     }
 
@@ -249,8 +266,8 @@ public class ChallengeServiceTest {
     @Test
     public void updateChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
 
-        Mockito.when(userRepository.findByEmail("educapi2@educapi.com")).thenReturn(Optional.of(creator2));
-        Mockito.when(userRepository.findByEmailAndPassword("educapi2@educapi.com", "testpassword2"))
+        Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(Optional.of(creator2));
+        Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2"))
                 .thenReturn(Optional.of(creator2));
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Mockito.when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
@@ -264,7 +281,7 @@ public class ChallengeServiceTest {
 
         Exception exception = assertThrows(InvalidUserException.class, () -> {
 
-            challengeService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), challengeRegisterDTO, context.getId());
+            challengeService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), challengeRegisterDTO, challenge.getId());
 
         });
 
@@ -272,7 +289,18 @@ public class ChallengeServiceTest {
 
     @Test
     @Disabled
-    public void deleteChallengeTest(){
+    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+                
+        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+        //Mockito.when(challengeRepository.deleteById(1L)).thenReturn(challengeOptional);
+        //Mockito.when(challengeService.validateUser(ArgumentMatchers.any())).thenReturn(validatedUser);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+
+        //challengeService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), challenge.getId());
         
     }
 

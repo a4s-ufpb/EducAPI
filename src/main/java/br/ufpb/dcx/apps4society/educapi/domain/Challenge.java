@@ -28,7 +28,7 @@ public class Challenge implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="challenge_creator")
 	private User creator;
-
+	
 	private String imageUrl;
 	private String soundUrl;
 	private String videoUrl;
@@ -65,8 +65,6 @@ public class Challenge implements Serializable {
 		this.videoUrl = videoUrl;
 		this.contexts = new HashSet<Context>(contexts);
 	}
-
-
 	/**
 	 * Constructor
 	 * @param id The id of this Challenge.
@@ -164,8 +162,22 @@ public class Challenge implements Serializable {
 	 * @param contexts
 	 *            the Contexts related to this Challenge.
 	 */
+
 	public void setContexts(Set<Context> contexts) {
 		this.contexts = contexts;
+	}
+	public String getImageUrl() {
+		return imageUrl;
+	}
+
+	/**
+	 * Changes the imageUrl of this Challenge.
+	 * 
+	 * @param imageUrl
+	 *            The new imageUrl for this Challenge.
+	 */
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
 	}
 
 	/**
@@ -210,20 +222,7 @@ public class Challenge implements Serializable {
 	 * Returns the URL of a image  for this Challenge.
 	 * 
 	 * @return the URL of a image for this Challenge.
-	 */
-	public String getImageUrl() {
-		return imageUrl;
-	}
-
-	/**
-	 * Changes the imageUrl of this Challenge.
-	 * 
-	 * @param imageUrl
-	 *            The new imageUrl for this Challenge.
-	 */
-	public void setImageUrl(String imageUrl) {
-		this.imageUrl = imageUrl;
-	}
+	 */	
 	
 	@Override
 	public int hashCode() {
@@ -252,8 +251,8 @@ public class Challenge implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "Challenge [id=" + id + ", word=" + word + ", creator=" + creator + ", soundUrl=" + soundUrl
-				+ ", videoUrl=" + videoUrl + ", imageUrl=" + imageUrl + ", contexts=" + contexts.toString() + "]";
+		return "Challenge [id=" + id + ", word=" + word + ", creator=" + creator + ", imageUrl=" + imageUrl 
+				+ ", soundUrl=" + soundUrl + ", videoUrl=" + videoUrl + ", contexts=" + contexts.toString() + "]";
 	}
 
 
