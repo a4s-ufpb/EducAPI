@@ -83,27 +83,11 @@ public class ContextServiceTest {
 
     // **Captar como variável de ambiente**
     private List<Context> contexts = new ArrayList<>();
-    public List<Context> contextListByCreator = new ArrayList<>();
-    public List<ContextDTO> contextDTOListByCreator = new ArrayList<>();
-    public Page<Context> pageResponse;
-    public Page<Context> pageResponse2;
-    public Page<Context> pageResponse3;
-    public Page<Context> pageResponse4;
-    public Pageable pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
+    private List<Context> contextListByCreator = new ArrayList<>();
+    private List<ContextDTO> contextDTOListByCreator = new ArrayList<>();
+    private Pageable pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
-    @Autowired
     LoginResponse loginResponse;
-
-    private Context contextIdGenerator(Context contextTemp){
-        if(contexts.isEmpty()){
-            contextTemp.setId(1L);
-        }
-        int intId = contexts.size()+1;
-        Long longId = new Long(intId);
-        contextTemp.setId(longId);
-
-        return contextTemp;
-    }
 
     @BeforeEach
     public void setUp() {
@@ -245,7 +229,7 @@ public class ContextServiceTest {
         contextDTO.setId(1L);
 
         Context contextResponse = contextDTO.contextDTOToContext();
-        contextResponse = contextIdGenerator(contextResponse);
+        contextResponse.setId(1L);
 
         ContextDTO updatedContextDTO = contextService.update(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 1L);
 
@@ -292,7 +276,7 @@ public class ContextServiceTest {
         context = contextDTO.contextDTOToContext();
         creator.setId(1L);
         context.setCreator(creator);
-        context = contextIdGenerator(context);
+        context.setId(1L);
         contexts.add(context);
         // * Teve que ser feito para contornar o problema da não associação do context com seu criador *
 
@@ -337,36 +321,30 @@ public class ContextServiceTest {
     @Test
     @DisplayName("Encontrar contextos por parâmetros")
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
-
+        
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         ContextDTO contextDTO2 = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
 
-        // INÍCIO DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
         context = contextDTO.contextDTOToContext();
         context.setCreator(creator);
-        contexts.add(context);
-
+        ServicesBuilder.insertSimulator(context, contexts);
         context2 = contextDTO.contextDTOToContext();
         context2.setCreator(creator2);
-        contexts.add(context2);
-        // FIM DE SIMULAÇÃO DE TRAMITAÇÃO EM SERVIDOR PROVOCADA PELO MÉTODO INSERT()
+        ServicesBuilder.insertSimulator(context2, contexts);        
+        
+        Page page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
         Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
-                .thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
-        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
-        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(new PageImpl<>(contexts, pageable, pageable.getPageSize()));
-
-        pageResponse = contextService.findContextsByParams("user@educapi.com", "User", pageable);
-        pageResponse2 = contextService.findContextsByParams("user@educapi.com", null, pageable);
-        pageResponse3 = contextService.findContextsByParams( null, "User", pageable);
-        pageResponse4 = contextService.findContextsByParams(null, null, pageable);
-
-        assertEquals(pageResponse, contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(
-                context.getCreator().getEmail(), context.getCreator().getName(), pageResponse.getPageable()));
-        assertEquals(pageResponse2, contextRepository.findAllByCreatorEmailEqualsIgnoreCase(context.getCreator().getEmail(), pageResponse.getPageable()));
-        assertEquals(pageResponse3, contextRepository.findAllByNameStartsWithIgnoreCase(context.getCreator().getName(), pageResponse.getPageable()));
-        assertNotNull(contextRepository.findAll());
+        .thenReturn(page);
+        Mockito.when(contextRepository.findAllByCreatorEmailEqualsIgnoreCase("user@educapi.com", pageable)).thenReturn(page);
+        Mockito.when(contextRepository.findAllByNameStartsWithIgnoreCase("User", pageable)).thenReturn(page);
+        Mockito.lenient().when(contextRepository.findAll(pageable)).thenReturn(page);
+        
+        assertEquals(page, contextService.findContextsByParams("user@educapi.com", "User", pageable));
+        assertEquals(page, contextService.findContextsByParams("user@educapi.com", null, pageable));
+        assertEquals(page, contextService.findContextsByParams( null, "User", pageable));
+        assertEquals(page, contextService.findContextsByParams(null, null, pageable));
 
     }
 

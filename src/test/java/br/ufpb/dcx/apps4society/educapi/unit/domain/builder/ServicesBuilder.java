@@ -1,5 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
 
+import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
+import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
@@ -7,6 +9,9 @@ import br.ufpb.dcx.apps4society.educapi.services.ChallengeService;
 import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ServicesBuilder {
@@ -50,6 +55,50 @@ public class ServicesBuilder {
     }
     public JWTService buildJwtService(){
         return new JWTService(this.userRepository);
+    }
+
+    public static void insertSimulator(Object obj, List list){
+        if(obj.getClass() == Challenge.class){
+
+            IdGenerator((Challenge)obj, list);
+            list.add((Challenge)obj);            
+        }
+
+        else if(obj.getClass() == Context.class){
+
+            IdGenerator((Context)obj, list);
+            list.add((Context)obj);
+        }
+
+    }        
+
+    private static Object IdGenerator(Object obj, List list){
+        if(obj.getClass() == Challenge.class){
+            
+            Challenge clg = (Challenge)obj;
+            if(list.isEmpty()){
+                clg.setId(1L);
+            }
+    
+            int intId = list.size()+1;
+            Long longId = new Long(intId);
+            clg.setId(longId);
+            }  
+            
+        else if(obj.getClass() == Context.class){            
+            Context ctt = (Context)obj;
+
+            if(list.isEmpty()){
+                ctt.setId(1L);
+            }
+    
+            int intId = list.size()+1;
+            Long longId = new Long(intId);
+            ctt.setId(longId);
+            }       
+
+        return obj;    
+
     }
 
 }

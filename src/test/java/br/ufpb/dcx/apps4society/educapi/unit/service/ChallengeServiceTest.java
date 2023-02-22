@@ -33,11 +33,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -76,7 +82,7 @@ public class ChallengeServiceTest {
     private ChallengeRegisterDTO challengeRegisterDTO2 = ChallengeBuilder
             .anChallenge()
             .withId(1L)
-            .withWord("word2").buildChallengeRegisterDTO();    
+            .withWord("testword2").buildChallengeRegisterDTO();    
     
     private final UserLoginDTO userLoginDTOEmptyEmail = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
@@ -113,6 +119,8 @@ public class ChallengeServiceTest {
     private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
 
     private List<Challenge> challenges = new ArrayList<>();
+
+    private final Pageable pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
     @BeforeEach
     public void setUp(){
@@ -235,10 +243,13 @@ public class ChallengeServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
-        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
-        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
+        Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
+        Challenge challengeResponse2 = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
 
-        List<Challenge> challengesResponse = challengeService.findChallengesByCreator(jwtService.tokenBearerFormat(loginResponse.getToken()));
+        ServicesBuilder.insertSimulator(challengeResponse, challenges);
+        ServicesBuilder.insertSimulator(challengeResponse2, challenges);
+
+        List<Challenge> challengesResponse = challengeService.findChallengesByCreator(jwtService.tokenBearerFormat(loginResponse.getToken()));        
 
         Assertions.assertFalse(challengesResponse.isEmpty());
 
@@ -289,25 +300,62 @@ public class ChallengeServiceTest {
 
     @Test
     @Disabled
-    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
-                
+    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{                
         Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
-        //Mockito.when(challengeRepository.deleteById(1L)).thenReturn(challengeOptional);
-        //Mockito.when(challengeService.validateUser(ArgumentMatchers.any())).thenReturn(validatedUser);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
 
-        challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+        ServicesBuilder.insertSimulator(challengeResponse, challenges);
 
-        //challengeService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), challenge.getId());
+        List<Context> contexts = new ArrayList<>();
+        context.setChallenges((Set<Challenge>) challenges);
+        //challenge.setContexts((Set<Context>) contexts);
+
+        // Acho que tenho que criar alguma associação do context com o challegne para esse metodo funcionar
+        challengeService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), challenge.getId());
         
     }
 
     @Test
-    @Disabled
-    public void findChallengesByParamsTest(){   
+    public void findChallengesByParamsTest() throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException{  
+       
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
+        Challenge challengeResponse2 = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
+
+        Page emptyPage = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        Page page;
+        Page page2 = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        Page pageAll;
+
+        ServicesBuilder.insertSimulator(challengeResponse, challenges);
+        page = new PageImpl<>(challenges, pageable, pageable.getPageSize()); 
+
+        ServicesBuilder.insertSimulator(challengeResponse2, challenges);
+        page2 = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        pageAll = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+
+        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("inexistentChallengeWord", pageable)).thenReturn(emptyPage);
+        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("w", pageable)).thenReturn(page);
+        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("t", pageable)).thenReturn(page2);
+        Mockito.lenient().when(challengeRepository.findAll(pageable)).thenReturn(pageAll);
+        
+        Page pageResponse1 = challengeService.findChallengesByParams("inexistentChallengeWord", emptyPage.getPageable());
+        Page pageResponse2 = challengeService.findChallengesByParams("w", page.getPageable());
+        Page pageResponse3 = challengeService.findChallengesByParams("t", page2.getPageable());
+        Page pageResponse4 = challengeService.findChallengesByParams(null, pageAll.getPageable());
+
+        // Só lembrando que tem que ser uma page para cada pesquisa, inclusive mudar nos testes do context
+        assertEquals(true, emptyPage.isEmpty());
+        assertEquals(challengeResponse, pageResponse2.getContent().get(0));
+        assertEquals(challengeResponse2, pageResponse3.getContent().get(0));
+        assertEquals(challenges, pageAll.getContent());
+
     }
 
 }
