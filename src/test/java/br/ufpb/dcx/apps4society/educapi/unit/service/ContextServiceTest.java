@@ -21,14 +21,11 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import javax.swing.text.html.parser.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,12 +122,12 @@ public class ContextServiceTest {
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         Context contextResponse = contextDTO.contextDTOToContext();
         contextResponse.setCreator(creator);
-        contextListByCreator.add(context);
+        ServicesBuilder.insertSimulator(contextResponse, contextListByCreator);
 
         ContextDTO contextDTO2 = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
         Context contextResponse2 = contextDTO2.contextDTOToContext();
         contextResponse2.setCreator(creator);
-        contextListByCreator.add(context2);
+        ServicesBuilder.insertSimulator(contextResponse2, contextListByCreator);
 
         contextDTOListByCreator = contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken()));
         contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
@@ -154,7 +151,7 @@ public class ContextServiceTest {
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword()))
                 .thenReturn(Optional.empty());
 
-        ObjectNotFoundException throwable = catchThrowableOfType(() ->
+        catchThrowableOfType(() ->
                 contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
 
     }
@@ -173,13 +170,13 @@ public class ContextServiceTest {
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword()))
                 .thenReturn(Optional.empty());
 
-        InvalidUserException throwable = catchThrowableOfType(() ->
+        catchThrowableOfType(() ->
                 contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse3.getToken())), InvalidUserException.class);
 
-        ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
+        catchThrowableOfType(() ->
                 contextService.findContextsByCreator(jwtService.tokenBearerFormat(loginResponse.getToken())), ObjectNotFoundException.class);
 
-        SecurityException throwable3 = catchThrowableOfType(() ->
+        catchThrowableOfType(() ->
                 contextService.findContextsByCreator((loginResponse3.getToken())), SecurityException.class);
 
     }
@@ -213,6 +210,7 @@ public class ContextServiceTest {
         Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
             contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
         });
+
         assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
         assertEquals(contextRepository.findContextByNameIgnoreCase("Context"), contextOptional);
 
@@ -277,8 +275,7 @@ public class ContextServiceTest {
         creator.setId(1L);
         context.setCreator(creator);
         context.setId(1L);
-        contexts.add(context);
-        // * Teve que ser feito para contornar o problema da não associação do context com seu criador *
+        ServicesBuilder.insertSimulator(context, contexts);
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Optional<Context> contextResponse =  contextRepository.findById(1L);
@@ -324,7 +321,6 @@ public class ContextServiceTest {
         
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        ContextDTO contextDTO2 = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2);
 
         context = contextDTO.contextDTOToContext();
         context.setCreator(creator);
@@ -346,37 +342,8 @@ public class ContextServiceTest {
         assertEquals(page, contextService.findContextsByParams( null, "User", pageable));
         assertEquals(page, contextService.findContextsByParams(null, null, pageable));
 
+        // WARN: EACH SEARCH RESULTS MUST BE AN INDEPENDENT PAGE
+
     }
 
-    /*
-    public void AAAPatern(){
-        Arrange(new, sets, mockito.when...thenReturn())
-        Act(create, read, update, delete, ...)
-        Assertions
-
-        ADICIONAL: .lenient() faz parar de reclamar de 'unecessary stubbins'
-        .thenReturn() é um como se fosse um retorno fake
-        Mock Instancia com valor nulo
-        InjectMock Classe a qual as injeções dos mocks serão aplicadas***
-    }
-
-    os temas sao contexto, q tem um conjunto de challenge q sao palavras
-    Na API a procura é feita pelo id e nos testes são feitas por e-mail, author e nome?!
-    OBS: não enganchar e ir fazendo o que da para fazer
-    OBS1: passar tokens para variáveis de ambiente e ao fazer os testes so fazer a chamada deles
-    OBS2: No teste unitário deve-se ajustar a gerência das instâncias manualmente por Mockito para simular as entradas e saídas do servidor
-    OBS3: Talvez uma boa prática seria conseguir alguma forma de mockar o repository.save(x)
-    OBS4: Ajuste do setUp() para ver se é possível atualizar os mockito constantemente para evitar ter que colocá-los no meio dos testes
-
-    https://www.youtube.com/watch?v=AKT9FYJBOEo
-    https://www.youtube.com/watch?v=lA18U8dGKF8 sobre jwt tokens
-    https://www.youtube.com/watch?v=E5nStRSgMaw sobre geração dos ids e levantamento do springtest com banco de dados
-    https://www.youtube.com/watch?v=R3ItceaMwnw testar controller(teste de integração)
-
-    _________________________________________________________________________________________________________________________________________
-    NOVIDADES, dá pra simular as criações de métodos service: save, new, etc, mas tem que criar um @Mock
-    @Spy suporta atributos ;) isso corrige o fato de um objeto @Mock ficar com valores todos nulos
-    PENDENCIA fazer um mock da lista de contextos para das suporte nativo do teste ao save, add, new de contextos
-
-    */
 }

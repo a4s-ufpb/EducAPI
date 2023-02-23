@@ -4,9 +4,7 @@ import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
-import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
@@ -24,10 +22,8 @@ import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -41,13 +37,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 
 @ExtendWith(MockitoExtension.class)
 public class ChallengeServiceTest {
@@ -82,7 +78,13 @@ public class ChallengeServiceTest {
     private ChallengeRegisterDTO challengeRegisterDTO2 = ChallengeBuilder
             .anChallenge()
             .withId(1L)
-            .withWord("testword2").buildChallengeRegisterDTO();    
+            .withWord("word2").buildChallengeRegisterDTO();
+            
+    @Spy
+    private ChallengeRegisterDTO challengeRegisterDTO3 = ChallengeBuilder
+            .anChallenge()
+            .withId(1L)
+            .withWord("testword2").buildChallengeRegisterDTO();
     
     private final UserLoginDTO userLoginDTOEmptyEmail = UserBuilder.anUser().withEmail("").buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
@@ -90,8 +92,6 @@ public class ChallengeServiceTest {
             .withName("user2")
             .withEmail("user2@educapi.com")
             .withPassword("testpassword2").buildUserLoginDTO();
-
-    private final UserRegisterDTO userRegisterDTOEmptyEmail = UserBuilder.anUser().withEmail(userLoginDTOEmptyEmail.getEmail()).buildUserRegisterDTO();
 
     private final Optional<User> userEmptyEmailOptional = UserBuilder.anUser().withId(3L). withName("userWithoutEmail").buildOptionalUser();
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
@@ -111,12 +111,8 @@ public class ChallengeServiceTest {
             .withCreator(creator).buildOptionalChallenge();
     private Challenge challenge = challengeOptional.get();
 
-    // private User validatedUser = new User();
-    // private Challenge obj = new Challenge();
-
     private final Context context = ContextBuilder.anContext().withCreator(userOptional.get()).withId(1L).buildContext();
     private final Optional<Context> contextOptional = Optional.of(context);
-    private final ContextRegisterDTO contextRegisterDTO = ContextBuilder.anContext().buildContextRegisterDTO();
 
     private List<Challenge> challenges = new ArrayList<>();
 
@@ -161,7 +157,7 @@ public class ChallengeServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTOEmptyEmail);
 
-        Exception exception = assertThrows(InvalidUserException.class, () -> {
+        assertThrows(InvalidUserException.class, () -> {
 
             challengeService.find(jwtService.tokenBearerFormat(loginResponse.getToken()), 1L);
 
@@ -214,7 +210,7 @@ public class ChallengeServiceTest {
 
         Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
 
-        Exception exception = assertThrows(ChallengeAlreadyExistsException.class, () -> {
+        assertThrows(ChallengeAlreadyExistsException.class, () -> {
                 challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
 
         });
@@ -230,6 +226,38 @@ public class ChallengeServiceTest {
 
         assertThrows(ObjectNotFoundException.class, () -> {
             challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
+
+        });
+
+    }
+
+    @Test
+    public void insertChallengeInvalidUserTest() throws InvalidUserException{
+
+        Mockito.lenient().when(userRepository.findByEmail("")).thenReturn(userEmptyEmailOptional);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword("", "testpassword")).thenReturn(userEmptyEmailOptional);
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTOEmptyEmail);
+
+        assertThrows(InvalidUserException.class, () -> {
+            challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
+
+        });
+
+    }
+
+    @Test
+    public void insertChallengeUserNotFound() throws InvalidUserException{        
+        
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+
+        Mockito.lenient().when(userRepository.findByEmail("user@educapi.com")).thenReturn(Optional.empty());
+
+        assertThrows(ObjectNotFoundException.class, () -> {
+            challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
 
         });
 
@@ -299,23 +327,40 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    @Disabled
-    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{                
+    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{  
+
         Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        
+        Set<Context> contextsSet = new HashSet<>();
+        contextsSet.add(context);
+        challenge.setContexts(contextsSet);
+        
+        challengeService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), challenge.getId());
+        
+    }
+
+    @Test
+    public void deleteChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+
+        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+        Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(userOptional2);
+        Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2")).thenReturn(userOptional2);
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
         Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
 
         ServicesBuilder.insertSimulator(challengeResponse, challenges);
 
-        List<Context> contexts = new ArrayList<>();
-        context.setChallenges((Set<Challenge>) challenges);
-        //challenge.setContexts((Set<Context>) contexts);
+        assertThrows(InvalidUserException.class, () -> {
+            challengeService.delete(jwtService.tokenBearerFormat(loginResponse2.getToken()), challengeResponse.getId());
 
-        // Acho que tenho que criar alguma associação do context com o challegne para esse metodo funcionar
-        challengeService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), challenge.getId());
-        
+        });
+
     }
 
     @Test
@@ -327,30 +372,34 @@ public class ChallengeServiceTest {
 
         Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
         Challenge challengeResponse2 = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
+        
+        List <Challenge> itensListEmpty = new ArrayList<>();
+        List <Challenge> itensList = new ArrayList<>();
+        List <Challenge> itensList2 = new ArrayList<>();
+        List <Challenge> itensListAll = new ArrayList<>();
 
-        Page emptyPage = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        Page emptyPage = new PageImpl<>(itensListEmpty, pageable, pageable.getPageSize());
         Page page;
-        Page page2 = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        Page page2;
         Page pageAll;
 
-        ServicesBuilder.insertSimulator(challengeResponse, challenges);
-        page = new PageImpl<>(challenges, pageable, pageable.getPageSize()); 
+        ServicesBuilder.insertSimulator(challengeResponse, itensList);
+        page = new PageImpl<>(itensList, pageable, pageable.getPageSize());
 
-        ServicesBuilder.insertSimulator(challengeResponse2, challenges);
-        page2 = new PageImpl<>(challenges, pageable, pageable.getPageSize());
-        pageAll = new PageImpl<>(challenges, pageable, pageable.getPageSize());
+        ServicesBuilder.insertSimulator(challengeResponse2, itensList2);
+        page2 = new PageImpl<>(itensList2, pageable, pageable.getPageSize());        
+        pageAll = new PageImpl<>(itensListAll, pageable, pageable.getPageSize());
 
-        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("inexistentChallengeWord", pageable)).thenReturn(emptyPage);
-        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("w", pageable)).thenReturn(page);
-        Mockito.lenient().when(challengeRepository.findByWordStartsWithIgnoreCase("t", pageable)).thenReturn(page2);
-        Mockito.lenient().when(challengeRepository.findAll(pageable)).thenReturn(pageAll);
+        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("inexistentChallengeWord", pageable)).thenReturn(emptyPage);
+        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("w", pageable)).thenReturn(page);
+        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("t", pageable)).thenReturn(page2);
+        Mockito.when(challengeRepository.findAll(pageable)).thenReturn(pageAll);
         
         Page pageResponse1 = challengeService.findChallengesByParams("inexistentChallengeWord", emptyPage.getPageable());
         Page pageResponse2 = challengeService.findChallengesByParams("w", page.getPageable());
         Page pageResponse3 = challengeService.findChallengesByParams("t", page2.getPageable());
         Page pageResponse4 = challengeService.findChallengesByParams(null, pageAll.getPageable());
-
-        // Só lembrando que tem que ser uma page para cada pesquisa, inclusive mudar nos testes do context
+        
         assertEquals(true, emptyPage.isEmpty());
         assertEquals(challengeResponse, pageResponse2.getContent().get(0));
         assertEquals(challengeResponse2, pageResponse3.getContent().get(0));

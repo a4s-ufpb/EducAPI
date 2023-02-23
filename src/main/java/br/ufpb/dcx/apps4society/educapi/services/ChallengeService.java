@@ -113,7 +113,7 @@ public class ChallengeService {
         if (obj.getCreator().equals(user)) {
             // a cada Context do desafio(obj)
             for (Context x : obj.getContexts()) {
-                // Pega e remova os desafios do Context(x) que sejam iguais ao desafio(obj)
+                // Pega e remova o desafio igual ao desafio(challengee)
                 x.getChallenges().remove(obj);
                 // E salva um contexto atualizado
                 contextRepository.save(x);
