@@ -97,7 +97,7 @@ public class UserServiceTest {
     
     LoginResponse loginResponse = jwtService.authenticate(userLoginEmailEmptyDTO);
 
-    InvalidUserException throwable = catchThrowableOfType(() ->
+    catchThrowableOfType(() ->
             userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
 
     assertNotNull(loginResponse.getToken());
@@ -146,9 +146,7 @@ public class UserServiceTest {
 
     @Test
     public void deleteUserTest() throws InvalidUserException, UserAlreadyExistsException{
-        
-        // Seria bom adaptar esses optionais de uma forma que tirasse esse Mockito do "meio" do teste
-        // O problema se dá pelo fato de não existir um objeto no banco de dados para realizar a remoção
+
         Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(Optional.empty());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
@@ -158,7 +156,7 @@ public class UserServiceTest {
 
         userService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()));
 
-        InvalidUserException throwable = catchThrowableOfType(() ->
+        catchThrowableOfType(() ->
                 userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
 
         assertNotNull(userDTOResponse);
@@ -172,8 +170,9 @@ public class UserServiceTest {
 
         User user = userRegisterDTO.userRegisterDtoToUser();
         User user2 = userRegisterDTO2.userRegisterDtoToUser();
-        users.add(user);
-        users.add(user2);
+
+        ServicesBuilder.insertSimulator(user, users);
+        ServicesBuilder.insertSimulator(user2, users);
 
         List<User> usersList = userService.findAll();
 
@@ -188,8 +187,9 @@ public class UserServiceTest {
 
         User user = userRegisterDTO.userRegisterDtoToUser();
         User user2 = userRegisterDTO2.userRegisterDtoToUser();
-        users.add(user);
-        users.add(user2);
+
+        ServicesBuilder.insertSimulator(user, users);
+        ServicesBuilder.insertSimulator(user2, users);
 
         Mockito.lenient().when(userRepository.findAll(pageable)).thenReturn(new PageImpl<>(users, pageable, pageable.getPageSize()));
 

@@ -2,6 +2,7 @@ package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
@@ -70,6 +71,12 @@ public class ServicesBuilder {
             list.add((Context)obj);
         }
 
+        else if(obj.getClass() == User.class){
+
+            IdGenerator((User)obj, list);
+            list.add((User)obj);
+        }
+
     }        
 
     private static Object IdGenerator(Object obj, List list){
@@ -95,7 +102,19 @@ public class ServicesBuilder {
             int intId = list.size()+1;
             Long longId = new Long(intId);
             ctt.setId(longId);
-            }       
+            }
+
+        else if(obj.getClass() == User.class){
+            User user = (User)obj;
+
+            if(list.isEmpty()){
+                user.setId(1L);
+            }
+
+            int intId = list.size()+1;
+            Long longId = new Long(intId);
+            user.setId(longId);
+        }
 
         return obj;    
 
