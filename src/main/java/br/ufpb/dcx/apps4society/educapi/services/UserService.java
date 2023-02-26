@@ -26,7 +26,7 @@ public class UserService {
 	@Autowired
 	private UserRepository userRepository;
 
-	// To support ContextsBuilder
+	// To support ServicesBuilder
 	public UserService(JWTService jwtService, UserRepository userRepository) {
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
