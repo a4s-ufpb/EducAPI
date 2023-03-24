@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
+
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
@@ -43,16 +44,17 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-//@ExtendWith(SpringExtension.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 //@AutoConfigureTestEntityManager
 //@ContextConfiguration(classes=EducApiApplicationTests.class)
 @Profile("test")
-@WebMvcTest(UserResource.class)
+@WebMvcTest(controllers = UserResource.class)
+
 //@ComponentScan(basePackageClasses={UserResource.class})
-class UserResourceIntegrationTest { //extends EducApiApplicationTests {
+class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 
     //Faz as requisições
     @Autowired
