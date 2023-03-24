@@ -37,26 +37,27 @@ public class EducAPIApplication {
     }
 
 
-	@Bean
-	public CommandLineRunner commandLineRunner() {
-		return args -> {
-
-			User admin = new User();
-			admin.setEmail("admin@educapi.com");
-			admin.setPassword("12345678");
-			admin.setName("Administrador");
-			admin.setId(1L);
-			this.userRepository.save(admin);
-
-			Context context = new Context();
-			context.setId(1L);
-			Set<Context> contextSet = new HashSet<>();
-			contextSet.add(context);
-			admin.setContexts(contextSet);
-
-
-		};
-
-	}
+//	@Bean
+//	public CommandLineRunner commandLineRunner() {
+//		return args -> {
+//
+//
+//
+//			User user = new User();
+//			user.setEmail("user@educapi.com");
+//			user.setPassword("12345678");
+//			user.setName("usuario");
+//			user.setId(1L);
+//			this.userRepository.save(user);
+//
+//			Context context = new Context();
+//			context.setId(1L);
+//			Set<Context> contextSet = new HashSet<>();
+//			contextSet.add(context);
+//			user.setContexts(contextSet);
+//
+//		};
+//
+//	}
 
 }

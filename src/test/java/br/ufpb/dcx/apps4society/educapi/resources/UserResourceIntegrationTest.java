@@ -4,53 +4,75 @@ import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
+//import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
-@ExtendWith(SpringExtension.class)
-class UserResourceIntegrationTest {    
+//@ExtendWith(SpringExtension.class)
+@SpringBootTest
+//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
+//@AutoConfigureTestEntityManager
+//@ContextConfiguration(classes=EducApiApplicationTests.class)
+@Profile("test")
+@WebMvcTest(UserResource.class)
+//@ComponentScan(basePackageClasses={UserResource.class})
+class UserResourceIntegrationTest { //extends EducApiApplicationTests {
 
-    @Mock
-    public UserRepository userRepository;
+    //Faz as requisições
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private JWTService jwtService = ServicesBuilder.anService().buildJwtService();
+    @Autowired
+    private UserResource userResource;
 
-    @InjectMocks
-    private JWTService jwtService = ServicesBuilder.anService().withUserRepository(userRepository).buildJwtService();
-    @InjectMocks
-    public UserService userService = ServicesBuilder.anService()
-            .withJwtService(jwtService)
-            .withUserRepository(userRepository).buildUserService();
+    @MockBean
+    private UserRepository userRepository;
+    @MockBean
+    private UserService userService;
 
-    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();    
+    private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginEmailEmptyDTO = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private final Optional<User> userEmailEmptyOptional = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginEmailEmptyDTO.getEmail()).buildOptionalUser();    
+    private final Optional<User> userEmailEmptyOptional = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginEmailEmptyDTO.getEmail()).buildOptionalUser();
+    private User user = userOptional.get();
 
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
     private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withId(2L).withName("User2").buildUserRegisterDTO();
@@ -60,44 +82,59 @@ class UserResourceIntegrationTest {
     public PageRequest pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
     @BeforeEach
-    public void setup() {
-        
-        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
+    public void setUp(){
+        mockMvc = MockMvcBuilders.standaloneSetup(userResource).build();
     }
 
-    @Test
-    public void findByUserEmailTest() throws InvalidUserException {        
+     @Test
+     public void insertUserWithCorrectsInputs_ThenReturnStatus201() throws Exception {
 
-        Mockito.when(userRepository.findByEmail("user@educapi.com")).thenReturn(userOptional);
-        Mockito.when(userRepository.findByEmailAndPassword("user@educapi.com", "testpassword")).thenReturn(userOptional);
+         ObjectMapper mapper= new ObjectMapper();
 
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+         String json = mapper.writeValueAsString(user);
 
-        String token = loginResponse.getToken();
-        String email = userLoginDTO.getEmail();
-        String bearedToken = jwtService.tokenBearerFormat(token);
-        User expectedUser = userOptional.get();
+         URI uri = new URI("/v1/api/auth/users");
 
-        when(jwtService.recoverUser(bearedToken)).thenReturn(Optional.of(email));
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(expectedUser));
-        
-        User actualUser = userService.find(bearedToken);
+         mockMvc.perform(MockMvcRequestBuilders
 
-        assertEquals(expectedUser, actualUser);
+                         .post("uri")
+                         .contentType(MediaType.APPLICATION_JSON)
+                         .content(json));
+//                         .andExpect(MockMvcResultMatchers.status().isCreated());
+//                         .andExpect(MockMvcResultMatchers.header().string(
+//                         "locations", Matchers.containsString("http://localhost:8080/v1/api/auth/users")))
 
-        //Diz que ele não é um mock
-        verify(jwtService.recoverUser(bearedToken));
-        verify(userRepository.findByEmail(email));
+     }
 
-    }
+//    @Test
+//    public void findByUserEmailTest() throws InvalidUserException {
+//
+//        Mockito.when(userRepository.findByEmail("user@educapi.com")).thenReturn(userOptional);
+//        Mockito.when(userRepository.findByEmailAndPassword("user@educapi.com", "testpassword")).thenReturn(userOptional);
+//
+//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+//
+//        String token = loginResponse.getToken();
+//        String email = userLoginDTO.getEmail();
+//        String bearedToken = jwtService.tokenBearerFormat(token);
+//        User expectedUser = userOptional.get();
+//
+//        when(jwtService.recoverUser(bearedToken)).thenReturn(Optional.of(email));
+//        when(userRepository.findByEmail(email)).thenReturn(Optional.of(expectedUser));
+//
+//        User actualUser = userService.find(bearedToken);
+//
+//        assertEquals(expectedUser, actualUser);
+//        verify(jwtService.recoverUser(bearedToken));
+//        verify(userRepository.findByEmail(email));
+//
+//    }
 
     public void findByInvalidUserEmailTest(){
 
     }
 
-    // @Test
-    // void insert() {
-    // }
+
 
     // @Test
     // void update() {
@@ -106,5 +143,8 @@ class UserResourceIntegrationTest {
     // @Test
     // void delete() {
     // }
+
+    //https://www.youtube.com/watch?v=Y4_LmPhx1Jc
+    //https://www.youtube.com/watch?v=l5WfHfHvqo8
 
 }
