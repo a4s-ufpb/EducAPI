@@ -11,15 +11,13 @@ import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,12 +35,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+
+import static io.restassured.RestAssured.*;
+import static io.restassured.RestAssured.given;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -52,7 +54,6 @@ import org.springframework.transaction.annotation.Transactional;
 //@ContextConfiguration(classes=EducApiApplicationTests.class)
 @Profile("test")
 @WebMvcTest(controllers = UserResource.class)
-
 //@ComponentScan(basePackageClasses={UserResource.class})
 class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 
@@ -150,3 +151,38 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
     //https://www.youtube.com/watch?v=l5WfHfHvqo8
 
 }
+//
+//package br.ufpb.dcx.apps4society.educapi.resources;
+//
+//        import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
+//        import io.restassured.http.ContentType;
+//        import org.junit.jupiter.api.Test;
+//        import static io.restassured.RestAssured.*;
+//        import static io.restassured.matcher.RestAssuredMatchers.*;
+//        import static org.hamcrest.Matchers.*;
+//
+//public class UserResourceIntegrationTest{
+//
+//    @Test
+//    public void insertUserTest(){
+//
+//        baseURI = "http://localhost";
+//        port = 8080;
+//        basePath = "/v1/api/";
+//
+//        UserRegisterDTO userRegisterDTO = given()
+//                .body("{\n" +
+//                        "  \"email\": \"string\",\n" +
+//                        "  \"name\": \"string\",\n" +
+//                        "  \"password\": \"string\"\n" +
+//                        "}")
+//                .contentType(ContentType.JSON)
+//                .when()
+//                .post(baseURI+":"+port+basePath+"users")
+//                .then()
+//                .extract().path("id","name", "email", "password");
+//
+//        given()
+//                .
+//    }
+//}
