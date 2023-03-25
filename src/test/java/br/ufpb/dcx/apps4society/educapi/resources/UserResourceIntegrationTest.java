@@ -4,6 +4,7 @@ import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
@@ -29,6 +30,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -54,22 +56,25 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
     @Autowired
     private UserResource userResource;
 
-//    @MockBean
-//    private UserRepository userRepository;
+    @MockBean
+    private UserRepository userRepository;
     @MockBean
     private UserService userService;
+
+
+    private static String NAME = "Jose";
+    private static String EMAIL = "Jose@educapi.com";
+    private static String PASSWORD = "12345678";
 
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
     private final UserLoginDTO userLoginEmailEmptyDTO = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
-    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private final Optional<User> userEmailEmptyOptional = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginEmailEmptyDTO.getEmail()).buildOptionalUser();
-    private User user = userOptional.get();
+    private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser()
+            .withName(NAME)
+            .withEmail(EMAIL)
+            .withPassword(PASSWORD).buildUserRegisterDTO();
 
-    private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
-    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withId(2L).withName("User2").buildUserRegisterDTO();
-
-    private List<User> users = new ArrayList<>();
+    private User user = userRegisterDTO.userRegisterDtoToUser();
 
     public PageRequest pageable = PageRequest.of(0, 20, Sort.by("name").ascending());
 
@@ -82,10 +87,8 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
      public void insertUserWithCorrectsInputs_ThenReturnStatus201() throws Exception {
 
          ObjectMapper mapper= new ObjectMapper();
-
-         String json = mapper.writeValueAsString(user);
-
-         URI uri = new URI("/v1/api/auth/users");
+         String json = mapper.writeValueAsString(userRegisterDTO);
+         URI uri = new URI("http://localhost:8080/v1/api/users");
 
          mockMvc.perform(MockMvcRequestBuilders
 
@@ -94,7 +97,8 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
                          .content(json))
                          .andExpect(MockMvcResultMatchers.status().isCreated())
                          .andExpect(MockMvcResultMatchers.header().string(
-                         "locations", Matchers.containsString("http://localhost:8080/v1/api/auth/users")));
+                         "locations", Matchers.containsString("http://localhost:8080/v1/api/users")))
+                 .andDo(MockMvcResultHandlers.print());
 
      }
 
@@ -122,9 +126,10 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 //
 //    }
 
-    public void findByInvalidUserEmailTest(){
-
-    }
+//    @Test
+//    public void findByInvalidUserEmailTest(){
+//
+//    }
 
 
 
