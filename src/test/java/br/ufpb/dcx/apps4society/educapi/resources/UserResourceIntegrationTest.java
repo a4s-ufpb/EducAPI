@@ -1,15 +1,10 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
-
 import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
-//import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import java.net.URI;
@@ -18,48 +13,34 @@ import java.util.List;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.http.ContentType;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestEntityManager;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-
-import static io.restassured.RestAssured.*;
-import static io.restassured.RestAssured.given;
 
 //@ExtendWith(SpringExtension.class)
 @RunWith(SpringRunner.class)
-@SpringBootTest
-//@SpringBootTest(classes = UserResource.class)
+//@SpringBootTest
+@SpringBootTest(classes = UserResource.class)
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 //@AutoConfigureTestEntityManager
 @ContextConfiguration(classes = EducApiApplicationTests.class)
-@Profile("test")
+@ActiveProfiles("test")
     //Carrega só o resource(controller)
 //@WebMvcTest(controllers = UserResource.class)
 //@ComponentScan(basePackageClasses={UserResource.class})
@@ -108,12 +89,12 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 
          mockMvc.perform(MockMvcRequestBuilders
 
-                         .post("uri")
+                         .post(uri)
                          .contentType(MediaType.APPLICATION_JSON)
-                         .content(json));
-//                         .andExpect(MockMvcResultMatchers.status().isCreated());
-//                         .andExpect(MockMvcResultMatchers.header().string(
-//                         "locations", Matchers.containsString("http://localhost:8080/v1/api/auth/users")))
+                         .content(json))
+                         .andExpect(MockMvcResultMatchers.status().isCreated())
+                         .andExpect(MockMvcResultMatchers.header().string(
+                         "locations", Matchers.containsString("http://localhost:8080/v1/api/auth/users")));
 
      }
 
