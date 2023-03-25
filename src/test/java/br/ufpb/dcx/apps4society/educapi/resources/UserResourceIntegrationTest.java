@@ -46,7 +46,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static io.restassured.RestAssured.*;
 import static io.restassured.RestAssured.given;
 
-@ExtendWith(SpringExtension.class)
+//@ExtendWith(SpringExtension.class)
+@RunWith(SpringRunner.class)
 @SpringBootTest
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc

@@ -13,7 +13,7 @@ public class EducApiApplicationTests {
 }
 
 //package br.ufpb.dcx.apps4society.educapi;
-
+//
 //import br.ufpb.dcx.apps4society.educapi.domain.User;
 //import org.junit.jupiter.api.Assertions;
 //import org.junit.jupiter.api.BeforeAll;
@@ -40,9 +40,9 @@ public class EducApiApplicationTests {
 //import org.springframework.test.context.TestPropertySource;
 //import org.springframework.test.context.junit4.SpringRunner;
 //import org.springframework.web.client.RestTemplate;
-
+//
 //@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@ContextConfiguration(classes=EducApiApplicationTests.class)
+////@ContextConfiguration(classes=EducApiApplicationTests.class)
 //public class EducApiApplicationTests {
 //
 //	@LocalServerPort
