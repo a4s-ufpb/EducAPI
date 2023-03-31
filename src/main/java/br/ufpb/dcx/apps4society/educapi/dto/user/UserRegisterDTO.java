@@ -1,6 +1,8 @@
 package br.ufpb.dcx.apps4society.educapi.dto.user;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;
@@ -23,7 +25,8 @@ public class UserRegisterDTO implements Serializable {
     @Length(min=8, max=12, message="The size must be between 8 and 12 characters")
     private String password;
 
-    public UserRegisterDTO(String name, String email, String password) {
+    @JsonCreator
+    public UserRegisterDTO(@JsonProperty("name") String name, @JsonProperty("email")String email, @JsonProperty("password")String password) {
         this.name = name;
         this.email = email;
         this.password = password;

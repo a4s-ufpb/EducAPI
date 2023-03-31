@@ -9,9 +9,6 @@ import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -87,14 +84,15 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
      public void insertUserWithCorrectsInputs_ThenReturnStatus201() throws Exception {
 
          ObjectMapper mapper= new ObjectMapper();
-         String json = mapper.writeValueAsString(userRegisterDTO);
+         String jsonDataString = mapper.writeValueAsString(userRegisterDTO);
+         //mapper.readValue(jsonDataString, UserRegisterDTO.class);
          URI uri = new URI("http://localhost:8080/v1/api/users");
 
          mockMvc.perform(MockMvcRequestBuilders
 
                          .post(uri)
                          .contentType(MediaType.APPLICATION_JSON)
-                         .content(json))
+                         .content(jsonDataString))
                          .andExpect(MockMvcResultMatchers.status().isCreated())
                          .andExpect(MockMvcResultMatchers.header().string(
                          "locations", Matchers.containsString("http://localhost:8080/v1/api/users")))
@@ -104,25 +102,6 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 
 //    @Test
 //    public void findByUserEmailTest() throws InvalidUserException {
-//
-//        Mockito.when(userRepository.findByEmail("user@educapi.com")).thenReturn(userOptional);
-//        Mockito.when(userRepository.findByEmailAndPassword("user@educapi.com", "testpassword")).thenReturn(userOptional);
-//
-//        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-//
-//        String token = loginResponse.getToken();
-//        String email = userLoginDTO.getEmail();
-//        String bearedToken = jwtService.tokenBearerFormat(token);
-//        User expectedUser = userOptional.get();
-//
-//        when(jwtService.recoverUser(bearedToken)).thenReturn(Optional.of(email));
-//        when(userRepository.findByEmail(email)).thenReturn(Optional.of(expectedUser));
-//
-//        User actualUser = userService.find(bearedToken);
-//
-//        assertEquals(expectedUser, actualUser);
-//        verify(jwtService.recoverUser(bearedToken));
-//        verify(userRepository.findByEmail(email));
 //
 //    }
 
@@ -143,6 +122,7 @@ class UserResourceIntegrationTest {// extends EducApiApplicationTests {
 
     //https://www.youtube.com/watch?v=Y4_LmPhx1Jc
     //https://www.youtube.com/watch?v=l5WfHfHvqo8
+    //https://www.youtube.com/watch?v=3duamjhP7NM
 
 }
 //
