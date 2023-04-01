@@ -114,8 +114,7 @@ public class UserBuilder {
      *
      * @return UserRegisterDTO
      */
-    public UserRegisterDTO buildUserRegisterDTO() {
-        return new UserRegisterDTO(this.name, this.email, this.password);
+    public UserRegisterDTO buildUserRegisterDTO() { return new UserRegisterDTO(this.name, this.email, this.password);
     }
 
     /**
