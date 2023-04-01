@@ -1,4 +1,4 @@
-package br.ufpb.dcx.apps4society.educapi.unit;
+package br.ufpb.dcx.apps4society.educapi.utils;
 
 import org.springframework.core.io.ClassPathResource;
 

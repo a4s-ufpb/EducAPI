@@ -5,13 +5,13 @@ import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
-import br.ufpb.dcx.apps4society.educapi.unit.FileUtils;
+import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 
 import java.net.URI;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -19,12 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -33,7 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = UserResource.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = EducApiApplicationTests.class)
 @ActiveProfiles("test")
 class UserResourceIntegrationTest {
@@ -43,11 +42,20 @@ class UserResourceIntegrationTest {
     @Autowired
     private UserResource userResource;
 
-    @MockBean
+    @Autowired
     private UserRepository userRepository;
+
+    //Fail to load application context
+
+    @MockBean
+    private JWTService jwtService;
     @MockBean
     private UserService userService;
+   /*     = ServicesBuilder.anService()
+            .withJwtService(jwtService)
+            .withUserRepository(userRepository).buildUserService();
 
+*/
     private static String NAME = "Jose";
     private static String EMAIL = "jose@educapi.com";
     private static String PASSWORD = "12345678";
@@ -66,6 +74,8 @@ class UserResourceIntegrationTest {
 
     @BeforeEach
     public void setUp(){
+
+        ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
         mockMvc = MockMvcBuilders.standaloneSetup(userResource).build();
     }
 
@@ -73,6 +83,7 @@ class UserResourceIntegrationTest {
      public void insertUserWithCorrectsInputs_ThenReturnStatus201() throws Exception {
 
          URI uri = new URI(USER_POST_ENDPOINT);
+         userRepository.save(user);
 
          String requestBody = FileUtils.getJsonFromFile("CreateUser.json");
 
@@ -125,12 +136,10 @@ class UserResourceIntegrationTest {
 //     }
 //
 //     @Test
-//     public void findByInvalidUserEmailTest(){
-//
-//     }
-//
-//     @Test
 //     void update() {
+//
+//     //Should update a user and return 200 ok
+//     //Should return 500
 //     }
 //
 //     @Test
