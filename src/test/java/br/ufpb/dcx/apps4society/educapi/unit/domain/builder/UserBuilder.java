@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 
@@ -114,6 +115,18 @@ public class UserBuilder {
      *
      * @return UserRegisterDTO
      */
+
+    public UserDTO buildUserDTO(){
+
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(this.id);
+        userDTO.setName(this.name);
+        userDTO.setEmail(this.email);
+        userDTO.setPassword(this.password);
+
+        return userDTO;
+    }
+
     public UserRegisterDTO buildUserRegisterDTO() { return new UserRegisterDTO(this.name, this.email, this.password);
     }
 
