@@ -61,7 +61,7 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("ActualUserBody.json"), userDTO);
+        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
         JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));

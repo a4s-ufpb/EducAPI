@@ -25,8 +25,7 @@ public class UserRegisterDTO implements Serializable {
     @Length(min=8, max=12, message="The size must be between 8 and 12 characters")
     private String password;
 
-    @JsonCreator
-    public UserRegisterDTO(@JsonProperty("name") String name, @JsonProperty("email")String email, @JsonProperty("password")String password) {
+    public UserRegisterDTO(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.password = password;
