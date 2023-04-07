@@ -44,7 +44,7 @@ public class UserResourceIntegrationTest{
        .then()
                .assertThat()
                .statusCode(201)
-               .log().all()
+                
                .extract().response();
 
         JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
@@ -327,7 +327,7 @@ public class UserResourceIntegrationTest{
                 .withPassword(null).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("ActualUserBody.json"), userDTO);
+        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
         JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
@@ -466,7 +466,7 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("ActualUserBody.json"), userDTO);
+        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
         JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
@@ -745,7 +745,7 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("ActualUserBody.json"), userDTO);
+        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
         JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
@@ -772,7 +772,7 @@ public class UserResourceIntegrationTest{
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
-                .log().all()
+                 
                 .extract().path("token");
 
         //Delete user
