@@ -22,6 +22,8 @@ public class UserResourceIntegrationTest{
     private static String PASSWORD = "12345678";
     private static String USER_POST_ENDPOINT = baseURI+":"+port+basePath+"users";
     private static String USER_AUTENTICATION_ENDPOINT = baseURI+":"+port+basePath+"auth/login";
+
+    private static String CONTEXT_POST_ENDPOINT = baseURI+":"+port+basePath+"contexts";
     private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9.qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
 
     @BeforeEach
@@ -37,7 +39,7 @@ public class UserResourceIntegrationTest{
     public void insertUserByNameEmailPassword_shouldReturn201Test() throws Exception {
 
         Response userDTOResponse = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                .contentType(ContentType.JSON)
        .when()
                .post(baseURI+":"+port+basePath+"users")
@@ -61,8 +63,8 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
+        mapper.writeValue(new File("src/test/resources/USER_ActualUserDTOBody.json"), userDTO);
+        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
         Assertions.assertEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
@@ -70,7 +72,7 @@ public class UserResourceIntegrationTest{
         Assertions.assertEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
 
         //Just to remove user from DB
-        String token = given().body(FileUtils.getJsonFromFile("AuthenticateUserBody.json"))
+        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -93,13 +95,13 @@ public class UserResourceIntegrationTest{
     public void insertUserByNameEmailPasswordAlreadyExists_shouldReturn201Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
         .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
         .when()
                 .post(baseURI+":"+port+basePath+"users")
@@ -109,7 +111,7 @@ public class UserResourceIntegrationTest{
                 .log().all();
 
         //Just to remove user from DB
-        String token = given().body(FileUtils.getJsonFromFile("AuthenticateUserBody.json"))
+        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -132,7 +134,7 @@ public class UserResourceIntegrationTest{
     public void insertUserByInvalidEmail_ShouldReturn400Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidEmailBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidEmailBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users")
@@ -146,7 +148,7 @@ public class UserResourceIntegrationTest{
     public void insertUserByInvalidPasswordLessThan8Characters_ShouldReturn400Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidPasswordLessThan8Body.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidPasswordLessThan8Body.json"))
                 .contentType(ContentType.JSON)
             .when()
                 .post(baseURI+":"+port+basePath+"users")
@@ -161,7 +163,7 @@ public class UserResourceIntegrationTest{
     public void insertUserByInvalidPasswordMoreThan8Characters_ShouldReturn400Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidPasswordMoreThan12Body.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidPasswordMoreThan12Body.json"))
                 .contentType(ContentType.JSON)
             .when()
                 .post(baseURI+":"+port+basePath+"users")
@@ -179,12 +181,12 @@ public class UserResourceIntegrationTest{
     public void authenticateUserByEmailPassword_shouldReturn201Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
-        String token = given().body(FileUtils.getJsonFromFile("AuthenticateUserBody.json"))
+        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
         .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -213,7 +215,7 @@ public class UserResourceIntegrationTest{
     @Test
     public void authenticateUserInexistent_ShouldReturn401() throws Exception {
 
-        given().body(FileUtils.getJsonFromFile("AuthenticateUserBody.json"))
+        given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login").then().assertThat().statusCode(401);
@@ -224,12 +226,12 @@ public class UserResourceIntegrationTest{
     public void authenticateUserByInvalidEmail_shouldReturn401Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
-        given().body(FileUtils.getJsonFromFile("AuthenticateUserInvalidEmailBody.json"))
+        given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserInvalidEmailBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -244,12 +246,12 @@ public class UserResourceIntegrationTest{
     public void authenticateUserByInvalidPasswordLessThan8Characters_shouldReturn401Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
-        given().body(FileUtils.getJsonFromFile("AuthenticateUserPasswordLessThan8Body.json"))
+        given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserPasswordLessThan8Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -264,12 +266,12 @@ public class UserResourceIntegrationTest{
     public void authenticateUserByInvalidPasswordMoreThan12Characters_shouldReturn401Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
-        given().body(FileUtils.getJsonFromFile("AuthenticateUserPasswordMoreThan8Body.json"))
+        given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserPasswordMoreThan8Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -286,13 +288,13 @@ public class UserResourceIntegrationTest{
     public void findUserByToken_ShouldReturn200Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                     .post(baseURI+":"+port+basePath+"auth/login")
@@ -314,11 +316,11 @@ public class UserResourceIntegrationTest{
                     .assertThat().statusCode(200)
                     .extract().response();
 
-        JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userDTOJSON_Actual = new JSONObject(userDTOResponse.getBody().prettyPrint());
 
-        String actualUserId = userDTOJSONActual.getString("id");
-        String actualUserName = userDTOJSONActual.getString("name");
-        String actualUserEmail = userDTOJSONActual.getString("email");
+        String actualUserId = userDTOJSON_Actual.getString("id");
+        String actualUserName = userDTOJSON_Actual.getString("name");
+        String actualUserEmail = userDTOJSON_Actual.getString("email");
 
         UserDTO userDTO = UserBuilder.anUser()
                 .withId(Long.valueOf(actualUserId))
@@ -327,12 +329,12 @@ public class UserResourceIntegrationTest{
                 .withPassword(null).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
+        mapper.writeValue(new File("src/test/resources/USER_ActualUserDTOBody.json"), userDTO);
+        JSONObject userRegisterDTOJSON_Expected = new JSONObject(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"));
 
-        Assertions.assertNotNull(userDTOJSONActual.getString("id"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
+        Assertions.assertNotNull(userDTOJSON_Actual.getString("id"));
+        Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("name"), userDTOJSON_Actual.getString("name"));
+        Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("email"), userDTOJSON_Actual.getString("email"));
 
         //Just to remove user from DB
         given()
@@ -353,14 +355,14 @@ public class UserResourceIntegrationTest{
 
         // Create user
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         //Authenticate user
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -420,13 +422,13 @@ public class UserResourceIntegrationTest{
     public void updateUserByEmailAndNameAndPasswordAndToken_ShouldReturn200Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -442,7 +444,7 @@ public class UserResourceIntegrationTest{
                             ContentType.JSON,
                             "Accept",
                             ContentType.JSON)
-                    .body(FileUtils.getJsonFromFile("PUT_UserBody.json"))
+                    .body(FileUtils.getJsonFromFile("USER_PUT_UserBody.json"))
                     .contentType(ContentType.JSON)
                 .when()
                     .put(baseURI+":"+port+basePath+"auth/users")
@@ -466,8 +468,8 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
+        mapper.writeValue(new File("src/test/resources/USER_ActualUserDTOBody.json"), userDTO);
+        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
         Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
@@ -493,14 +495,14 @@ public class UserResourceIntegrationTest{
 
         // Create user
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         //Authenticate user
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -528,7 +530,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("PUT_UserBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_PUT_UserBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -541,13 +543,13 @@ public class UserResourceIntegrationTest{
     public void updateUserByInvalidEmail_ShouldReturn400Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -563,7 +565,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidEmailBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidEmailBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -588,13 +590,13 @@ public class UserResourceIntegrationTest{
     public void updateUserByPasswordLessThan8Characters_ShouldReturn403Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -610,7 +612,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidPasswordLessThan8Body.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidPasswordLessThan8Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -634,13 +636,13 @@ public class UserResourceIntegrationTest{
     public void updateUserByPasswordMoreThan8Characters_ShouldReturn403Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -656,7 +658,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("POST_PUT_UserInvalidPasswordMoreThan12Body.json"))
+                .body(FileUtils.getJsonFromFile("USER_POST_PUT_UserInvalidPasswordMoreThan12Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -687,7 +689,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -703,13 +705,13 @@ public class UserResourceIntegrationTest{
     public void deleteUserByToken_ShouldReturn200Test() throws Exception {
 
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -745,8 +747,8 @@ public class UserResourceIntegrationTest{
                 .withPassword(actualUserPassword).buildUserDTO();
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/ActualUserBody.json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"));
+        mapper.writeValue(new File("src/test/resources/USER_ActualUserDTOBody.json"), userDTO);
+        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"));
 
         Assertions.assertNotNull(userDTOJSONActual.getString("id"));
         Assertions.assertEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
@@ -760,14 +762,14 @@ public class UserResourceIntegrationTest{
 
         // Create user
         given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"users");
 
         //Authenticate user
         String token = given()
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
@@ -813,7 +815,7 @@ public class UserResourceIntegrationTest{
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("UserRegisterDTODefaultBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")

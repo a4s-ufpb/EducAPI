@@ -61,13 +61,21 @@ public class ContextBuilder {
         return new Context(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl, this.creator);
     }
 
-//    public ContextDTO buildContextDTO(Context obj) {
-//        ContextDTO contexDTO = new ContextDTO();
-//        contexDTO.setName(obj.getName());
-//        contexDTO.setImageUrl(obj.getImageUrl());
-//        contexDTO.setSoundUrl(obj.getSoundUrl());
-//        contexDTO.setVideoUrl(obj.getVideoUrl());
-//        return contexDTO;
+//    public ContextDTO buildContextDTO(){
+//        return new ContextDTO(this.id, this.name, this.imageUrl, this.soundUrl, this.videoUrl);
 //    }
+
+    public ContextDTO buildContextDTO() {
+
+        ContextDTO contexDTO = new ContextDTO();
+        contexDTO.setId(this.id);
+        contexDTO.setName(this.name);
+        contexDTO.setImageUrl(this.imageUrl);
+        contexDTO.setSoundUrl(this.soundUrl);
+        contexDTO.setVideoUrl(this.videoUrl);
+
+        return contexDTO;
+
+    }
 
 }
