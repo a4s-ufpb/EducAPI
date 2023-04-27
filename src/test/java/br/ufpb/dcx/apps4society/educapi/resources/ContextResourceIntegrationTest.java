@@ -40,10 +40,12 @@ public class ContextResourceIntegrationTest {
     @Test
     public void insertContextWithTokenNameImageURLSoundURLVideoURL_ShouldReturn201() throws Exception {
 
+        //Create User
         given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
             .when().post(baseURI+":"+port+basePath+"users");
 
+        //Authenticate User
         String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
             .when()
@@ -52,8 +54,9 @@ public class ContextResourceIntegrationTest {
                 .log().all()
                 .extract().path("token");
 
+        //Create Context
         Response contextDTOResponse = given()
-                .body(FileUtils.getJsonFromFile("CONTEXT_ËxpectedRegisterDTOBody.json"))
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization",
                         "Bearer " + token,
@@ -84,7 +87,7 @@ public class ContextResourceIntegrationTest {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File("src/test/resources/CONTEXT_ActualContextDTOBody.json"), contextDTO);
-        JSONObject contextJSONExpected = new JSONObject(FileUtils.getJsonFromFile("CONTEXT_ËxpectedRegisterDTOBody.json"));
+        JSONObject contextJSONExpected = new JSONObject(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"));
 
         Assertions.assertNotNull(contextDTOJSONActual.getString("id"));
         Assertions.assertEquals(contextJSONExpected.getString("imageUrl"), contextDTOJSONActual.getString("imageUrl"));
@@ -92,17 +95,17 @@ public class ContextResourceIntegrationTest {
         Assertions.assertEquals(contextJSONExpected.getString("soundUrl"), contextDTOJSONActual.getString("soundUrl"));
         Assertions.assertEquals(contextJSONExpected.getString("videoUrl"), contextDTOJSONActual.getString("videoUrl"));
 
-        //Just to remove context from db
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/contexts");
+//        //Just to remove context from db
+//        given()
+//                .headers(
+//                        "Authorization",
+//                        "Bearer " + token,
+//                        "Content-Type",
+//                        ContentType.JSON,
+//                        "Accept",
+//                        ContentType.JSON)
+//                .when()
+//                .delete(baseURI+":"+port+basePath+"auth/contexts");
 
         //Just to remove user from DB
         given()
@@ -116,4 +119,523 @@ public class ContextResourceIntegrationTest {
                 .when()
                 .delete(baseURI+":"+port+basePath+"auth/users");
     }
+
+    @Test
+    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn403() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Create Context
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON).when()
+                .post(baseURI+":"+port+basePath+"auth/contexts");
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(403);
+
+//        //Just to remove context from db
+//        given()
+//                .headers(
+//                        "Authorization",
+//                        "Bearer " + token,
+//                        "Content-Type",
+//                        ContentType.JSON,
+//                        "Accept",
+//                        ContentType.JSON)
+//                .when()
+//                .delete(baseURI+":"+port+basePath+"auth/contexts");
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+    }
+
+    @Test
+    public void insertContextWithTokenImageURLSoundURLVideoURLWithoutName_ShouldReturn400() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody(no name).json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(400);
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+    }
+
+    @Test
+    public void insertContextWithNameImageURLSoundURLVideoURLWithOutToken_ShouldReturn400() throws Exception {
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody(no name).json"))
+                .contentType(ContentType.JSON)
+
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(400);
+
+    }
+
+    @Test
+    public void insertContextWithTokenNameImageURLSoundURLVideoURLButInexistentUser_ShouldReturn404() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(404);
+    }
+
+    @Test
+    public void insertContextWithMalformedOrExpiredToken_ShouldReturn500() throws Exception {
+
+        //Create Context
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + invalidToken,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(500);
+    }
+
+    @Test
+    public void findContextsByToken_ShouldReturn201() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Create Context
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts");
+
+        //Get Contexts
+        given()
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"auth/contexts")
+                .then().assertThat().statusCode(200);
+
+//        //Just to remove context from db
+//        given()
+//                .headers(
+//                        "Authorization",
+//                        "Bearer " + token,
+//                        "Content-Type",
+//                        ContentType.JSON,
+//                        "Accept",
+//                        ContentType.JSON)
+//                .when()
+//                .delete(baseURI+":"+port+basePath+"auth/contexts");
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+    }
+
+    @Test
+    public void findContextsByTokenWithInexistentUser_ShouldReturn404() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+
+        //Get Contexts
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(404);
+    }
+
+    @Test
+    public void findContextsByMalformedOrExpiredToken_ShouldReturn500() throws Exception {
+
+        //Get Contexts
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + invalidToken,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(500);
+    }
+
+    @Test
+    public void findContextByID_ShouldReturn200() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Create Context
+        Response contextDTOResponse = given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .extract().response();
+
+        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+
+        String actualContextID = contextDTOJSONActual.getString("id");
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"contexts/" + actualContextID)
+                .then()
+                .assertThat().statusCode(200);
+
+//        //Just to remove context from db
+//        given()
+//                .headers(
+//                        "Authorization",
+//                        "Bearer " + token,
+//                        "Content-Type",
+//                        ContentType.JSON,
+//                        "Accept",
+//                        ContentType.JSON)
+//                .when()
+//                .delete(baseURI+":"+port+basePath+"auth/contexts");
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+
+    }
+
+    @Test
+    public void findContextByNullID_ShouldReturn400() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Get Context
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"contexts/" + null)
+                .then()
+                .assertThat().statusCode(400);
+
+    }
+
+    @Test
+    public void findContextByInexistentID_ShouldReturn404() throws Exception {
+
+        //Create User
+        given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when().post(baseURI+":"+port+basePath+"users");
+
+        //Authenticate User
+        String token = given().body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .log().all()
+                .extract().path("token");
+
+        //Create Context
+        Response contextDTOResponse = given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .extract().response();
+
+        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+
+        String actualContextID = contextDTOJSONActual.getString("id");
+
+        //Just to remove context by id from db
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/contexts/" + actualContextID);
+
+        //Get Context
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .get(baseURI+":"+port+basePath+"contexts/" + actualContextID)
+                .then()
+                .assertThat().statusCode(404);
+
+        //Just to remove user from DB
+        given()
+                .headers(
+                        "Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .delete(baseURI+":"+port+basePath+"auth/users");
+    }
+
+    @Test
+    public void findContextBtQuery_ShouldReturn200(){
+
+    }
 }
+
+//ISSUES:
+// Tentar criar um contexto com mesmo nome retorna status code 403Forbidden
+// Contextos sendo criados mesmo sem urls
+// Nomes estão passando com caracteres que não são letras(pode ser um problema principalmente para usuários)
+// VALIDAÇÃO DE EMAIL NÃO ESTÁ IMPLEMENTADO EM PESQUISAS POR QUERY
+// na documentação do educAPI no swagger | context-resource, put indica que é um possivel response "201 created" porém é um update não era pra ter created... aparentemente é so um erro de texto na propria documentação do swagger.
+// Atualizar contextos inserindo o mesmo nome do contexto antigo ou com novo nome que não seja somente letras está passando, ou seja o processamento esta sendo realizado porem está trocando o mesmo objeto pelo menos objeto idêntico, talvez isso devesse ser tratado.
