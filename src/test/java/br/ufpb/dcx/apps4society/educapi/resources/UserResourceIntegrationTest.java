@@ -3,6 +3,7 @@ package br.ufpb.dcx.apps4society.educapi.resources;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
+import br.ufpb.dcx.apps4society.educapi.utils.USER_RequestsUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
 import io.restassured.response.*;
@@ -17,12 +18,8 @@ import static io.restassured.RestAssured.*;
 
 public class UserResourceIntegrationTest{
 
-    private static String NAME = "jose";
-    private static String EMAIL = "jose@educapi.com";
-    private static String PASSWORD = "12345678";
     private static String USER_POST_ENDPOINT = baseURI+":"+port+basePath+"users";
     private static String USER_AUTENTICATION_ENDPOINT = baseURI+":"+port+basePath+"auth/login";
-
     private static String CONTEXT_POST_ENDPOINT = baseURI+":"+port+basePath+"contexts";
     private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9.qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
 
@@ -44,9 +41,7 @@ public class UserResourceIntegrationTest{
        .when()
                .post(baseURI+":"+port+basePath+"users")
        .then()
-               .assertThat()
-               .statusCode(201)
-                
+               .assertThat().statusCode(201)
                .extract().response();
 
         JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
@@ -78,27 +73,14 @@ public class UserResourceIntegrationTest{
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then().extract().path("token");
 
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
     @Test
     public void insertUserByNameEmailPasswordAlreadyExists_shouldReturn201Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-        .when()
-                .post(baseURI+":"+port+basePath+"users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
 
         given()
                 .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
@@ -106,9 +88,7 @@ public class UserResourceIntegrationTest{
         .when()
                 .post(baseURI+":"+port+basePath+"users")
         .then()
-                .assertThat()
-                .statusCode(204)
-                .log().all();
+                .assertThat().statusCode(204);
 
         //Just to remove user from DB
         String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
@@ -117,16 +97,7 @@ public class UserResourceIntegrationTest{
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then().extract().path("token");
 
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
@@ -139,9 +110,7 @@ public class UserResourceIntegrationTest{
                 .when()
                 .post(baseURI+":"+port+basePath+"users")
                 .then()
-                .assertThat()
-                .statusCode(400)
-                .log().all();
+                .assertThat().statusCode(400);
     }
 
     @Test
@@ -153,9 +122,7 @@ public class UserResourceIntegrationTest{
             .when()
                 .post(baseURI+":"+port+basePath+"users")
             .then()
-                .assertThat()
-                .statusCode(400)
-                .log().all();
+                .assertThat().statusCode(400);
 
     }
 
@@ -170,7 +137,6 @@ public class UserResourceIntegrationTest{
             .then()
                 .assertThat()
                 .statusCode(400)
-                .log().all()
                 .extract().response();
 
     }
@@ -178,13 +144,9 @@ public class UserResourceIntegrationTest{
     //_____________________________________________________________________________________________________
 
     @Test
-    public void authenticateUserByEmailPassword_shouldReturn201Test() throws Exception {
+    public void authenticateUserByEmailPassword_shouldReturn200Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
 
         String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
@@ -197,17 +159,7 @@ public class UserResourceIntegrationTest{
 
         Assertions.assertNotNull(token);
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
@@ -218,67 +170,51 @@ public class UserResourceIntegrationTest{
         given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/login").then().assertThat().statusCode(401);
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then()
+                .assertThat().statusCode(401);
 
     }
 
     @Test
     public void authenticateUserByInvalidEmail_shouldReturn401Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserInvalidEmailBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
-                .assertThat()
-                .statusCode(401)
-                .log().all();
+                .assertThat().statusCode(401);
 
     }
 
     @Test
     public void authenticateUserByInvalidPasswordLessThan8Characters_shouldReturn401Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserPasswordLessThan8Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
-                .assertThat()
-                .statusCode(401)
-                .log().all();
+                .assertThat().statusCode(401);
 
     }
 
     @Test
     public void authenticateUserByInvalidPasswordMoreThan12Characters_shouldReturn401Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticateUserPasswordMoreThan8Body.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
-                .assertThat()
-                .statusCode(401)
-                .log().all();
+                .assertThat().statusCode(401);
 
     }
 
@@ -287,20 +223,8 @@ public class UserResourceIntegrationTest{
     @Test
     public void findUserByToken_ShouldReturn200Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                    .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                    .log().all()
-                    .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                     .headers(
@@ -336,51 +260,16 @@ public class UserResourceIntegrationTest{
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("name"), userDTOJSON_Actual.getString("name"));
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("email"), userDTOJSON_Actual.getString("email"));
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
     @Test
     public void findInexistentUserByToken_ShouldReturn500Test() throws Exception {
 
-        // Create user
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        //Authenticate user
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
-
-        //Delete user
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.deleteUser(token);
 
         //Try to get a inexistent user
         given()
@@ -421,20 +310,8 @@ public class UserResourceIntegrationTest{
     @Test
     public void updateUserByEmailAndNameAndPasswordAndToken_ShouldReturn200Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                     .headers(
@@ -450,9 +327,7 @@ public class UserResourceIntegrationTest{
                     .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
                     .assertThat().statusCode(200)
-                    .log().all()
-                    .extract()
-                    .response();
+                    .extract().response();
 
         JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
 
@@ -476,51 +351,16 @@ public class UserResourceIntegrationTest{
         Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
         Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
     @Test
     public void updateInexistentUserByEmailAndNameAndPasswordAndToken_ShouldReturn500Test() throws Exception {
 
-        // Create user
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        //Authenticate user
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
-
-        //Delete user
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.deleteUser(token);
 
         given()
                 .headers(
@@ -542,20 +382,8 @@ public class UserResourceIntegrationTest{
     @Test
     public void updateUserByInvalidEmail_ShouldReturn400Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -572,37 +400,15 @@ public class UserResourceIntegrationTest{
                 .then()
                 .assertThat().statusCode(400);
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
 
     }
 
     @Test
     public void updateUserByPasswordLessThan8Characters_ShouldReturn403Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -619,36 +425,15 @@ public class UserResourceIntegrationTest{
                 .then()
                 .assertThat().statusCode(400);
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
+
     }
 
     @Test
     public void updateUserByPasswordMoreThan8Characters_ShouldReturn403Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -665,17 +450,8 @@ public class UserResourceIntegrationTest{
                 .then()
                 .assertThat().statusCode(400);
 
-        //Just to remove user from DB
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.deleteUser(token);
+
     }
 
     @Test
@@ -704,20 +480,8 @@ public class UserResourceIntegrationTest{
     @Test
     public void deleteUserByToken_ShouldReturn200Test() throws Exception {
 
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                .log().all()
-                .extract().path("token");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                 .headers(
@@ -760,34 +524,9 @@ public class UserResourceIntegrationTest{
     @Test
     public void deleteInexistentUserByToken_ShouldReturn500Test() throws Exception {
 
-        // Create user
-        given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"users");
-
-        //Authenticate user
-        String token = given()
-                .body(FileUtils.getJsonFromFile("USER_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then()
-                 
-                .extract().path("token");
-
-        //Delete user
-        given()
-                .headers(
-                        "Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .delete(baseURI+":"+port+basePath+"auth/users");
+        USER_RequestsUtil.postUser("USER_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticateUser("USER_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.deleteUser(token);
 
         given()
                 .headers(
