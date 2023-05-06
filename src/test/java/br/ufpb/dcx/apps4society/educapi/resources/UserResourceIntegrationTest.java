@@ -141,7 +141,6 @@ public class UserResourceIntegrationTest{
 
     }
 
-    //_____________________________________________________________________________________________________
 
     @Test
     public void authenticateUserByEmailPassword_shouldReturn200Test() throws Exception {
@@ -162,7 +161,6 @@ public class UserResourceIntegrationTest{
         USER_RequestsUtil.deleteUser(token);
 
     }
-
 
     @Test
     public void authenticateUserInexistent_ShouldReturn401() throws Exception {
@@ -218,7 +216,6 @@ public class UserResourceIntegrationTest{
 
     }
 
-    //______________________________________________________________________________________________________
 
     @Test
     public void findUserByToken_ShouldReturn200Test() throws Exception {
@@ -305,7 +302,6 @@ public class UserResourceIntegrationTest{
 
     }
 
-    //______________________________________________________________________________________________________
 
     @Test
     public void updateUserByEmailAndNameAndPasswordAndToken_ShouldReturn200Test() throws Exception {
@@ -475,8 +471,6 @@ public class UserResourceIntegrationTest{
     }
 
 
-    //______________________________________________________________________________________________________
-
     @Test
     public void deleteUserByToken_ShouldReturn200Test() throws Exception {
 
@@ -562,9 +556,5 @@ public class UserResourceIntegrationTest{
                 .assertThat().statusCode(500);
 
     }
-
-//    https://www.youtube.com/watch?v=Y4_LmPhx1Jc
-//    https://www.youtube.com/watch?v=l5WfHfHvqo8
-//    https://www.youtube.com/watch?v=3duamjhP7NM
 
 }
