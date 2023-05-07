@@ -5,8 +5,9 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 
 import static io.restassured.RestAssured.*;
+import static io.restassured.RestAssured.basePath;
 
-public class CONTEXT_RequestUtil {
+public class CHALLENGE_RequestsUtil {
 
     @BeforeEach
     public void setUp(){
@@ -17,9 +18,9 @@ public class CONTEXT_RequestUtil {
 
     }
 
-    public static Response postContext(String token, String body) throws Exception {
+    public static Response postChallenge(String token, String body, String contextID) throws Exception {
 
-        Response contextDTOResponse = given()
+        Response challengeDTOResponse = given()
                 .body(FileUtils.getJsonFromFile(body))
                 .contentType(ContentType.JSON)
                 .headers("Authorization",
@@ -27,15 +28,16 @@ public class CONTEXT_RequestUtil {
                         "Content-Type",
                         ContentType.JSON,
                         "Accept",
-                        ContentType.JSON).when()
-                .post(baseURI+":"+port+basePath+"auth/contexts")
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
                 .then()
                 .extract().response();
 
-        return contextDTOResponse;
+        return challengeDTOResponse;
     }
 
-    public static void deleteContext(String token, String ID){
+    public static void deleteChallenge(String token, String ID){
 
         given()
                 .headers(
@@ -46,7 +48,7 @@ public class CONTEXT_RequestUtil {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .delete(baseURI+":"+port+basePath+"auth/contexts/" + ID);
-    }
+                .delete(baseURI+":"+port+basePath+"auth/challenges/" + ID);
 
+    }
 }
