@@ -20,11 +20,8 @@ import static io.restassured.RestAssured.basePath;
 
 public class ContextResourceIntegrationTest {
 
-    private static String USER_POST_ENDPOINT = baseURI+":"+port+basePath+"users";
-    private static String USER_AUTENTICATION_ENDPOINT = baseURI+":"+port+basePath+"auth/login";
-    private static String CONTEXT_POST_ENDPOINT = baseURI+":"+port+basePath+"contexts";
-
-    private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9.qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
+    private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
+            "qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
 
     @BeforeEach
     public void setUp(){
