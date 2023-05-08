@@ -251,4 +251,3 @@ GitHub.sublime-settings
 # .env
 .env
 .env-prod
-src/test/resources/*\[spawned\].json

@@ -1,6 +1,5 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
-import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.CONTEXT_RequestsUtil;
@@ -19,7 +18,19 @@ import java.io.File;
 import static io.restassured.RestAssured.*;
 import static io.restassured.RestAssured.basePath;
 
-public class ContextResourceIntegrationTest extends EducApiApplicationTests {
+public class ContextResourceIntegrationTest {
+
+    private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
+            "qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
+
+    @BeforeEach
+    public void setUp(){
+
+        baseURI = "http://localhost";
+        port = 8080;
+        basePath = "/v1/api/";
+
+    }
 
     @Test
     public void insertContextWithTokenNameImageURLSoundURLVideoURL_ShouldReturn201Test() throws Exception {
@@ -854,7 +865,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
 // Nomes estão passando com caracteres que não são letras(pode ser um problema principalmente para usuários)
 // VALIDAÇÃO DE EMAIL NÃO ESTÁ IMPLEMENTADO EM PESQUISAS POR QUERY
 // na documentação do educAPI no swagger | context-resource, put indica que é um possivel response "201 created" porém é um update não era pra ter created... aparentemente é so um erro de texto na propria documentação do swagger.
-// Atualizar contextos inserindo o mesmo nome do contexto antigo ou com novo nome que não seja somente letras está passando, ou seja o processamento esta sendo realizado porem está trocando o mesmo objeto pelo menos objeto idêntico, talvez isso devesse ser tratado.
+// Atualizar contextos inserindo o mesmo nome do contexto antigo ou com novo nome que não seja somente letras está passando, ou seja o processamento esta sendo realizado porem está trocando o mesmo objeto pelo mesmo objeto idêntico, talvez isso devesse ser tratado.
 
 //    https://www.youtube.com/watch?v=Y4_LmPhx1Jc
 //    https://www.youtube.com/watch?v=l5WfHfHvqo8

@@ -9,6 +9,15 @@ import static io.restassured.RestAssured.basePath;
 
 public class CHALLENGE_RequestsUtil {
 
+    @BeforeEach
+    public void setUp(){
+
+        baseURI = "http://localhost";
+        port = 8080;
+        basePath = "/v1/api/";
+
+    }
+
     public static Response postChallenge(String token, String body, String contextID) throws Exception {
 
         Response challengeDTOResponse = given()
@@ -29,6 +38,7 @@ public class CHALLENGE_RequestsUtil {
     }
 
     public static void deleteChallenge(String token, String ID){
+
         given()
                 .headers(
                         "Authorization",
