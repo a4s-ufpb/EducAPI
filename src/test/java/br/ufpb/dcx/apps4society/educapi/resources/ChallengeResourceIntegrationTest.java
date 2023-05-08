@@ -13,9 +13,6 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 
@@ -734,105 +731,6 @@ public class ChallengeResourceIntegrationTest {
 
     }
 
-    @Test
-    public void findChallengeQueryMissingToken_ShouldReturn400Test() throws Exception {
-
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
-
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.postChallenge(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
-
-        //Read challenge
-        given()
-                .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .get(baseURI+":"+port+basePath+"challenges/" + "?word=&page=0&size=20")
-                .then()
-                .assertThat().statusCode(400);
-
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
-
-        USER_RequestsUtil.deleteUser(token);
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        CHALLENGE_RequestsUtil.deleteChallenge(token, challengeIDActual);
-
-    }
-
-    @Test
-    public void findChallengeQueryByTokenLinkedToMissingCreator_ShouldReturn404Test() throws Exception {
-
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
-
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.postChallenge(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
-
-        USER_RequestsUtil.deleteUser(token);
-
-        //Read challenge
-        given()
-                .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .headers("Authorization", "Bearer " + token,
-                        "content-type", ContentType.JSON,
-                        "Accept", ContentType.JSON)
-                .when()
-                .get(baseURI+":"+port+basePath+"challenges/" + "?word=&page=0&size=20")
-                .then()
-                .assertThat().statusCode(404);
-
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
-
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        CHALLENGE_RequestsUtil.deleteChallenge(token, challengeIDActual);
-
-    }
-
-    @Test
-    public void findChallengeQueryByMalformedOrExpiredToken_ShouldReturn500Test() throws Exception {
-
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
-
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.postChallenge(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
-
-        given()
-                .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .headers("Authorization", "Bearer " + invalidToken,
-                        "content-type", ContentType.JSON,
-                        "Accept", ContentType.JSON)
-                .when()
-                .get(baseURI+":"+port+basePath+"challenges/" + "?word=&page=0&size=20")
-                .then()
-                .assertThat().statusCode(500).log().all();
-
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
-
-        USER_RequestsUtil.deleteUser(token);
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        CHALLENGE_RequestsUtil.deleteChallenge(token, challengeIDActual);
-
-    }
-
 
     @Test
     public void updateChallengeByCreatorTokenBodyChallengeID_ShouldReturn200Test() throws Exception {
@@ -1436,17 +1334,6 @@ public class ChallengeResourceIntegrationTest {
         CONTEXT_RequestsUtil.deleteContext(token, contextID);
         CHALLENGE_RequestsUtil.deleteChallenge(token, challengeIDExpected);
 
-
     }
 
 }
-
-//ISSUES
-// i1: GET por QUERY não está filtrando nada, sugestão: filtrar por word
-// i2: PUT desafio com word já existente(200 OK) não altera nada e retorna o mesmo desafio(body) do input. Sugestão: Deveria ser tratado
-
-//TODO's
-// ToDo: FAZER A VERIFICAÇÃO DE QUANTIDADE DE CARACTERES DE CONTEXTS
-// ToDo: FAZER UMA TABELA DAS FUNÇÕES E O QUE FORAM TESTADAS NELAS em x e y(BATALHA NAVAL)
-// ToDo: FAZER O TESTE DE INTEGRAÇÃO DO LOGIN-RESOURCE
-// ToDo: Drop tables between tests

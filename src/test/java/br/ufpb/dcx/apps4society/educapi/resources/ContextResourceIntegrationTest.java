@@ -855,18 +855,3 @@ public class ContextResourceIntegrationTest {
 
     }
 }
-
-//ISSUES:
-// Tentar criar um contexto com mesmo nome retorna status code 403Forbidden
-// Contextos sendo criados mesmo sem urls
-// QUERY Busca de contextos por nome com nome vazio retorna todos os desafios e 200 OK
-// QUERY Busca de contextos por email com email vazio retorna nada e 200 OK
-// QUERY BUSCA SEM ID exibe todos os contextos
-// Nomes estão passando com caracteres que não são letras(pode ser um problema principalmente para usuários)
-// VALIDAÇÃO DE EMAIL NÃO ESTÁ IMPLEMENTADO EM PESQUISAS POR QUERY
-// na documentação do educAPI no swagger | context-resource, put indica que é um possivel response "201 created" porém é um update não era pra ter created... aparentemente é so um erro de texto na propria documentação do swagger.
-// Atualizar contextos inserindo o mesmo nome do contexto antigo ou com novo nome que não seja somente letras está passando, ou seja o processamento esta sendo realizado porem está trocando o mesmo objeto pelo mesmo objeto idêntico, talvez isso devesse ser tratado.
-
-//    https://www.youtube.com/watch?v=Y4_LmPhx1Jc
-//    https://www.youtube.com/watch?v=l5WfHfHvqo8
-//    https://www.youtube.com/watch?v=3duamjhP7NM
