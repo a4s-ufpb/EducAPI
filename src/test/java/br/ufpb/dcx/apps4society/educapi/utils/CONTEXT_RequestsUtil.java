@@ -8,15 +8,6 @@ import static io.restassured.RestAssured.*;
 
 public class CONTEXT_RequestsUtil {
 
-    @BeforeEach
-    public void setUp(){
-
-        baseURI = "http://localhost";
-        port = 8080;
-        basePath = "/v1/api/";
-
-    }
-
     public static Response postContext(String token, String body) throws Exception {
 
         Response contextDTOResponse = given()

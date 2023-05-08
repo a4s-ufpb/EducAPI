@@ -8,15 +8,6 @@ import static io.restassured.RestAssured.*;
 
 public class USER_RequestsUtil {
 
-    @BeforeEach
-    public void setUp(){
-
-        baseURI = "http://localhost";
-        port = 8080;
-        basePath = "/v1/api/";
-
-    }
-
     public static Response postUser(String body) throws Exception {
         Response userDTOResponse = given().body(FileUtils.getJsonFromFile(body))
                 .contentType(ContentType.JSON)

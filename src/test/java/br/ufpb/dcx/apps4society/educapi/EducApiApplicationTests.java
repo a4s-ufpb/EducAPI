@@ -1,19 +1,49 @@
 package br.ufpb.dcx.apps4society.educapi;
 
-import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.annotation.DirtiesContext;
 
-@SpringBootTest
-@ComponentScan(basePackages = "repositories")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 public class EducApiApplicationTests {
+	@LocalServerPort
+	public int port;
 
-	@Test
-	void contextLoads() {
+	@Autowired
+	public TestRestTemplate restTemplate;
+
+	public static final String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
+			"qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
+
+	@BeforeEach
+	public void setupServerParam() {
+		io.restassured.RestAssured.baseURI = "http://localhost";
+		io.restassured.RestAssured.basePath = "/v1/api/";
+		io.restassured.RestAssured.port = this.port;
 	}
 
 }
+
+//import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+//import org.junit.jupiter.api.Test;
+//import org.springframework.boot.test.context.SpringBootTest;
+//import org.springframework.context.annotation.ComponentScan;
+//
+//@SpringBootTest
+//@ComponentScan(basePackages = "repositories")
+//public class EducApiApplicationTests {
+//
+//	@Test
+//	void contextLoads() {
+//	}
+//
+//}
 
 //package br.ufpb.dcx.apps4society.educapi;
 //

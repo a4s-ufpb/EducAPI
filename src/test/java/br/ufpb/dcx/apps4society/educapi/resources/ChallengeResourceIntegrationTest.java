@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
+import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ChallengeBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.CHALLENGE_RequestsUtil;
@@ -18,19 +19,7 @@ import java.io.File;
 
 import static io.restassured.RestAssured.*;
 
-public class ChallengeResourceIntegrationTest {
-
-    private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
-            "qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
-
-    @BeforeEach
-    public void setUp(){
-
-        baseURI = "http://localhost";
-        port = 8080;
-        basePath = "/v1/api/";
-
-    }
+public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
 
     @Test
     public void insertChallengeByCreatorTokenBodyContextID_ShouldReturn201Test() throws Exception {
