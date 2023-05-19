@@ -108,10 +108,10 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(403);
 
-//        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-//        String actualContextID = contextDTOJSONActual.getString("id");
-//
-//        CONTEXT_RequestUtil.deleteContext(token, actualContextID);
+        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String actualContextID = contextDTOJSONActual.getString("id");
+
+        CONTEXT_RequestsUtil.deleteContext(token, actualContextID);
         USER_RequestsUtil.deleteUser(token);
     }
 

@@ -6,8 +6,8 @@ import java.nio.file.Files;
 
 public class FileUtils {
 
-    public static String getJsonFromFile(String fileName) throws Exception{
-        ClassPathResource resource = new ClassPathResource(fileName);
+    public static String getJsonFromFile(String fileLocation) throws Exception{
+        ClassPathResource resource = new ClassPathResource(fileLocation);
         return new String(Files.readAllBytes(resource.getFile().toPath()));
 
     }
