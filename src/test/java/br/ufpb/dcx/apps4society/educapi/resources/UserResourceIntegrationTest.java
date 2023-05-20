@@ -70,14 +70,14 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then().extract().path("token");
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void insertUserByNameEmailPasswordAlreadyExists_shouldReturn201Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .body(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"))
@@ -94,7 +94,7 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then().extract().path("token");
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
@@ -142,7 +142,7 @@ public class UserResourceIntegrationTest {
     @Test
     public void authenticateUserByEmailPassword_shouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
         String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
                 .contentType(ContentType.JSON)
@@ -155,7 +155,7 @@ public class UserResourceIntegrationTest {
 
         Assertions.assertNotNull(token);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
@@ -174,7 +174,7 @@ public class UserResourceIntegrationTest {
     @Test
     public void authenticateUserByInvalidEmail_shouldReturn401Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticateInvalidEmailBody.json"))
                 .contentType(ContentType.JSON)
@@ -188,7 +188,7 @@ public class UserResourceIntegrationTest {
     @Test
     public void authenticateUserByInvalidPasswordLessThan8Characters_shouldReturn401Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticatePasswordLessThan8Body.json"))
                 .contentType(ContentType.JSON)
@@ -202,7 +202,7 @@ public class UserResourceIntegrationTest {
     @Test
     public void authenticateUserByInvalidPasswordMoreThan12Characters_shouldReturn401Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
         given().body(FileUtils.getJsonFromFile("USER_AuthenticatePasswordMoreThan8Body.json"))
                 .contentType(ContentType.JSON)
@@ -217,8 +217,8 @@ public class UserResourceIntegrationTest {
     @Test
     public void findUserByToken_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                     .headers(
@@ -254,16 +254,16 @@ public class UserResourceIntegrationTest {
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("name"), userDTOJSON_Actual.getString("name"));
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("email"), userDTOJSON_Actual.getString("email"));
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findInexistentUserByToken_ShouldReturn500Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.delete(token);
 
         //Try to get a inexistent user
         given()
@@ -303,8 +303,8 @@ public class UserResourceIntegrationTest {
     @Test
     public void updateUserByEmailAndNameAndPasswordAndToken_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                     .headers(
@@ -344,16 +344,16 @@ public class UserResourceIntegrationTest {
         Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
         Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateInexistentUserByEmailAndNameAndPasswordAndToken_ShouldReturn500Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.delete(token);
 
         given()
                 .headers(
@@ -375,8 +375,8 @@ public class UserResourceIntegrationTest {
     @Test
     public void updateUserByInvalidEmail_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -393,15 +393,15 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateUserByPasswordLessThan8Characters_ShouldReturn403Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -418,15 +418,15 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateUserByPasswordMoreThan8Characters_ShouldReturn403Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .headers(
@@ -443,7 +443,7 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
@@ -471,8 +471,8 @@ public class UserResourceIntegrationTest {
     @Test
     public void deleteUserByToken_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         Response userDTOResponse = given()
                 .headers(
@@ -515,9 +515,9 @@ public class UserResourceIntegrationTest {
     @Test
     public void deleteInexistentUserByToken_ShouldReturn500Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.delete(token);
 
         given()
                 .headers(

@@ -8,6 +8,9 @@ import static io.restassured.RestAssured.*;
 
 public class USER_RequestsUtil {
 
+    private static String USER_POST_ENDPOINT = baseURI+":"+port+basePath+"users";
+    private static String USER_AUTENTICATION_ENDPOINT = baseURI+":"+port+basePath+"auth/login";
+
     @BeforeEach
     public void setUp(){
 
@@ -17,20 +20,20 @@ public class USER_RequestsUtil {
 
     }
 
-    public static Response postUser(String body) throws Exception {
+    public static Response post(String body) throws Exception {
         Response userDTOResponse = given().body(FileUtils.getJsonFromFile(body))
                 .contentType(ContentType.JSON)
-                .when().post(baseURI + ":" + port + basePath + "users")
+                .when().post(USER_POST_ENDPOINT)
                 .then()
                 .extract().response();
         return userDTOResponse;
     }
 
-    public static String authenticateUser(String body) throws Exception {
+    public static String authenticate(String body) throws Exception {
         String token = given().body(FileUtils.getJsonFromFile(body))
                 .contentType(ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
+                .post(USER_AUTENTICATION_ENDPOINT)
                 .then()
                 .log().all()
                 .extract().path("token");
@@ -39,7 +42,7 @@ public class USER_RequestsUtil {
 
     }
 
-    public static void deleteUser(String token){
+    public static void delete(String token){
         given()
                 .headers(
                         "Authorization",

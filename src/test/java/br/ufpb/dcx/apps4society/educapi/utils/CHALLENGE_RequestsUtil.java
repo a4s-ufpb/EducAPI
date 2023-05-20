@@ -18,7 +18,7 @@ public class CHALLENGE_RequestsUtil {
 
     }
 
-    public static Response postChallenge(String token, String body, String contextID) throws Exception {
+    public static Response post(String token, String body, String contextID) throws Exception {
 
         Response challengeDTOResponse = given()
                 .body(FileUtils.getJsonFromFile(body))
@@ -37,7 +37,7 @@ public class CHALLENGE_RequestsUtil {
         return challengeDTOResponse;
     }
 
-    public static void deleteChallenge(String token, String ID){
+    public static void delete(String token, String ID){
 
         given()
                 .headers(

@@ -35,9 +35,9 @@ public class ContextResourceIntegrationTest {
     @Test
     public void insertContextWithTokenNameImageURLSoundURLVideoURL_ShouldReturn201Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Create Context
         Response contextDTOResponse = given()
@@ -80,19 +80,19 @@ public class ContextResourceIntegrationTest {
         Assertions.assertEquals(contextJSONExpected.getString("soundUrl"), contextDTOJSONActual.getString("soundUrl"));
         Assertions.assertEquals(contextJSONExpected.getString("videoUrl"), contextDTOJSONActual.getString("videoUrl"));
 
-        CONTEXT_RequestsUtil.deleteContext(token, actualContextID);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, actualContextID);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn403Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
@@ -111,16 +111,16 @@ public class ContextResourceIntegrationTest {
         JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String actualContextID = contextDTOJSONActual.getString("id");
 
-        CONTEXT_RequestsUtil.deleteContext(token, actualContextID);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, actualContextID);
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
     public void insertContextWithTokenImageURLSoundURLVideoURLWithoutName_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_MissingNameExpectedRegisterDTOBody.json"))
@@ -136,7 +136,7 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -156,11 +156,11 @@ public class ContextResourceIntegrationTest {
     @Test
     public void insertContextWithTokenNameImageURLSoundURLVideoURLButInexistentUser_ShouldReturn404Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
         given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
@@ -199,9 +199,9 @@ public class ContextResourceIntegrationTest {
     @Test
     public void findContextsByToken_ShouldReturn201Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         //Get Contexts
         given()
@@ -215,16 +215,16 @@ public class ContextResourceIntegrationTest {
                 .get(baseURI+":"+port+basePath+"auth/contexts")
                 .then().assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextsByTokenWithInexistentUser_ShouldReturn404Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.delete(token);
 
         //Get Contexts
         given()
@@ -265,9 +265,9 @@ public class ContextResourceIntegrationTest {
     @Test
     public void findContextByID_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String actualContextID = contextDTOJSONActual.getString("id");
@@ -286,15 +286,15 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextByNonID_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Get Context
         given()
@@ -311,21 +311,21 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextByInexistentID_ShouldReturn404Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String actualContextID = contextDTOJSONActual.getString("id");
 
-        CONTEXT_RequestsUtil.deleteContext(token, actualContextID);
+        CONTEXT_RequestsUtil.delete(token, actualContextID);
 
         //Get Context
         given()
@@ -342,16 +342,16 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextByOwnerEmailQuery_ShouldReturn200Test() throws Exception {
 
-        Response userDTOResponse = USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        Response userDTOResponse = USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
         String actualUserEmail = userDTOJSONActual.getString("email");
@@ -371,16 +371,16 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextByContextNameQuery_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String actualContextName = contextDTOJSONActual.getString("name");
@@ -400,15 +400,15 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextsByNonNamedQuery_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Get All Contexts
         given()
@@ -425,15 +425,15 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void findContextsByNonEmailQuery_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Get Contexts
         given()
@@ -450,16 +450,16 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextByTokenIDNameImageURLSoundURLVideoURL_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -504,17 +504,17 @@ public class ContextResourceIntegrationTest {
         Assertions.assertEquals(contextDTOJSON.getString("soundUrl"), contextDTOJSONUpdated.getString("soundUrl"));
         Assertions.assertEquals(contextDTOJSON.getString("videoUrl"), contextDTOJSONUpdated.getString("videoUrl"));
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextIDUpdated);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, contextIDUpdated);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextByTokenImageURLSoundURLVideoURLButSameName_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -559,17 +559,17 @@ public class ContextResourceIntegrationTest {
         Assertions.assertEquals(contextDTOJSON.getString("soundUrl"), contextDTOJSONUpdated.getString("soundUrl"));
         Assertions.assertEquals(contextDTOJSON.getString("videoUrl"), contextDTOJSONUpdated.getString("videoUrl"));
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextIDUpdated);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, contextIDUpdated);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextByNonName_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -590,16 +590,16 @@ public class ContextResourceIntegrationTest {
                 .assertThat().statusCode(400)
                 .extract().response();
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, contextID);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextByNonID_ShouldReturn405Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Update Context
         given()
@@ -616,21 +616,21 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(405);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateInexistentContextByID_ShouldReturn404Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextID);
 
         //Update Context
         given()
@@ -647,15 +647,15 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextByNonNumericID_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         String contextID = "ID Non Numeric";
 
@@ -675,16 +675,16 @@ public class ContextResourceIntegrationTest {
                 .assertThat().statusCode(400)
                 .extract().response();
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextButAnyToken_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -698,17 +698,17 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, contextID);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void updateContextButExpiredOrMalformedToken_ShouldReturn500Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -728,17 +728,17 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(500);
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
-        USER_RequestsUtil.deleteUser(token);
+        CONTEXT_RequestsUtil.delete(token, contextID);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void deleteContextByTokenID_ShouldReturn200Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -755,15 +755,15 @@ public class ContextResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/contexts/" + contextID)
                 .then().assertThat().statusCode(200);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void deleteContextButAnyID_ShouldReturn405Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
 
         //Delete Context
         given()
@@ -777,21 +777,21 @@ public class ContextResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/contexts")
                 .then().assertThat().statusCode(405);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void deleteInexistentContextByID_ShouldReturn404Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
 
-        CONTEXT_RequestsUtil.deleteContext(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextID);
 
         //Delete Context
         given()
@@ -805,16 +805,16 @@ public class ContextResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/contexts/" + contextID)
                 .then().assertThat().statusCode(404);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void deleteContextButPassAnyToken_ShouldReturn400Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -825,16 +825,16 @@ public class ContextResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/contexts/" + contextID)
                 .then().assertThat().statusCode(400);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 
     @Test
     public void deleteContextByExpiredOrMalformedToken_ShouldReturn500Test() throws Exception {
 
-        USER_RequestsUtil.postUser("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticateUser("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.postContext(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSON.getString("id");
@@ -851,7 +851,7 @@ public class ContextResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/contexts/" + contextID)
                 .then().assertThat().statusCode(500);
 
-        USER_RequestsUtil.deleteUser(token);
+        USER_RequestsUtil.delete(token);
 
     }
 }
