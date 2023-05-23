@@ -36,15 +36,22 @@ Access the cloned repository through the IDE of your choice and change the `spri
 
 Create a `.env` file in the project's root directory, to set the environment variables used in the API, and fill this file with the following content:
 
+PostgreSQL(dev):
+
     EDUCAPI_VERSION=1.0.4
     PROFILE_ACTIVE=dev
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
     POSTGRES_DB=educapi
-    DB_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+    DB_URL=jdbc:postgresql://localhost:5432/${POSTGRES_DB}
     TOKEN_KEY=educapi-dev
     
+ H2(test):
  
+     EDUCAPI_VERSION=1.0.4
+     PROFILE_ACTIVE=test
+     TOKEN_KEY=educapi-dev
+     
 
 > NOTE: Configure the environment variables above according to the PostgreSQL connection created on your machine.
 
@@ -113,6 +120,12 @@ This project is licensed under the MIT License, see also [LICENSE.md](https://gi
 	    <a href="https://github.com/MarcosLudgerio">
 		    <img style="border-radius: 50%;" src="https://avatars0.githubusercontent.com/u/43012976?s=460&u=1163c04d9f35b577063b3f6550ae520c4dd2f866&v=4" width="100px;" alt=""/>
 		    <br/><sub><b>Marcos Ludgero</b></sub>
+		</a></br>
+    </td>
+    <td align="center">
+	    <a href="https://github.com/robinsonmourao">
+		    <img style="border-radius: 50%;" src="https://avatars.githubusercontent.com/u/49078615?s=460&u=1163c04d9f35b577063b3f6550ae520c4dd2f866&v=4" width="100px;" alt=""/>
+		    <br/><sub><b>Robinson Mourão</b></sub>
 		</a></br>
     </td>
   </tr>
