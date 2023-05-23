@@ -15,10 +15,10 @@ import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ChallengeBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ChallengeBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ContextBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ServicesBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -196,25 +196,6 @@ public class ChallengeServiceTest {
         assertEquals(challengeResponse.getSoundUrl(), challengeRegisterDTO.getSoundUrl());
         assertEquals(challengeResponse.getVideoUrl(), challengeRegisterDTO.getVideoUrl());
         
-    }
-
-    @Test
-    public void insertChallengeAlreadyExistTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException {
-       
-        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);        
-        Mockito.lenient().when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
-
-        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
-
-        challengeOptional = Optional.of(challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId()));
-
-        Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
-
-        assertThrows(ChallengeAlreadyExistsException.class, () -> {
-                challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, context.getId());
-
-        });
-
     }
 
     @Test

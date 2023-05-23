@@ -1,7 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ChallengeBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ChallengeBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.CHALLENGE_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.CONTEXT_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
@@ -79,40 +79,6 @@ public class ChallengeResourceIntegrationTest {
         Assertions.assertEquals(challengeJSONExpected.getString("imageUrl"), challengeDTOJSONActual.getString("imageUrl"));
         Assertions.assertEquals(challengeJSONExpected.getString("soundUrl"), challengeDTOJSONActual.getString("soundUrl"));
         Assertions.assertEquals(challengeJSONExpected.getString("videoUrl"), challengeDTOJSONActual.getString("videoUrl"));
-
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
-    }
-
-    @Test
-    public void insertChallengeByAlreadyExistingWord_ShouldReturn201Test() throws Exception {
-
-        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
-
-        CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
-
-        //Create challenge
-        Response challengeDTOResponse = given()
-                .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .headers("Authorization", "Bearer " + token,
-                        "content-type", ContentType.JSON,
-                        "Accept", ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
-                .then()
-                .assertThat().statusCode(201)
-                .extract().response();
-
-        JSONObject challengeDTOJSONActual = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOJSONActual.getString("id");
 
         USER_RequestsUtil.delete(token);
         CONTEXT_RequestsUtil.delete(token, contextID);

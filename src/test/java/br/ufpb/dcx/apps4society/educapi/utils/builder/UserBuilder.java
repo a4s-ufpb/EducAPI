@@ -1,4 +1,4 @@
-package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
+package br.ufpb.dcx.apps4society.educapi.utils.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
@@ -28,79 +28,35 @@ public class UserBuilder {
     private String name = "User";
     private String email = "user@educapi.com";
     private String password = "testpassword";
-
-    /**
-     * Init a new User Builder with default values that can personalized with others methods
-     * Is similar to getInstance in the pattern Builder
-     *
-     * Note: id by default is null but you can change it using the function .withId("put your id").
-     * @return a new User Builder
-     */
     public static UserBuilder anUser() {
         return new UserBuilder();
     }
-
-    /**
-     * Changes the id of this UserBuilder
-     * id is an identification, and in class User is only
-     *
-     * @param id type Long; example: 1L
-     * @return UserBuilder with id changed
-     */
     public UserBuilder withId(Long id) {
         this.id = id;
         return this;
     }
-
-    /**
-     * Changes the email of this UserBuilder
-     * email is any email with type String
-     * But if you use to test, can use any string
-     *
-     * @param email type String; example: "foo@bar.com"
-     * @return UserBuilder with email changed
-     */
     public UserBuilder withEmail(String email) {
         this.email = email;
         return this;
     }
-
-    /**
-     * Changes the name of this UserBuilder
-     * name is your name or your object name
-     *
-     * @param name type String; Example: "test name"
-     * @return UserBuilder with name changed
-     */
     public UserBuilder withName(String name) {
         this.name = name;
         return this;
     }
-
-    /**
-     * Changes the password of this UserBuilder
-     * password is an secret key usually used in authentication in systems
-     *
-     * @param password type String; Example: "testpass"
-     * @return UserBuilder with password changed
-     */
     public UserBuilder withPassword(String password) {
         this.password = password;
         return this;
     }
+    public UserDTO buildUserDTO(){
 
-    /**
-     * Generate an Optional object containing an User using custom or default data
-     * Example 1:
-     *      UserBuilder.anUser().buildOptionalUser();
-     *      // return an Optional User with default data
-     *
-     * Example 2:
-     *      UserBuilder.anUser().withName("Optional User").buildOptionalUser();
-     *      // return an Optional User with all data default, but with name "Optional User"
-     *
-     * @return Optional<User>
-     */
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(this.id);
+        userDTO.setName(this.name);
+        userDTO.setEmail(this.email);
+        userDTO.setPassword(this.password);
+
+        return userDTO;
+    }
     public Optional<User> buildOptionalUser() { return Optional.ofNullable(new User(this.id, this.name, this.email, this.password)); }
 
     /**
@@ -116,16 +72,7 @@ public class UserBuilder {
      * @return UserRegisterDTO
      */
 
-    public UserDTO buildUserDTO(){
 
-        UserDTO userDTO = new UserDTO();
-        userDTO.setId(this.id);
-        userDTO.setName(this.name);
-        userDTO.setEmail(this.email);
-        userDTO.setPassword(this.password);
-
-        return userDTO;
-    }
 
     public UserRegisterDTO buildUserRegisterDTO() { return new UserRegisterDTO(this.name, this.email, this.password);
     }

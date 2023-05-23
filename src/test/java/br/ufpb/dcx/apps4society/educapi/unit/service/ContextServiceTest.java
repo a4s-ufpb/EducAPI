@@ -12,9 +12,9 @@ import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ContextBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ServicesBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 import org.junit.jupiter.api.*;

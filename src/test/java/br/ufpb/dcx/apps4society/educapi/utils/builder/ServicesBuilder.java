@@ -1,4 +1,4 @@
-package br.ufpb.dcx.apps4society.educapi.unit.domain.builder;
+package br.ufpb.dcx.apps4society.educapi.utils.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;

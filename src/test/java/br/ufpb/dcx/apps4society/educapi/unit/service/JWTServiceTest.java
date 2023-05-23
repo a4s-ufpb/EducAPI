@@ -6,7 +6,7 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

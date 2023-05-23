@@ -60,21 +60,6 @@ public class ChallengeService {
         return challengeOptional.get();
     }
 
-//    @Transactional
-//    public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID) throws ObjectNotFoundException, InvalidUserException {
-//        User user = validateUser(token);
-//
-//        Optional<Context> contextOptional = contextRepository.findById(contextID);
-//        if (contextOptional.isEmpty()) {
-//            throw new ObjectNotFoundException();
-//        }
-//        Challenge challenge = obj.toChallenge();
-//        Context context = contextOptional.get();
-//        challenge.setCreator(user);
-//        challenge.getContexts().add(context);
-//
-//        return challengeRepository.save(challenge);
-//    }
     @Transactional
     public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID)
             throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException {
@@ -87,11 +72,6 @@ public class ChallengeService {
 
         Challenge challenge = obj.toChallenge();
         Context context = contextOptional.get();
-        
-//        Optional<Challenge> challengeOptional = challengeRepository.findById(challenge.getId());
-//        if (challengeOptional.isPresent()) {
-//            throw new ChallengeAlreadyExistsException();
-//        }
         
         challenge.setCreator(user);
         challenge.getContexts().add(context);

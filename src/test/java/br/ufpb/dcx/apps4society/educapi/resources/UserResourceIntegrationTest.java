@@ -1,7 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
 import br.ufpb.dcx.apps4society.educapi.utils.USER_RequestsUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;

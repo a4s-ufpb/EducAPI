@@ -1,7 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ContextBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.CONTEXT_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
 import br.ufpb.dcx.apps4society.educapi.utils.USER_RequestsUtil;

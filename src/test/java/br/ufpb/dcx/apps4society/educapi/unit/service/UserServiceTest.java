@@ -10,8 +10,8 @@ import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.ServicesBuilder;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.ServicesBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 
 import org.junit.jupiter.api.BeforeEach;
