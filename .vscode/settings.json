@@ -1,0 +1,8 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "editor.tokenColorCustomizations": {
+        "comments": "",
+        "textMateRules": []
+    },
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

@@ -19,10 +19,10 @@ public class ChallengeDTO implements Serializable{
 	@NotEmpty(message="Required")
 	@Length(min=2, max=72, message="The size must be between 2 and 72 characters")
 	private String word;
-	
+		
+	private String imageUrl;
 	private String soundUrl;
 	private String videoUrl;
-	private String imageUrl;
 
 	private User creator;
 
@@ -36,9 +36,9 @@ public class ChallengeDTO implements Serializable{
 	
 	public ChallengeDTO(Challenge obj) {
 		this.word = obj.getWord();
+		this.imageUrl = obj.getImageUrl();
 		this.soundUrl = obj.getSoundUrl();
 		this.videoUrl = obj.getVideoUrl();
-		this.imageUrl = obj.getVideoUrl();
 	}
 
 	public Long getId() {

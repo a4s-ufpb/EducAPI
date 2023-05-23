@@ -24,8 +24,7 @@ public class ContextRegisterDTO implements Serializable {
         this.videoUrl = videoUrl;
     }
 
-    public Context toContext(){
-        return new Context(name, imageUrl, soundUrl, videoUrl);
+    public Context contextRegisterDTOToContext(){ return new Context(name, imageUrl, soundUrl, videoUrl);
     }
 
     public String getName() {

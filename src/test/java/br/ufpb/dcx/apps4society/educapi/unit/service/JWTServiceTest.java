@@ -6,7 +6,7 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import br.ufpb.dcx.apps4society.educapi.unit.domain.builder.UserBuilder;
+import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JWTServiceTest {
 
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
-    private final Optional<User> userOptional = UserBuilder.anUser().buildOptionalUser();
+    private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
     private final String invalidToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
             "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
     @Mock

@@ -4,9 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ContextRepository extends JpaRepository<Context, Long> {
@@ -14,4 +17,6 @@ public interface ContextRepository extends JpaRepository<Context, Long> {
 	Page<Context> findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(String email, String name, Pageable pageable);
 	Page<Context> findAllByCreatorEmailEqualsIgnoreCase(String email, Pageable pageable);
 	Page<Context> findAllByNameStartsWithIgnoreCase(String name, Pageable pageable);
+
+	Optional<Context> findContextByNameIgnoreCase(String name);
 }
