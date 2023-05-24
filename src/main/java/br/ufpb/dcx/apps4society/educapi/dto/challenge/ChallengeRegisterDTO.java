@@ -27,7 +27,7 @@ public class ChallengeRegisterDTO implements Serializable {
         this.videoUrl = videoUrl;
     }
 
-    public Challenge toChallenge(){
+    public Challenge challengeRegisterDTOToChallenge(){
         return new Challenge(word, imageUrl, soundUrl, videoUrl);
     }
 

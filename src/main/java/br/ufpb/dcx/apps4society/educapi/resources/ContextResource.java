@@ -81,11 +81,12 @@ public class ContextResource {
 
     @ApiOperation("Returns a list of Contexts registered in the service.")
     @GetMapping("contexts")
-    public ResponseEntity<Page<Context>> findContextsByParams(@RequestParam(value = "email", required = false) String email,
-                                                              @RequestParam(value = "name", required = false) String name,
-                                                              @RequestParam(value = "size", defaultValue = "20") Integer size,
-                                                              @RequestParam(value = "page", defaultValue = "0") Integer page,
-                                                              Pageable pageable){
+    public ResponseEntity<Page<Context>> findContextsByParams(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "size", defaultValue = "20") Integer size,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            Pageable pageable){
         return new ResponseEntity<>(contextService.findContextsByParams(email, name, pageable), HttpStatus.OK);
 
     }

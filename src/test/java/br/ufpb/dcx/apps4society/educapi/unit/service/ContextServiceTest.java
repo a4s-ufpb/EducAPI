@@ -36,8 +36,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-@WebAppConfiguration
-@DisplayName("ContextServiceTest")
 public class ContextServiceTest {
 
     @Mock
@@ -48,17 +46,10 @@ public class ContextServiceTest {
     @InjectMocks
     JWTService jwtService = ServicesBuilder.anService().withUserRepository(userRepository).buildJwtService();
     @InjectMocks
-    UserService userService = ServicesBuilder.anService()
-            .withJwtService(jwtService)
-            .withUserRepository(userRepository).buildUserService();
-    @InjectMocks
     ContextService contextService = ServicesBuilder.anService()
             .withJwtService(jwtService)
             .withContextRepository(contextRepository)
             .withUserRepository(userRepository).buildContextService();
-
-    @Value("${app.token.key}")
-    private String TOKEN_KEY;
 
     public User creator = UserBuilder.anUser().buildUserRegisterDTO().userRegisterDtoToUser();
 
@@ -78,7 +69,6 @@ public class ContextServiceTest {
 
     private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(userOptional.get()).buildOptionalContext();
 
-    // **Captar como variável de ambiente**
     private List<Context> contexts = new ArrayList<>();
     private List<Context> contextListByCreator = new ArrayList<>();
     private List<ContextDTO> contextDTOListByCreator = new ArrayList<>();
@@ -92,13 +82,11 @@ public class ContextServiceTest {
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
 
-        //Métodos de origem devem estar com optional.isPresent() implementados, quando buscar pelo 'Long', ele retorna optional ou empty.
         ReflectionTestUtils.setField(jwtService, "TOKEN_KEY", "it's a token key");
 
     }
 
     @Test
-    @DisplayName("Encontrar contextos")
     public void findTest() throws ObjectNotFoundException {
 
         Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(Optional.empty());
@@ -111,7 +99,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Encontrar contextos por criador")
     public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
         Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contextListByCreator);
@@ -141,7 +128,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Encontrar contextos inexistentes por criador")
     public void findInexistentContextsByCreatorTest() throws InvalidUserException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
@@ -157,7 +143,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Encontrar contextos com criador inválido")
     public void findContextsByInvalidCreatorTest() throws InvalidUserException {
 
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO3.getEmail(), userLoginDTO3.getPassword())).thenReturn(userOptional3);
@@ -182,7 +167,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Inserir um contexto")
     public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
 
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
@@ -200,7 +184,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Inserir um contexto já existente")
     public void insertAContextAlreadyExistTest() throws InvalidUserException {
 
         Mockito.when(contextRepository.findContextByNameIgnoreCase(context.getName())).thenReturn(contextOptional);
@@ -217,7 +200,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Atualizar um contexto")
     public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
@@ -239,7 +221,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Atualizar um contexto inválido")
     public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException, ContextAlreadyExistsException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
@@ -266,7 +247,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Deletar um contexto")
     public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
@@ -289,7 +269,6 @@ public class ContextServiceTest {
     }
 
     @Test
-    @DisplayName("Atualizar um contexto inválido")
     public void deleteAInvalidContextTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
@@ -316,7 +295,6 @@ public class ContextServiceTest {
     }
     
     @Test
-    @DisplayName("Encontrar contextos por parâmetros")
     public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
         
         loginResponse = jwtService.authenticate(userLoginDTO);

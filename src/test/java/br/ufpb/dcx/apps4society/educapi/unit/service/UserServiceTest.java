@@ -50,9 +50,6 @@ public class UserServiceTest {
             .withJwtService(jwtService)
             .withUserRepository(userRepository).buildUserService();
 
-    @Value("${app.token.key}")
-    private String TOKEN_KEY;
-
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();    
     private final UserLoginDTO userLoginEmailEmptyDTO = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 

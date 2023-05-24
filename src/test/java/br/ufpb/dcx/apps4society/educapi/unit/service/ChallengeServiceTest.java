@@ -10,7 +10,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.ChallengeService;
-import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
@@ -57,11 +56,6 @@ public class ChallengeServiceTest {
 
     @InjectMocks
     JWTService jwtService = ServicesBuilder.anService().withUserRepository(userRepository).buildJwtService();
-    @InjectMocks
-    ContextService contextService = ServicesBuilder.anService()
-            .withJwtService(jwtService)
-            .withContextRepository(contextRepository)
-            .withUserRepository(userRepository).buildContextService();
     @InjectMocks
     ChallengeService challengeService = ServicesBuilder.anService()
             .withJwtService(jwtService)
@@ -132,7 +126,7 @@ public class ChallengeServiceTest {
     public void findChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
         
         Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);             
-        Mockito.lenient().when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
+        Mockito.lenient().when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
@@ -268,7 +262,7 @@ public class ChallengeServiceTest {
     public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
         
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
-        Mockito.when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
+        Mockito.when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
@@ -290,7 +284,7 @@ public class ChallengeServiceTest {
         Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2"))
                 .thenReturn(Optional.of(creator2));
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
-        Mockito.when(challengeRegisterDTO.toChallenge()).thenReturn(challengeOptional.get());
+        Mockito.when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
@@ -308,7 +302,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{  
+    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
 
         Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
 

@@ -50,7 +50,7 @@ public class ContextBuilder {
         this.creator = creator;
         return this;
     }
-    // Optional é utilizado quando não se sabe que um objeto vai estar no banco de dados(se vai ser utilizado ou nao)
+
     public Optional<Context> buildOptionalContext(){ return Optional.ofNullable(new Context(this.id, this.name, this.creator, this.imageUrl, this.soundUrl, this.videoUrl));
     }
 

@@ -38,7 +38,7 @@ Create a `.env` file in the project's root directory, to set the environment var
 
 PostgreSQL(dev):
 
-    EDUCAPI_VERSION=1.0.4
+    EDUCAPI_VERSION=1.0.5
     PROFILE_ACTIVE=dev
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
@@ -48,7 +48,7 @@ PostgreSQL(dev):
     
  H2(test):
  
-     EDUCAPI_VERSION=1.0.4
+     EDUCAPI_VERSION=1.0.5
      PROFILE_ACTIVE=test
      TOKEN_KEY=educapi-dev
      

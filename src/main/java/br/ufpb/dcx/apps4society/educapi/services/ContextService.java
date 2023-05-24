@@ -31,7 +31,6 @@ public class ContextService {
     @Autowired
     private UserRepository userRepository;
 
-    // para testes com ServicesBuilder
     public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository) {
         this.jwtService = jwtService;
         this.contextRepository = contextRepository;
@@ -55,13 +54,11 @@ public class ContextService {
 
         context.setCreator(user);
 
-        // Início de trecho a verificar necessidade
         Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(context.getName());
 
         if (contextOptional.isPresent()){
-            throw new ContextAlreadyExistsException("There is already a context with this name registered in the system!");
+            throw new ContextAlreadyExistsException("There is already a context with this name registered for this user!");
         }
-        // Fim de trecho a verificar necessidade
 
         contextRepository.save(context);
         return new ContextDTO(context);
@@ -70,13 +67,12 @@ public class ContextService {
     public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        // Início de trecho a verificar necessidade
+
         Optional<Context> contextOptional = contextRepository.findById(id);
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
         }
-        // Fim de trecho a verificar necessidade
 
         Context newObj = find(id);
         if (!newObj.getCreator().equals(user)) {
@@ -92,13 +88,11 @@ public class ContextService {
     public ContextDTO delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        // Início de trecho a verificar necessidade
         Optional<Context> contextOptional = contextRepository.findById(id);
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
         }
-        // Fim de trecho a verificar necessidade
 
         Context context = find(id);
         if (!context.getCreator().equals(user)) {
