@@ -3,14 +3,10 @@ package br.ufpb.dcx.apps4society.educapi.services;
 import java.util.*;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +17,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Service
 public class ChallengeService {
@@ -38,17 +32,9 @@ public class ChallengeService {
     @Autowired
     private ContextRepository contextRepository;
 
-    public ChallengeService(JWTService jwtService, ChallengeRepository challengeRepository,
-            ContextRepository contextRepository, UserRepository userRepository) {
-        this.jwtService = jwtService;
-        this.challengeRepository = challengeRepository;
-        this.contextRepository = contextRepository;
-        this.userRepository = userRepository;
-    }
-
     public Challenge find(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
-        Optional<String> userEmail = jwtService.recoverUser(token);
-        if (userEmail.isEmpty()) {
+        Optional<String> usuarioId = jwtService.recoverUser(token);
+        if (usuarioId.isEmpty()) {
             throw new InvalidUserException();
         }
 
@@ -61,25 +47,19 @@ public class ChallengeService {
     }
 
     @Transactional
-    public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID)
-            throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException {
+    public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(contextID);
         if (contextOptional.isEmpty()) {
             throw new ObjectNotFoundException();
-        }        
-
+        }
         Challenge challenge = obj.toChallenge();
         Context context = contextOptional.get();
-        
         challenge.setCreator(user);
         challenge.getContexts().add(context);
 
-        //BACKUP: return challengeRepository.save(challenge);
-        challengeRepository.save(challenge);
-        return challenge;
-
+        return challengeRepository.save(challenge);
     }
 
     public List<Challenge> findChallengesByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
@@ -96,10 +76,7 @@ public class ChallengeService {
         }
 
         updateData(newObj, obj.toChallenge());
-        
-        //return challengeRepository.save(newObj);
-        challengeRepository.save(newObj);
-        return newObj;
+        return challengeRepository.save(newObj);
     }
 
     public void delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
@@ -107,11 +84,8 @@ public class ChallengeService {
 
         Challenge obj = find(token, id);
         if (obj.getCreator().equals(user)) {
-            // a cada Context do desafio(obj)
             for (Context x : obj.getContexts()) {
-                // Pega e remova o desafio igual ao desafio(challengee)
                 x.getChallenges().remove(obj);
-                // E salva um contexto atualizado
                 contextRepository.save(x);
             }
             challengeRepository.deleteById(id);

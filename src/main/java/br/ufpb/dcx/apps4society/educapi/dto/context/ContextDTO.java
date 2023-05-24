@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.dto.context;
 
 import java.io.Serializable;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 import javax.validation.constraints.NotEmpty;
 
 import org.hibernate.validator.constraints.Length;
@@ -29,7 +30,7 @@ public class ContextDTO  implements Serializable{
 		this.videoUrl = obj.getVideoUrl();
 	}
 
-	public Context contextDTOToContext(){
+	public Context toContext(){
 		return new Context(id, name, imageUrl, soundUrl, videoUrl);
 	}
 

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,26 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 
 @Service
 public class ContextService {
-    
     @Autowired
-    //private
-    public JWTService jwtService;
+    private JWTService jwtService;
 
     @Autowired
     private ContextRepository contextRepository;
 
     @Autowired
     private UserRepository userRepository;
-
-    // para testes com ServicesBuilder
-    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository) {
-        this.jwtService = jwtService;
-        this.contextRepository = contextRepository;
-        this.userRepository = userRepository;
-    }
 
     public Context find(Long id) throws ObjectNotFoundException {
 
@@ -48,21 +40,12 @@ public class ContextService {
     }
 
     @Transactional
-    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ContextAlreadyExistsException, ObjectNotFoundException, InvalidUserException {
+    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        Context context = contextRegisterDTO.contextRegisterDTOToContext();
+        Context context = contextRegisterDTO.toContext();
 
         context.setCreator(user);
-
-        // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(context.getName());
-
-        if (contextOptional.isPresent()){
-            throw new ContextAlreadyExistsException("There is already a context with this name registered in the system!");
-        }
-        // Fim de trecho a verificar necessidade
-
         contextRepository.save(context);
         return new ContextDTO(context);
     }
@@ -70,21 +53,12 @@ public class ContextService {
     public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findById(id);
-
-        if (!contextOptional.isPresent()){
-            throw new ObjectNotFoundException();
-        }
-        // Fim de trecho a verificar necessidade
-
         Context newObj = find(id);
         if (!newObj.getCreator().equals(user)) {
-            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
-                    + newObj.getName() + ".");
+            throw new InvalidUserException();
         }
 
-        updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
+        updateData(newObj, contextRegisterDTO.toContext());
         contextRepository.save(newObj);
         return new ContextDTO(newObj);
     }
@@ -92,23 +66,14 @@ public class ContextService {
     public ContextDTO delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
-        // Início de trecho a verificar necessidade
-        Optional<Context> contextOptional = contextRepository.findById(id);
-
-        if (!contextOptional.isPresent()){
-            throw new ObjectNotFoundException();
-        }
-        // Fim de trecho a verificar necessidade
-
         Context context = find(id);
         if (!context.getCreator().equals(user)) {
-            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
-                    + context.getName() + ".");
+            throw new InvalidUserException();
         }
-
         contextRepository.deleteById(id);
         return new ContextDTO(context);
     }
+
 
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {
         if (email != null && name != null){
@@ -122,13 +87,10 @@ public class ContextService {
         }
     }
 
-    public List<ContextDTO> findContextsByCreator(String token) throws  ObjectNotFoundException, InvalidUserException {
+    public List<ContextDTO> findContextsByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
-        if(contextListByCreator.isEmpty()) {
-            throw new ObjectNotFoundException();
-        }
 
         return contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
     }
