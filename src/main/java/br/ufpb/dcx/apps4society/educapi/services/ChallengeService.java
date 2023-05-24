@@ -112,9 +112,9 @@ public class ChallengeService {
         }
     }
 
-    public Page<Challenge> findChallengesByParams(String prefix, Pageable pageable) {
-        if (prefix != null) {
-            return challengeRepository.findByWordStartsWithIgnoreCase(prefix, pageable);
+    public Page<Challenge> findChallengesByParams(String word,Pageable pageable) {
+        if (word != null) {
+            return challengeRepository.findByWordStartsWithIgnoreCase(word, pageable);
         }
 
         return challengeRepository.findAll(pageable);

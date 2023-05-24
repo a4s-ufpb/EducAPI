@@ -96,11 +96,11 @@ public class ChallengeResource {
 	@ApiOperation("Returns a page with Challenges registered in the service.")
 	@GetMapping("challenges")
 	public ResponseEntity<Page<Challenge>> findAllChallenges(
-			@RequestParam(value = "prefix", required = false) String prefix,
+			@RequestParam(value = "word", required = false) String word,
 			@RequestParam(value = "size", defaultValue = "20") Integer size,
 			@RequestParam(value = "page", defaultValue = "0") Integer page,
 			Pageable pageable){
-		return new ResponseEntity<>(challengeService.findChallengesByParams(prefix, pageable), HttpStatus.OK);
+		return new ResponseEntity<>(challengeService.findChallengesByParams(word, pageable), HttpStatus.OK);
 	}
 
 }
