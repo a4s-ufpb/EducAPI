@@ -193,6 +193,11 @@ public class User implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((email == null) ? 0 : email.hashCode());
+		result = prime * result + ((password == null) ? 0 : password.hashCode());
+		result = prime * result + ((challenges == null) ? 0 : challenges.hashCode());
+		result = prime * result + ((contexts == null) ? 0 : contexts.hashCode());
 		return result;
 	}
 
@@ -210,7 +215,34 @@ public class User implements Serializable {
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (email == null) {
+			if (other.email != null)
+				return false;
+		} else if (!email.equals(other.email))
+			return false;
+		if (password == null) {
+			if (other.password != null)
+				return false;
+		} else if (!password.equals(other.password))
+			return false;
+		if (challenges == null) {
+			if (other.challenges != null)
+				return false;
+		} else if (!challenges.equals(other.challenges))
+			return false;
+		if (contexts == null) {
+			if (other.contexts != null)
+				return false;
+		} else if (!contexts.equals(other.contexts))
+			return false;
 		return true;
 	}
+
+	
 
 }

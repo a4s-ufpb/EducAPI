@@ -4,6 +4,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,8 @@ public class ContextResource {
         }catch (ObjectNotFoundException exception){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }catch (InvalidUserException | SecurityException exception){
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (ContextAlreadyExistsException e) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }

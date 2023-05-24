@@ -20,10 +20,17 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 public class UserService {
 
 	@Autowired
-	private JWTService jwtService;
+	// private 
+	public JWTService jwtService;
 
 	@Autowired
 	private UserRepository userRepository;
+
+	// To support ServicesBuilder
+	public UserService(JWTService jwtService, UserRepository userRepository) {
+		this.jwtService = jwtService;
+		this.userRepository = userRepository;
+	}
 
 	public User find(String token) throws InvalidUserException {
 		Optional<String> userEmail = jwtService.recoverUser(token);
