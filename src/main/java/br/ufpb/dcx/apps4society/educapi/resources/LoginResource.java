@@ -27,4 +27,13 @@ public class LoginResource {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
+
+    @ApiOperation("Returns a timestamp.")
+    @GetMapping ("timestamp")
+    public ResponseEntity<Long> timestamp(){
+        return new ResponseEntity<>(System.currentTimeMillis(), HttpStatus.OK);
+
+    }
+
+
 }
