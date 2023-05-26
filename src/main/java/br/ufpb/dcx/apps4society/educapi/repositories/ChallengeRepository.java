@@ -11,6 +11,5 @@ import java.util.List;
 @Repository
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 	List<Challenge> findChallengesByCreator(User creator);
-	//List<Challenge> findChallengeByWord(String word);
 	Page<Challenge> findByWordStartsWithIgnoreCase(String word, Pageable pageable);
 }
