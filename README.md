@@ -11,9 +11,11 @@ To make this project run you will need to have the following items installed:
 * [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 * Java 11 or OpenJDK 11
 * PostgreSQL 12.3 (it is recommended to use a Docker container)
-* Intelij or other IDE of your choice
+* Intellij or other IDE of your choice
+
 
 This project also uses the following technologies:
+
 * Spring Boot - 2.2.7.RELEASE
 * JPA
 * Hibernate
@@ -21,8 +23,10 @@ This project also uses the following technologies:
 * Maven 4.0.0 
 * Swagger 2.9.2
 * JUnit 4
+* JoCoCo Code Coverage
+* REST Assured
 
- > Note: Use Insomnia or another tool to test calls to API endpoints
+ > Note: Use Postman, Insomnia or another tool to test calls to API endpoints
 
 ## :rocket: Starting the project
 
@@ -32,9 +36,36 @@ To clone this repository via HTTPS:
 
     a4sufpb@a4sufpb:~$ git clone https://github.com/a4s-ufpb/EducAPI.git
 
-Access the cloned repository through the IDE of your choice and change the `spring.profiles.active` variable in the` EducAPI/src/main/resources/application.properties` file to` dev` or` test`.
+## :gear: Configuring the project
 
-Create a `.env` file in the project's root directory, to set the environment variables used in the API, and fill this file with the following content:
+Access the cloned repository through the IDE of your choice and change the `spring.profiles.active` variable in the
+`EducAPI/src/main/resources/application.properties` file to `dev` or `test`
+
+You should be able to choose between `dev`, `test` and `prod` profiles on enviroment variables configurations of the API
+
+Intellij:
+
+Copy variables and values, paste to "Environment variables:" in configuration application(main) splitting by ";"
+
+	EDUCAPI_VERSION=1.0.5;PROFILE_ACTIVE=test;TOKEN_KEY=educapi-dev
+	
+
+
+VSCode:
+
+1º Create a folder `.vscode` in the project's root directory, then create a file `launch.json` inside of it.
+
+2º Open `launch.json` and add a field `"env":` below the last field line of `"configurations":`  
+
+> NOTE: Format is <"variable": "value">	
+
+	"env": { 
+                "EDUCAPI_VERSION": "1.0.5",
+                "PROFILE_ACTIVE": "dev",
+                "TOKEN_KEY": "educapi-dev"}
+
+
+You can also add or remove configs depending of the data base system of your choice.
 
 PostgreSQL(dev):
 
@@ -45,19 +76,19 @@ PostgreSQL(dev):
     POSTGRES_DB=educapi
     DB_URL=jdbc:postgresql://localhost:5432/${POSTGRES_DB}
     TOKEN_KEY=educapi-dev
-    
- H2(test):
- 
-     EDUCAPI_VERSION=1.0.5
-     PROFILE_ACTIVE=test
-     TOKEN_KEY=educapi-dev
-     
-
+        
 > NOTE: Configure the environment variables above according to the PostgreSQL connection created on your machine.
 
 > NOTE: Remember to create a database with the name defined in the value of the POSTGRES_DB variable.
- 
 
+
+H2(test):
+ 
+    EDUCAPI_VERSION=1.0.5
+    PROFILE_ACTIVE=test
+    TOKEN_KEY=educapi-dev 
+
+## :arrow_forward: Running
 
 If you are NOT going to run the project using Docker, download the dependencies needed to run the project by right-clicking on the `EducAPI/pom.xml` file.
 
