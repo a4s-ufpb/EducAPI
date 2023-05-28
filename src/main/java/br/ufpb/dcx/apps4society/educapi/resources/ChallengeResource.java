@@ -6,6 +6,7 @@ import javax.validation.Valid;
 
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,8 @@ public class ChallengeResource {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}catch (InvalidUserException | SecurityException exception){
 			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+		}catch (InvalidChallengeException exception){
+			return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
 		}
 	}
 

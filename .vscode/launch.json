@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "EducAPIApplication",
+            "request": "launch",
+            "mainClass": "br.ufpb.dcx.apps4society.educapi.EducAPIApplication",
+            "projectName": "EducAPI",
+            "env": { 
+                "EDUCAPI_VERSION" : "1.0.5",
+                "PROFILE_ACTIVE": "test",
+                // "POSTGRES_USER": "postgres",
+                // "POSTGRES_PASSWORD": "12345678",
+                // "POSTGRES_DB": "educapi",
+                // "DB_URL": "jdbc:postgresql://localhost:5432/${POSTGRES_DB}",
+                "TOKEN_KEY": "educapi-dev"}
+        }
+    ]
+}

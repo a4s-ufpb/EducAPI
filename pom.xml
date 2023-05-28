@@ -7,7 +7,7 @@
 
 	<groupId>br.ufpb.dcx.educapi</groupId>
 	<artifactId>EducAPI</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.5</version>
 	<packaging>jar</packaging>
 
 	<name>EducAPI</name>
@@ -106,7 +106,7 @@
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
-			<version>1.7</version>
+			<version>1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

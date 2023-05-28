@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -64,7 +65,7 @@ public class ContextService {
         return new ContextDTO(context);
     }
 
-    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException {
+    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException, InvalidContextException {
         User user = validateUser(token);
 
 
@@ -72,6 +73,13 @@ public class ContextService {
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
+        }
+
+        if(Objects.equals(contextRegisterDTO.getName(), contextOptional.get().getName())
+                && Objects.equals(contextRegisterDTO.getImageUrl(), contextOptional.get().getImageUrl())
+                && Objects.equals(contextRegisterDTO.getSoundUrl(), contextOptional.get().getSoundUrl())
+                && Objects.equals(contextRegisterDTO.getVideoUrl(), contextOptional.get().getVideoUrl())){
+            throw new InvalidContextException();
         }
 
         Context newObj = find(id);

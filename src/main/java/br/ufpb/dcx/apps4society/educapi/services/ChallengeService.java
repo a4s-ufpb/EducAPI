@@ -5,6 +5,7 @@ import java.util.*;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -82,7 +83,7 @@ public class ChallengeService {
         return challengeRepository.findChallengesByCreator(user);
     }
 
-    public Challenge update(String token, ChallengeRegisterDTO obj, Long id) throws ObjectNotFoundException, InvalidUserException {
+    public Challenge update(String token, ChallengeRegisterDTO obj, Long id) throws ObjectNotFoundException, InvalidUserException, InvalidChallengeException {
         User user = validateUser(token);
 
         Challenge newObj = find(token, id);
@@ -90,6 +91,12 @@ public class ChallengeService {
             throw new InvalidUserException();
         }
 
+        if(Objects.equals(obj.getWord(), newObj.getWord())
+                && Objects.equals(obj.getImageUrl(), newObj.getImageUrl())
+                && Objects.equals(obj.getSoundUrl(), newObj.getSoundUrl())
+                && Objects.equals(obj.getVideoUrl(), newObj.getVideoUrl())){
+            throw new InvalidChallengeException();
+        }
         updateData(newObj, obj.challengeRegisterDTOToChallenge());
 
         //BACKUP: challengeRepository.save(newObj);
