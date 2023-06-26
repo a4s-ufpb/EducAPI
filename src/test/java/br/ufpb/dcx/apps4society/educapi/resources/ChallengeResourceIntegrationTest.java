@@ -119,6 +119,7 @@ public class ChallengeResourceIntegrationTest {
         JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
         String contextID = contextDTOJSONActual.getString("id");
 
+
         given().body(FileUtils.getJsonFromFile("CHALLENGE_POST_InvalidWordMoreThan72CharactersBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -759,7 +760,7 @@ public class ChallengeResourceIntegrationTest {
     }
 
     @Test
-    public void updateChallengeByWordAlreadyExists_ShouldReturn200Test() throws Exception {
+    public void updateChallengeByWordAlreadyExists_ShouldReturn304Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
@@ -775,7 +776,7 @@ public class ChallengeResourceIntegrationTest {
         String challengeIDExpected = challengeDTOJSONExpected.getString("id");
 
         //Update challenge
-        Response challengeDTOResponseActual = given()
+        given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -784,37 +785,12 @@ public class ChallengeResourceIntegrationTest {
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDExpected)
                 .then()
-                .assertThat().statusCode(200)
+                .assertThat().statusCode(304)
                 .extract().response();
-
-        JSONObject challengeDTOJSONActual = new JSONObject(challengeDTOResponseActual.getBody().prettyPrint());
-
-        String challengeIDActual = challengeDTOJSONActual.getString("id");
-        String challengeImageURLActual = challengeDTOJSONActual.getString("imageUrl");
-        String challengeWordActual = challengeDTOJSONActual.getString("word");
-        String challengeSoundURLActual = challengeDTOJSONActual.getString("soundUrl");
-        String challengeVideoURLActual = challengeDTOJSONActual.getString("videoUrl");
-
-        ChallengeDTO challengeDTOActual = ChallengeBuilder.anChallenge()
-                .withId(Long.valueOf(challengeIDActual))
-                .withWord(challengeWordActual)
-                .withImageUrl(challengeImageURLActual)
-                .withSoundUrl(challengeSoundURLActual)
-                .withVideoUrl(challengeVideoURLActual).buildChallengeDTO();
-
-        ObjectMapper mapper =  new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/CHALLENGE_ActualContextDTOBody[spawned].json"), challengeDTOActual);
-        JSONObject challengeJSONExpected = new JSONObject(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(challengeDTOJSONActual.getString("id"));
-        Assertions.assertEquals(challengeJSONExpected.getString("word"), challengeDTOJSONActual.getString("word"));
-        Assertions.assertEquals(challengeJSONExpected.getString("imageUrl"), challengeDTOJSONActual.getString("imageUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("soundUrl"), challengeDTOJSONActual.getString("soundUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("videoUrl"), challengeDTOJSONActual.getString("videoUrl"));
-
+        
         USER_RequestsUtil.delete(token);
         CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
     }
 

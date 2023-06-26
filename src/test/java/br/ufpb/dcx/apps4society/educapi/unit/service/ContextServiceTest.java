@@ -200,7 +200,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException, InvalidContextException {
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
@@ -233,7 +233,7 @@ public class ContextServiceTest {
         contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
 
         InvalidUserException throwable = catchThrowableOfType(() ->
-                contextService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO, 1L), InvalidUserException.class);
+                contextService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), contextRegisterDTO2, 1L), InvalidUserException.class);
         ObjectNotFoundException throwable2 = catchThrowableOfType(() ->
                 contextService.update(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO2, 2L), ObjectNotFoundException.class);
 

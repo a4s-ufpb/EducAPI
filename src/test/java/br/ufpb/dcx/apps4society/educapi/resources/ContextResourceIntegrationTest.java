@@ -510,17 +510,17 @@ public class ContextResourceIntegrationTest {
     }
 
     @Test
-    public void updateContextByTokenImageURLSoundURLVideoURLButSameName_ShouldReturn200Test() throws Exception {
+    public void updateContextByTokenImageURLSoundURLVideoURLButSameName_ShouldReturn304Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        JSONObject contextDTOJSONExpected = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOIDExpected = contextDTOJSONExpected.getString("id");
 
         //Update Context
-        Response contextDTOResponseUpdated = given()
+        given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization",
@@ -530,36 +530,12 @@ public class ContextResourceIntegrationTest {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .put(baseURI+":"+port+basePath+"auth/contexts/" + contextID)
+                .put(baseURI+":"+port+basePath+"auth/contexts/" + contextDTOIDExpected)
                 .then()
-                .assertThat().statusCode(200)
+                .assertThat().statusCode(304)
                 .extract().response();
-
-        JSONObject contextDTOJSONUpdated = new JSONObject(contextDTOResponseUpdated.getBody().prettyPrint());
-
-        String contextIDUpdated = contextDTOJSONUpdated.getString("id");
-        String contextImageURLUpdated = contextDTOJSONUpdated.getString("imageUrl");
-        String contextNameUpdated = contextDTOJSONUpdated.getString("name");
-        String contextSoundURLUpdated = contextDTOJSONUpdated.getString("soundUrl");
-        String contextVideoURLUpdated = contextDTOJSONUpdated.getString("videoUrl");
-
-        ContextDTO contextDTOUpdated = ContextBuilder.anContext()
-                .withId(Long.valueOf(contextIDUpdated))
-                .withImage(contextImageURLUpdated)
-                .withName(contextNameUpdated)
-                .withSound(contextSoundURLUpdated)
-                .withVideo(contextVideoURLUpdated).buildContextDTO();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/CONTEXT_PUT_ContextDTOBody[spawned].json"), contextDTOUpdated);
-
-        Assertions.assertNotNull(contextDTOJSONUpdated.getString("id"));
-        Assertions.assertEquals(contextDTOJSON.getString("imageUrl"), contextDTOJSONUpdated.getString("imageUrl"));
-        Assertions.assertEquals(contextDTOJSON.getString("name"), contextDTOJSONUpdated.getString("name"));
-        Assertions.assertEquals(contextDTOJSON.getString("soundUrl"), contextDTOJSONUpdated.getString("soundUrl"));
-        Assertions.assertEquals(contextDTOJSON.getString("videoUrl"), contextDTOJSONUpdated.getString("videoUrl"));
-
-        CONTEXT_RequestsUtil.delete(token, contextIDUpdated);
+        
+        CONTEXT_RequestsUtil.delete(token, contextDTOIDExpected);
         USER_RequestsUtil.delete(token);
 
     }
