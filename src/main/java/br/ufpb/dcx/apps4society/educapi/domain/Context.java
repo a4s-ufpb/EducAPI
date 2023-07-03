@@ -15,9 +15,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import org.hibernate.annotations.Cascade;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * This class represents a set of related challenges.
  * 

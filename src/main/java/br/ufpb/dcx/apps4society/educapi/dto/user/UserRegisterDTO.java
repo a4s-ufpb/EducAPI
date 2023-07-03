@@ -1,8 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.dto.user;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;

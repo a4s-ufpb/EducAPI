@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import java.util.List;
 import java.util.Optional;

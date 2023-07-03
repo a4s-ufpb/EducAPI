@@ -294,7 +294,7 @@ public class ChallengeServiceTest {
 
         Mockito.when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
 
-        Exception exception = assertThrows(InvalidUserException.class, () -> {
+        assertThrows(InvalidUserException.class, () -> {
 
             challengeService.update(jwtService.tokenBearerFormat(loginResponse2.getToken()), challengeRegisterDTO, challenge.getId());
 
@@ -347,39 +347,27 @@ public class ChallengeServiceTest {
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
         Challenge challengeResponse = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO, 1L);
-        Challenge challengeResponse2 = challengeService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), challengeRegisterDTO2, 1L);
         
         List <Challenge> itensListEmpty = new ArrayList<>();
         List <Challenge> itensList = new ArrayList<>();
-        List <Challenge> itensList2 = new ArrayList<>();
-        List <Challenge> itensListAll = new ArrayList<>();
 
-        Page emptyPage = new PageImpl<>(itensListEmpty, pageable, pageable.getPageSize());
-        Page page;
-        Page page2;
-        Page pageAll;
+        Page<Challenge> emptyPage = new PageImpl<>(itensListEmpty, pageable, pageable.getPageSize());
+        Page<Challenge> page;
 
         ServicesBuilder.insertSimulator(challengeResponse, itensList);
         page = new PageImpl<>(itensList, pageable, pageable.getPageSize());
 
-        ServicesBuilder.insertSimulator(challengeResponse2, itensList2);
-        page2 = new PageImpl<>(itensList2, pageable, pageable.getPageSize());        
-        pageAll = new PageImpl<>(itensListAll, pageable, pageable.getPageSize());
-
-        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("inexistentChallengeWord", pageable)).thenReturn(emptyPage);
+        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("", pageable)).thenReturn(emptyPage);
         Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("w", pageable)).thenReturn(page);
-        Mockito.when(challengeRepository.findByWordStartsWithIgnoreCase("t", pageable)).thenReturn(page2);
-        Mockito.when(challengeRepository.findAll(pageable)).thenReturn(pageAll);
+        Mockito.when(challengeRepository.findAll(pageable)).thenReturn(page);        
         
-        Page pageResponse1 = challengeService.findChallengesByParams("inexistentChallengeWord", emptyPage.getPageable());
-        Page pageResponse2 = challengeService.findChallengesByParams("w", page.getPageable());
-        Page pageResponse3 = challengeService.findChallengesByParams("t", page2.getPageable());
-        Page pageResponse4 = challengeService.findChallengesByParams(null, pageAll.getPageable());
+        Page<Challenge> emptyPageResponse = challengeService.findChallengesByParams("", emptyPage.getPageable());
+        Page<Challenge> pageResponse2 = challengeService.findChallengesByParams("w", page.getPageable());
+        Page<Challenge> pageResponse3 = challengeService.findChallengesByParams(null, page.getPageable());
         
-        assertEquals(true, emptyPage.isEmpty());
+        assertEquals(emptyPageResponse, emptyPage);
         assertEquals(challengeResponse, pageResponse2.getContent().get(0));
-        assertEquals(challengeResponse2, pageResponse3.getContent().get(0));
-        assertEquals(challenges, pageAll.getContent());
+        assertEquals(pageResponse3, page);
 
     }
 

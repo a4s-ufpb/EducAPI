@@ -837,7 +837,8 @@ public class ChallengeResourceIntegrationTest {
         Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
 
         JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
-
+        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        
         //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
@@ -852,6 +853,7 @@ public class ChallengeResourceIntegrationTest {
 
         USER_RequestsUtil.delete(token);
         CONTEXT_RequestsUtil.delete(token, contextID);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
     }
 

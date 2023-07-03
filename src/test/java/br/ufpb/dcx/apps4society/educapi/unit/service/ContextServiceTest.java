@@ -10,7 +10,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.ContextService;
 import br.ufpb.dcx.apps4society.educapi.services.JWTService;
-import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
 import br.ufpb.dcx.apps4society.educapi.utils.builder.ContextBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.builder.ServicesBuilder;
@@ -21,9 +20,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
@@ -60,11 +57,11 @@ public class ContextServiceTest {
     private Context context = ContextBuilder.anContext().withCreator(creator).buildContext();
     private Context context2 = ContextBuilder.anContext().withName("Context2").withCreator(creator).buildContext();
     private final UserLoginDTO userLoginDTO = UserBuilder.anUser().buildUserLoginDTO();
-    private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").buildUserLoginDTO();
+    private final UserLoginDTO userLoginDTO2 = UserBuilder.anUser().withName("User2").withEmail(creator2.getEmail()).buildUserLoginDTO();
     private final UserLoginDTO userLoginDTO3 = UserBuilder.anUser().withName("User3").withEmail("").buildUserLoginDTO();
 
     private Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
-    private Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail("user2@educapi.com").buildOptionalUser();
+    private Optional<User> userOptional2 = UserBuilder.anUser().withId(2L).withName("User2").withEmail(creator2.getEmail()).buildOptionalUser();
     private Optional<User> userOptional3 = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginDTO3.getEmail()).buildOptionalUser();
 
     private Optional<Context> contextOptional = ContextBuilder.anContext().withId(1L).withCreator(userOptional.get()).buildOptionalContext();
@@ -307,7 +304,7 @@ public class ContextServiceTest {
         context2.setCreator(creator2);
         ServicesBuilder.insertSimulator(context2, contexts);        
         
-        Page page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
+        Page<Context> page = new PageImpl<>(contexts, pageable, pageable.getPageSize());
 
         Mockito.when(contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase("user@educapi.com", "User", pageable))
         .thenReturn(page);

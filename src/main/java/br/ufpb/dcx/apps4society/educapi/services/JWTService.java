@@ -12,7 +12,6 @@ import io.jsonwebtoken.SignatureException;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
