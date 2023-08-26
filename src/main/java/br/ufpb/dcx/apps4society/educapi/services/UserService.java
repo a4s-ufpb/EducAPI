@@ -18,10 +18,8 @@ import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 
 @Service
 public class UserService {
-
 	@Autowired
-	// private 
-	public JWTService jwtService;
+	private JWTService jwtService;
 
 	@Autowired
 	private UserRepository userRepository;

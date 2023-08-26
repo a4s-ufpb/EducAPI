@@ -551,7 +551,7 @@ public class ContextResourceIntegrationTest {
         String contextID = contextDTOJSON.getString("id");
 
         //Update Context
-        Response contextDTOResponseUpdated = given()
+        given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_MissingNameExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization",
@@ -636,7 +636,7 @@ public class ContextResourceIntegrationTest {
         String contextID = "ID Non Numeric";
 
         //Update Context
-        Response contextDTOResponseUpdated = given()
+        given()
                 .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization",

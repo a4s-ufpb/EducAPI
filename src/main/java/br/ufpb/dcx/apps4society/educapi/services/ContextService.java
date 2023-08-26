@@ -20,11 +20,9 @@ import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 
 @Service
-public class ContextService {
-    
+public class ContextService {    
     @Autowired
-    //private
-    public JWTService jwtService;
+    private JWTService jwtService;
 
     @Autowired
     private ContextRepository contextRepository;

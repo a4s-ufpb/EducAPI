@@ -1,6 +1,5 @@
 package br.ufpb.dcx.apps4society.educapi.resources.exceptions;
 
-import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.hibernate.exception.ConstraintViolationException;

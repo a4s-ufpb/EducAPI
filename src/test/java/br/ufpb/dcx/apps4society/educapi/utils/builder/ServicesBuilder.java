@@ -88,7 +88,7 @@ public class ServicesBuilder {
             }
     
             int intId = list.size()+1;
-            Long longId = new Long(intId);
+            Long longId = Long.valueOf(intId);
             clg.setId(longId);
             }  
             
@@ -100,7 +100,7 @@ public class ServicesBuilder {
             }
     
             int intId = list.size()+1;
-            Long longId = new Long(intId);
+            Long longId = Long.valueOf(intId);
             ctt.setId(longId);
             }
 
@@ -112,7 +112,7 @@ public class ServicesBuilder {
             }
 
             int intId = list.size()+1;
-            Long longId = new Long(intId);
+            Long longId = Long.valueOf(intId);
             user.setId(longId);
         }
 
