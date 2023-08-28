@@ -1,10 +1,9 @@
-package br.ufpb.dcx.apps4society.educapi.unit.service;
+package br.ufpb.dcx.apps4society.educapi.services;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
-import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.util.Messages;

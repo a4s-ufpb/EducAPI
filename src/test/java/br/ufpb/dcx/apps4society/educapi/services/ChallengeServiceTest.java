@@ -1,4 +1,4 @@
-package br.ufpb.dcx.apps4society.educapi.unit.service;
+package br.ufpb.dcx.apps4society.educapi.services;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
@@ -9,8 +9,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
-import br.ufpb.dcx.apps4society.educapi.services.ChallengeService;
-import br.ufpb.dcx.apps4society.educapi.services.JWTService;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
