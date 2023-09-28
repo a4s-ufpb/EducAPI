@@ -22,7 +22,7 @@ This project also uses the following technologies:
 * H2 Database
 * Maven 4.0.0 
 * Swagger 2.9.2
-* JUnit 4
+* JUnit 4.12
 * JoCoCo Code Coverage
 * REST Assured
 
