@@ -26,6 +26,7 @@ public class ContextResourceIntegrationTest {
         basePath = "/v1/api/";
     }
 
+
     @Test
     public void insertContextWithTokenNameImageURLSoundURLVideoURL_ShouldReturn201Test() throws Exception {
 
@@ -170,6 +171,7 @@ public class ContextResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(500);
     }
+
 
     @Test
     public void findContextsByToken_ShouldReturn201Test() throws Exception {
@@ -417,6 +419,7 @@ public class ContextResourceIntegrationTest {
         USER_RequestsUtil.delete(token);
     }
 
+
     @Test
     public void updateContextByTokenIDNameImageURLSoundURLVideoURL_ShouldReturn200Test() throws Exception {
 
@@ -647,6 +650,7 @@ public class ContextResourceIntegrationTest {
         CONTEXT_RequestsUtil.delete(token, contextID);
         USER_RequestsUtil.delete(token);
     }
+    
 
     @Test
     public void deleteContextByTokenID_ShouldReturn200Test() throws Exception {

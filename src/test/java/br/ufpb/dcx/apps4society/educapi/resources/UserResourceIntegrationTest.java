@@ -23,6 +23,7 @@ public class UserResourceIntegrationTest {
         port = 8080;
         basePath = "/v1/api/";
     }
+    
 
     @Test
     public void insertUserByNameEmailPassword_shouldReturn201Test() throws Exception {

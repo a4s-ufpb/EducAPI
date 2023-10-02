@@ -26,6 +26,7 @@ public class ChallengeResourceIntegrationTest {
         basePath = "/v1/api/";
     }
 
+
     @Test
     public void insertChallengeByCreatorTokenBodyContextID_ShouldReturn201Test() throws Exception {
 
@@ -393,7 +394,6 @@ public class ChallengeResourceIntegrationTest {
         CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
-
     @Test
     public void findChallengeByCreatorTokenID_ShouldReturn200Test() throws Exception {
 
@@ -622,7 +622,6 @@ public class ChallengeResourceIntegrationTest {
         CONTEXT_RequestsUtil.delete(token, contextDTOId);
         CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
-
 
     @Test
     public void findChallengeByQuery_ShouldReturn200Test() throws Exception {
