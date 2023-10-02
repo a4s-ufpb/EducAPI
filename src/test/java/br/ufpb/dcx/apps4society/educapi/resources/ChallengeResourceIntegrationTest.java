@@ -1,20 +1,15 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
-import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
-import br.ufpb.dcx.apps4society.educapi.utils.builder.ChallengeBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.CHALLENGE_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.CONTEXT_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
 import br.ufpb.dcx.apps4society.educapi.utils.USER_RequestsUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
 
 import static io.restassured.RestAssured.*;
 
@@ -29,7 +24,6 @@ public class ChallengeResourceIntegrationTest {
         baseURI = "http://localhost";
         port = 8080;
         basePath = "/v1/api/";
-
     }
 
     @Test
@@ -40,50 +34,33 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        //Create challenge
-        Response challengeDTOResponse = given()
+        Response challengeDTOResponseAnterior = given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then()
                 .assertThat().statusCode(201)
                 .extract().response();
 
-        JSONObject challengeDTOJSONActual = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        JSONObject challengeRegisterDTOEsperado = new JSONObject(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"));
 
-        String challengeIDActual = challengeDTOJSONActual.getString("id");
-        String challengeImageURLActual = challengeDTOJSONActual.getString("imageUrl");
-        String challengeWordActual = challengeDTOJSONActual.getString("word");
-        String challengeSoundURLActual = challengeDTOJSONActual.getString("soundUrl");
-        String challengeVideoURLActual = challengeDTOJSONActual.getString("videoUrl");
+        Assertions.assertNotNull(challengeDTOAtual.getString("id"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("word"), challengeDTOAtual.getString("word"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("imageUrl"), challengeDTOAtual.getString("imageUrl"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("soundUrl"), challengeDTOAtual.getString("soundUrl"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("videoUrl"), challengeDTOAtual.getString("videoUrl"));
 
-        ChallengeDTO challengeDTOActual = ChallengeBuilder.anChallenge()
-                .withId(Long.valueOf(challengeIDActual))
-                .withWord(challengeWordActual)
-                .withImageUrl(challengeImageURLActual)
-                .withSoundUrl(challengeSoundURLActual)
-                .withVideoUrl(challengeVideoURLActual).buildChallengeDTO();
-
-        ObjectMapper mapper =  new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/CHALLENGE_ActualContextDTOBody[spawned].json"), challengeDTOActual);
-        JSONObject challengeJSONExpected = new JSONObject(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(challengeDTOJSONActual.getString("id"));
-        Assertions.assertEquals(challengeJSONExpected.getString("word"), challengeDTOJSONActual.getString("word"));
-        Assertions.assertEquals(challengeJSONExpected.getString("imageUrl"), challengeDTOJSONActual.getString("imageUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("soundUrl"), challengeDTOJSONActual.getString("soundUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("videoUrl"), challengeDTOJSONActual.getString("videoUrl"));
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeDTOAtual.getString("id"));
     }
 
     @Test
@@ -93,20 +70,20 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_AuthenticateBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
         given().body(FileUtils.getJsonFromFile("CHALLENGE_POST_InvalidWordLessThan2CharactersBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
-                .when().post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .when().post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then().assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -116,8 +93,8 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_AuthenticateBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
 
         given().body(FileUtils.getJsonFromFile("CHALLENGE_POST_InvalidWordMoreThan72CharactersBody.json"))
@@ -125,12 +102,12 @@ public class ChallengeResourceIntegrationTest {
                 .headers("Authorization", "Bearer " + token,
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
-                .when().post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .when().post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then().assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -140,8 +117,8 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_AuthenticateBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
         given().body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -151,9 +128,9 @@ public class ChallengeResourceIntegrationTest {
                 .when().post(baseURI+":"+port+basePath+"auth/challenges")
                 .then().assertThat().statusCode(405);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -163,12 +140,11 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
 
-        //Create challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -176,12 +152,12 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -191,10 +167,9 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        //Create challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -206,9 +181,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -218,21 +193,20 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        //Create challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -242,12 +216,11 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
         USER_RequestsUtil.delete(token);
 
-        //Create challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -255,12 +228,12 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then()
                 .assertThat().statusCode(404);
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -270,10 +243,9 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        //Create challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -281,13 +253,13 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextID)
+                .post(baseURI+":"+port+basePath+"auth/challenges/" + contextDTOId)
                 .then()
                 .assertThat().statusCode(500);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
 
@@ -298,13 +270,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -316,13 +287,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -332,13 +303,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -347,13 +317,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -363,15 +333,14 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
         USER_RequestsUtil.delete(token);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -383,13 +352,12 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
-
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
 
 
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -399,13 +367,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -417,13 +384,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(500);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
 
@@ -434,16 +401,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -451,14 +417,14 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDActual)
+                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDAtual)
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -468,13 +434,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -486,13 +451,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -502,13 +467,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -520,13 +484,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -536,13 +500,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -554,13 +517,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -570,18 +533,17 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -589,13 +551,13 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDActual)
+                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDAtual)
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.delete(token);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
 
+        USER_RequestsUtil.delete(token);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -605,28 +567,27 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDActual)
+                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDAtual)
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
     @Test
@@ -636,16 +597,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -653,14 +613,14 @@ public class ChallengeResourceIntegrationTest {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDActual)
+                .get(baseURI+":"+port+basePath+"auth/challenges/" + challengeIDAtual)
                 .then()
                 .assertThat().statusCode(500);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
 
@@ -671,13 +631,12 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(
-                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(
+                token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        //Read challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -689,13 +648,13 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        JSONObject challengeDTOActualJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDActual = challengeDTOActualJSON.getString("id");
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDAtual = challengeDTOAtual.getString("id");
+
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDAtual);
     }
 
 
@@ -706,17 +665,16 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
-        Response challengeDTOResponseActual = given()
+        Response challengeDTOResponseAtual = given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_PUT_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -728,35 +686,19 @@ public class ChallengeResourceIntegrationTest {
                 .assertThat().statusCode(200)
                 .extract().response();
 
-        JSONObject challengeDTOJSONActual = new JSONObject(challengeDTOResponseActual.getBody().prettyPrint());
+        JSONObject challengeDTOAtual = new JSONObject(challengeDTOResponseAtual.getBody().prettyPrint());
+        JSONObject challengeRegisterDTOEsperado = new JSONObject(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"));
 
-        String challengeIDActual = challengeDTOJSONActual.getString("id");
-        String challengeImageURLActual = challengeDTOJSONActual.getString("imageUrl");
-        String challengeWordActual = challengeDTOJSONActual.getString("word");
-        String challengeSoundURLActual = challengeDTOJSONActual.getString("soundUrl");
-        String challengeVideoURLActual = challengeDTOJSONActual.getString("videoUrl");
+        Assertions.assertNotNull(challengeDTOAtual.getString("id"));
+        Assertions.assertNotEquals(challengeRegisterDTOEsperado.getString("word"), challengeDTOAtual.getString("word"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("imageUrl"), challengeDTOAtual.getString("imageUrl"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("soundUrl"), challengeDTOAtual.getString("soundUrl"));
+        Assertions.assertEquals(challengeRegisterDTOEsperado.getString("videoUrl"), challengeDTOAtual.getString("videoUrl"));
 
-        ChallengeDTO challengeDTOActual = ChallengeBuilder.anChallenge()
-                .withId(Long.valueOf(challengeIDActual))
-                .withWord(challengeWordActual)
-                .withImageUrl(challengeImageURLActual)
-                .withSoundUrl(challengeSoundURLActual)
-                .withVideoUrl(challengeVideoURLActual).buildChallengeDTO();
-
-        ObjectMapper mapper =  new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/CHALLENGE_ActualContextDTOBody[spawned].json"), challengeDTOActual);
-        JSONObject challengeJSONExpected = new JSONObject(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(challengeDTOJSONActual.getString("id"));
-        Assertions.assertNotEquals(challengeJSONExpected.getString("word"), challengeDTOJSONActual.getString("word"));
-        Assertions.assertEquals(challengeJSONExpected.getString("imageUrl"), challengeDTOJSONActual.getString("imageUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("soundUrl"), challengeDTOJSONActual.getString("soundUrl"));
-        Assertions.assertEquals(challengeJSONExpected.getString("videoUrl"), challengeDTOJSONActual.getString("videoUrl"));
 
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDActual);
-
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeDTOAtual.getString("id"));
     }
 
     @Test
@@ -766,16 +708,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -788,10 +729,10 @@ public class ChallengeResourceIntegrationTest {
                 .assertThat().statusCode(304)
                 .extract().response();
         
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -801,16 +742,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
         given().headers("Authorization", "Bearer " + token,
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
@@ -819,9 +759,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -831,15 +771,14 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
-        
-        //Update challenge
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
+
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -851,10 +790,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(405);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -864,15 +803,14 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -884,10 +822,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -897,17 +835,16 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -919,8 +856,8 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -930,17 +867,16 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
         CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -952,9 +888,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -964,18 +900,17 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -987,9 +922,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
+
         USER_RequestsUtil.delete(token);
         CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
-
     }
 
     @Test
@@ -999,16 +934,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -1017,10 +951,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -1030,16 +964,15 @@ public class ChallengeResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
-        JSONObject contextDTOJSONActual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSONActual.getString("id");
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+        String contextDTOId = contextDTOAtual.getString("id");
 
-        Response challengeDTOResponseExpected = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json", contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponseExpected.getBody().prettyPrint());
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
 
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Update challenge
         given()
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
@@ -1051,10 +984,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(500);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
 
@@ -1066,14 +999,13 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSON = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
+        JSONObject challengeDTOJSON = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
         String challengeID =challengeDTOJSON.getString("id");
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -1084,9 +1016,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(200);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
     }
 
     @Test
@@ -1097,14 +1029,13 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -1115,10 +1046,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(405);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -1129,16 +1060,15 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -1149,9 +1079,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
+
         USER_RequestsUtil.delete(token);
         CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
-
     }
 
     @Test
@@ -1162,14 +1092,13 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -1180,10 +1109,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -1194,14 +1123,13 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .when()
@@ -1209,10 +1137,10 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        USER_RequestsUtil.delete(token);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -1223,16 +1151,15 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
         USER_RequestsUtil.delete(token);
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + token,
@@ -1243,9 +1170,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(404);
 
-        CONTEXT_RequestsUtil.delete(token, contextID);
-        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
 
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
+        CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
     }
 
     @Test
@@ -1256,14 +1183,13 @@ public class ChallengeResourceIntegrationTest {
         Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
 
         JSONObject contextDTOJSON = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextID = contextDTOJSON.getString("id");
+        String contextDTOId = contextDTOJSON.getString("id");
 
-        Response challengeDTOResponse = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextID);
+        Response challengeDTOResponseAnterior = CHALLENGE_RequestsUtil.post(token, "CHALLENGE_POST_ExpectedRegisterDTOBody.json",contextDTOId);
 
-        JSONObject challengeDTOJSONExpected = new JSONObject(challengeDTOResponse.getBody().prettyPrint());
-        String challengeIDExpected = challengeDTOJSONExpected.getString("id");
+        JSONObject challengeDTOEsperado = new JSONObject(challengeDTOResponseAnterior.getBody().prettyPrint());
+        String challengeIDExpected = challengeDTOEsperado.getString("id");
 
-        //Delete challenge
         given()
                 .contentType(ContentType.JSON)
                 .headers("Authorization", "Bearer " + invalidToken,
@@ -1274,10 +1200,9 @@ public class ChallengeResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(500);
 
+
         USER_RequestsUtil.delete(token);
-        CONTEXT_RequestsUtil.delete(token, contextID);
+        CONTEXT_RequestsUtil.delete(token, contextDTOId);
         CHALLENGE_RequestsUtil.delete(token, challengeIDExpected);
-
     }
-
 }

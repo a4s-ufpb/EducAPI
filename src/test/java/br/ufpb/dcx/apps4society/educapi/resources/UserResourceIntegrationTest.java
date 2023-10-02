@@ -1,10 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
-import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
-import br.ufpb.dcx.apps4society.educapi.utils.builder.UserBuilder;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
 import br.ufpb.dcx.apps4society.educapi.utils.USER_RequestsUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
 import io.restassured.response.*;
 import org.json.JSONObject;
@@ -12,11 +9,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-
 import static io.restassured.RestAssured.*;
 
 public class UserResourceIntegrationTest {
+
     private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
             "qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
 
@@ -26,44 +22,30 @@ public class UserResourceIntegrationTest {
         baseURI = "http://localhost";
         port = 8080;
         basePath = "/v1/api/";
-
     }
 
     @Test
     public void insertUserByNameEmailPassword_shouldReturn201Test() throws Exception {
 
-        Response userDTOResponse = given()
-                .body(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"))
-               .contentType(ContentType.JSON)
-       .when()
-               .post(baseURI+":"+port+basePath+"users")
-       .then()
-               .assertThat().statusCode(201)
-               .extract().response();
+        Response userDTOResponse = 
+                given()
+                                .body(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"))
+                        .contentType(ContentType.JSON)
+                .when()
+                        .post(baseURI+":"+port+basePath+"users")
+                .then()
+                        .assertThat().statusCode(201)
+                        .extract().response();
 
-        JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userDTOAtual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userRegisterDTOEsperado = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
 
-        String actualUserId = userDTOJSONActual.getString("id");
-        String actualUserName = userDTOJSONActual.getString("name");
-        String actualUserPassword = userDTOJSONActual.getString("password");
-        String actualUserEmail = userDTOJSONActual.getString("email");
+        Assertions.assertNotNull(userDTOAtual.getString("id"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("name"), userDTOAtual.getString("name"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("email"), userDTOAtual.getString("email"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("password"), userDTOAtual.getString("password"));
 
-        UserDTO userDTO = UserBuilder.anUser()
-                .withId(Long.valueOf(actualUserId))
-                .withName(actualUserName)
-                .withEmail(actualUserEmail)
-                .withPassword(actualUserPassword).buildUserDTO();
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/USER_POST_ActualUserDTOBody[spawned].json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(userDTOJSONActual.getString("id"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
-
-        //Just to remove user from DB
         String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
@@ -71,7 +53,6 @@ public class UserResourceIntegrationTest {
                 .then().extract().path("token");
 
         USER_RequestsUtil.delete(token);
-
     }
 
     @Test
@@ -87,15 +68,15 @@ public class UserResourceIntegrationTest {
         .then()
                 .assertThat().statusCode(204);
 
-        //Just to remove user from DB
+
         String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then().extract().path("token");
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -120,7 +101,6 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"users")
             .then()
                 .assertThat().statusCode(400);
-
     }
 
     @Test
@@ -135,7 +115,6 @@ public class UserResourceIntegrationTest {
                 .assertThat()
                 .statusCode(400)
                 .extract().response();
-
     }
 
 
@@ -155,8 +134,8 @@ public class UserResourceIntegrationTest {
 
         Assertions.assertNotNull(token);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -168,7 +147,6 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
                 .assertThat().statusCode(401);
-
     }
 
     @Test
@@ -182,7 +160,6 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
                 .assertThat().statusCode(401);
-
     }
 
     @Test
@@ -196,7 +173,6 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
                 .assertThat().statusCode(401);
-
     }
 
     @Test
@@ -210,7 +186,6 @@ public class UserResourceIntegrationTest {
                 .post(baseURI+":"+port+basePath+"auth/login")
                 .then()
                 .assertThat().statusCode(401);
-
     }
 
 
@@ -235,27 +210,14 @@ public class UserResourceIntegrationTest {
                     .extract().response();
 
         JSONObject userDTOJSON_Actual = new JSONObject(userDTOResponse.getBody().prettyPrint());
-
-        String actualUserId = userDTOJSON_Actual.getString("id");
-        String actualUserName = userDTOJSON_Actual.getString("name");
-        String actualUserEmail = userDTOJSON_Actual.getString("email");
-
-        UserDTO userDTO = UserBuilder.anUser()
-                .withId(Long.valueOf(actualUserId))
-                .withName(actualUserName)
-                .withEmail(actualUserEmail)
-                .withPassword(null).buildUserDTO();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/USER_POST_ActualUserDTOBody[spawned].json"), userDTO);
         JSONObject userRegisterDTOJSON_Expected = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
 
         Assertions.assertNotNull(userDTOJSON_Actual.getString("id"));
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("name"), userDTOJSON_Actual.getString("name"));
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("email"), userDTOJSON_Actual.getString("email"));
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -265,7 +227,6 @@ public class UserResourceIntegrationTest {
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
         USER_RequestsUtil.delete(token);
 
-        //Try to get a inexistent user
         given()
                 .headers(
                         "Authorization",
@@ -278,7 +239,6 @@ public class UserResourceIntegrationTest {
                 .get(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
 
     @Test
@@ -296,7 +256,6 @@ public class UserResourceIntegrationTest {
                 .get(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
 
 
@@ -322,30 +281,16 @@ public class UserResourceIntegrationTest {
                     .assertThat().statusCode(200)
                     .extract().response();
 
-        JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userDTOAtual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userRegisterDTOEsperado = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
 
-        String actualUserId = userDTOJSONActual.getString("id");
-        String actualUserName = userDTOJSONActual.getString("name");
-        String actualUserPassword = userDTOJSONActual.getString("password");
-        String actualUserEmail = userDTOJSONActual.getString("email");
+        Assertions.assertNotNull(userDTOAtual.getString("id"));
+        Assertions.assertNotEquals(userRegisterDTOEsperado.getString("name"), userDTOAtual.getString("name"));
+        Assertions.assertNotEquals(userRegisterDTOEsperado.getString("email"), userDTOAtual.getString("email"));
+        Assertions.assertNotEquals(userRegisterDTOEsperado.getString("password"), userDTOAtual.getString("password"));
 
-        UserDTO userDTO = UserBuilder.anUser()
-                .withId(Long.valueOf(actualUserId))
-                .withName(actualUserName)
-                .withEmail(actualUserEmail)
-                .withPassword(actualUserPassword).buildUserDTO();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/USER_POST_ActualUserDTOBody[spawned].json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(userDTOJSONActual.getString("id"));
-        Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
-        Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
-        Assertions.assertNotEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
 
         USER_RequestsUtil.delete(token);
-
     }
 
     @Test
@@ -369,7 +314,6 @@ public class UserResourceIntegrationTest {
                 .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
 
     @Test
@@ -393,8 +337,8 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -418,8 +362,8 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -443,8 +387,8 @@ public class UserResourceIntegrationTest {
                 .then()
                 .assertThat().statusCode(400);
 
-        USER_RequestsUtil.delete(token);
 
+        USER_RequestsUtil.delete(token);
     }
 
     @Test
@@ -464,7 +408,6 @@ public class UserResourceIntegrationTest {
                 .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
 
 
@@ -488,28 +431,13 @@ public class UserResourceIntegrationTest {
                 .assertThat().statusCode(200)
                 .extract().response();
 
-        JSONObject userDTOJSONActual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userDTOAtual = new JSONObject(userDTOResponse.getBody().prettyPrint());
+        JSONObject userRegisterDTOEsperado = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
 
-        String actualUserId = userDTOJSONActual.getString("id");
-        String actualUserName = userDTOJSONActual.getString("name");
-        String actualUserPassword = userDTOJSONActual.getString("password");
-        String actualUserEmail = userDTOJSONActual.getString("email");
-
-        UserDTO userDTO = UserBuilder.anUser()
-                .withId(Long.valueOf(actualUserId))
-                .withName(actualUserName)
-                .withEmail(actualUserEmail)
-                .withPassword(actualUserPassword).buildUserDTO();
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File("src/test/resources/USER_POST_ActualUserDTOBody[spawned].json"), userDTO);
-        JSONObject userRegisterDTOJSONExpected = new JSONObject(FileUtils.getJsonFromFile("USER_POST_ExpectedRegisterDTOBody.json"));
-
-        Assertions.assertNotNull(userDTOJSONActual.getString("id"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("name"), userDTOJSONActual.getString("name"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("email"), userDTOJSONActual.getString("email"));
-        Assertions.assertEquals(userRegisterDTOJSONExpected.getString("password"), userDTOJSONActual.getString("password"));
-
+        Assertions.assertNotNull(userDTOAtual.getString("id"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("name"), userDTOAtual.getString("name"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("email"), userDTOAtual.getString("email"));
+        Assertions.assertEquals(userRegisterDTOEsperado.getString("password"), userDTOAtual.getString("password"));
     }
 
     @Test
@@ -531,7 +459,6 @@ public class UserResourceIntegrationTest {
                 .delete(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
 
     @Test
@@ -551,7 +478,5 @@ public class UserResourceIntegrationTest {
                 .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
                 .assertThat().statusCode(500);
-
     }
-
 }
