@@ -52,7 +52,7 @@ public class UserServiceTest {
     private final Optional<User> userEmailEmptyOptional = UserBuilder.anUser().withId(3L).withName("User3").withEmail(userLoginEmailEmptyDTO.getEmail()).buildOptionalUser();    
 
     private final UserRegisterDTO userRegisterDTO = UserBuilder.anUser().buildUserRegisterDTO();
-    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withId(2L).withName("User2").buildUserRegisterDTO();
+    private final UserRegisterDTO userRegisterDTO2 = UserBuilder.anUser().withName("User2").buildUserRegisterDTO();
 
     private List<User> users = new ArrayList<>();
 
