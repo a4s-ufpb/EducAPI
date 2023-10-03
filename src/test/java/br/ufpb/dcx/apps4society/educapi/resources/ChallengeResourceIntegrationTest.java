@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
+import br.ufpb.dcx.apps4society.educapi.EducApiApplicationTests;
 import br.ufpb.dcx.apps4society.educapi.utils.CHALLENGE_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.CONTEXT_RequestsUtil;
 import br.ufpb.dcx.apps4society.educapi.utils.FileUtils;
@@ -8,25 +9,11 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.*;
 
-public class ChallengeResourceIntegrationTest {
-
-    private static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
-            "qfwlZuirBvosD82v-7lHxb8qhH54_KXR20_0z3guG9rZOW68l5y3gZtvugBtpevmlgK76dsa4hOUPOooRiJ3ng";
-
-    @BeforeAll
-    public static void setUp(){
-
-        baseURI = "http://localhost";
-        port = 8080;
-        basePath = "/v1/api/";
-    }
-
+public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
 
     @Test
     public void insertChallengeByCreatorTokenBodyContextID_ShouldReturn201Test() throws Exception {
