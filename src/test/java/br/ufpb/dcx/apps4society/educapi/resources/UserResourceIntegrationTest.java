@@ -34,14 +34,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
         Assertions.assertEquals(userRegisterDTOEsperado.getString("email"), userDTOAtual.getString("email"));
         Assertions.assertEquals(userRegisterDTOEsperado.getString("password"), userDTOAtual.getString("password"));
 
-
-        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then().extract().path("token");
-
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData();
     }
 
     @Test
@@ -57,15 +50,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
         .then()
                 .assertThat().statusCode(204);
 
-
-        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
-                .contentType(ContentType.JSON)
-                .when()
-                .post(baseURI+":"+port+basePath+"auth/login")
-                .then().extract().path("token");
-
-
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData();
     }
 
     @Test
@@ -122,9 +107,9 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .log().all().extract().path("token");
 
         Assertions.assertNotNull(token);
+        
 
-
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test
@@ -206,7 +191,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
         Assertions.assertEquals(userRegisterDTOJSON_Expected.getString("email"), userDTOJSON_Actual.getString("email"));
 
 
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test
@@ -279,7 +264,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
         Assertions.assertNotEquals(userRegisterDTOEsperado.getString("password"), userDTOAtual.getString("password"));
 
 
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test
@@ -327,7 +312,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .assertThat().statusCode(400);
 
 
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test
@@ -352,7 +337,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .assertThat().statusCode(400);
 
 
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test
@@ -377,7 +362,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .assertThat().statusCode(400);
 
 
-        USER_RequestsUtil.delete(token);
+        USER_RequestsUtil.reverseUserData(token);
     }
 
     @Test

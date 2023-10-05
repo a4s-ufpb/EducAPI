@@ -19,6 +19,21 @@ public class USER_RequestsUtil {
         basePath = "/v1/api/";
 
     }
+    public static void reverseUserData() throws Exception {
+        
+        String token = given().body(FileUtils.getJsonFromFile("USER_AuthenticateBody.json"))
+                .contentType(ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/login")
+                .then().extract().path("token");
+        
+        reverseUserData(token);
+    }
+
+    public static void reverseUserData(String token) throws Exception {
+
+        USER_RequestsUtil.delete(token);
+    }
 
     public static Response post(String body) throws Exception {
         Response userDTOResponse = given().body(FileUtils.getJsonFromFile(body))
