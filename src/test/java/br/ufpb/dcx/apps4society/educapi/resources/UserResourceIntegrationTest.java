@@ -247,7 +247,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                             ContentType.JSON,
                             "Accept",
                             ContentType.JSON)
-                    .body(FileUtils.getJsonFromFile("USER_PUT_UserBody.json"))
+                    .body(FileUtils.getJsonFromFile("USER_PUT_UserBodyNew.json"))
                     .contentType(ContentType.JSON)
                 .when()
                     .put(baseURI+":"+port+basePath+"auth/users")
@@ -282,7 +282,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON)
-                .body(FileUtils.getJsonFromFile("USER_PUT_UserBody.json"))
+                .body(FileUtils.getJsonFromFile("USER_PUT_UserBodyNew.json"))
                 .contentType(ContentType.JSON)
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
@@ -383,6 +383,31 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .then()
                 .assertThat().statusCode(500);
     }
+
+    @Test
+    public void updateUserBySameEmailAndNameAndPasswordAndToken_ShouldReturn200Test() throws Exception {
+
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+
+        given()
+                    .headers(
+                            "Authorization",
+                            "Bearer " + token,
+                            "Content-Type",
+                            ContentType.JSON,
+                            "Accept",
+                            ContentType.JSON)
+                    .body(FileUtils.getJsonFromFile("USER_PUT_UserBody.json"))
+                    .contentType(ContentType.JSON)
+                .when()
+                    .put(baseURI+":"+port+basePath+"auth/users")
+                .then()
+                    .assertThat().statusCode(304);
+
+
+        USER_RequestsUtil.reverseUserData(token);
+    }   
 
 
     @Test
