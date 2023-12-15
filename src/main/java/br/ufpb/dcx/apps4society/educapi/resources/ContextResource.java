@@ -1,13 +1,13 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 import java.util.List;
-import javax.validation.Valid;
 
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ContextAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidContextException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +28,7 @@ public class ContextResource {
     @Autowired
     private ContextService contextService;
 
-    @ApiOperation("Returns a Context, if the Context ID are valid.")
+    @Operation(summary = "Returns a Context, if the Context ID are valid.")
     @GetMapping("contexts/{idContext}")
     public ResponseEntity<Context> find(@PathVariable Long idContext) {
         try {
@@ -38,7 +38,7 @@ public class ContextResource {
         }
     }
 
-    @ApiOperation("Adds a new Context to the service, if the token is valid.")
+    @Operation(summary = "Adds a new Context to the service, if the token is valid.")
     @PostMapping("auth/contexts")
     public ResponseEntity<ContextDTO> insert(@RequestHeader("Authorization") String token,
                                              @Valid @RequestBody ContextRegisterDTO objDto) {
@@ -53,7 +53,7 @@ public class ContextResource {
         }
     }
 
-    @ApiOperation("Updates a User Context, if the token and the Context ID are valid.")
+    @Operation(summary = "Updates a User Context, if the token and the Context ID are valid.")
     @PutMapping("auth/contexts/{idContext}")
     public ResponseEntity<ContextDTO> update(@RequestHeader("Authorization") String token,
                                              @Valid @RequestBody ContextRegisterDTO objDto,
@@ -69,7 +69,7 @@ public class ContextResource {
         }
     }
 
-    @ApiOperation("Deletes a User Context from the service, if the token and the Context ID are valid.")
+    @Operation(summary = "Deletes a User Context from the service, if the token and the Context ID are valid.")
     @DeleteMapping("auth/contexts/{idContext}")
     public ResponseEntity<ContextDTO> delete(@RequestHeader("Authorization") String token,
                                              @PathVariable Long idContext) {
@@ -82,7 +82,7 @@ public class ContextResource {
         }
     }
 
-    @ApiOperation("Returns a list of Contexts registered in the service.")
+    @Operation(summary = "Returns a list of Contexts registered in the service.")
     @GetMapping("contexts")
     public ResponseEntity<Page<Context>> findContextsByParams(
             @RequestParam(value = "email", required = false) String email,
@@ -95,7 +95,7 @@ public class ContextResource {
     }
 
 
-    @ApiOperation("Returns a list of all Contexts registered by the request User, if the token is valid.")
+    @Operation(summary = "Returns a list of all Contexts registered by the request User, if the token is valid.")
     @GetMapping("auth/contexts")
     public ResponseEntity<List<ContextDTO>> findAllByUser(@RequestHeader("Authorization") String token) {
         try {

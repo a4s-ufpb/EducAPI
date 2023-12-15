@@ -2,13 +2,13 @@ package br.ufpb.dcx.apps4society.educapi.resources;
 
 import java.util.List;
 
-import javax.validation.Valid;
 
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +27,7 @@ public class ChallengeResource {
 	@Autowired
 	private ChallengeService challengeService;
 
-	@ApiOperation("Returns a Challenge present in the service, if the token and the Challenge ID are valid.")
+	@Operation(summary = "Returns a Challenge present in the service, if the token and the Challenge ID are valid.")
 	@GetMapping("auth/challenges/{idChallenge}")
 	public ResponseEntity<Challenge> find(@RequestHeader("Authorization") String token,
 										  @PathVariable Long idChallenge) {
@@ -40,7 +40,7 @@ public class ChallengeResource {
 		}
 	}
 
-	@ApiOperation("Adds a new Challenge to a Context, if the token and the Context ID are valid.")
+	@Operation(summary = "Adds a new Challenge to a Context, if the token and the Context ID are valid.")
 	@PostMapping("auth/challenges/{idContext}")
 	public ResponseEntity<Challenge> insert(@RequestHeader("Authorization") String token,
 											@Valid @RequestBody ChallengeRegisterDTO objDto,
@@ -54,7 +54,7 @@ public class ChallengeResource {
 		}
 	}
 
-	@ApiOperation("Updates a User Challenge, if the token and the Challenge ID are valid.")
+	@Operation(summary = "Updates a User Challenge, if the token and the Challenge ID are valid.")
 	@PutMapping("auth/challenges/{idChallenge}")
 	public ResponseEntity<Challenge> update(@RequestHeader("Authorization") String token,
 											@Valid @RequestBody ChallengeRegisterDTO objDto,
@@ -70,7 +70,7 @@ public class ChallengeResource {
 		}
 	}
 
-	@ApiOperation("Deletes a User Challenge, if the token and the Challenge ID are valid.")
+	@Operation(summary = "Deletes a User Challenge, if the token and the Challenge ID are valid.")
 	@DeleteMapping("auth/challenges/{idChallenge}")
 	public ResponseEntity<Void> delete(@RequestHeader("Authorization") String token,
 									   @PathVariable Long idChallenge){
@@ -84,7 +84,7 @@ public class ChallengeResource {
 		}
 	}
 
-	@ApiOperation("Returns a list of all Challenges registered by the request User, if the token is valid.")
+	@Operation(summary = "Returns a list of all Challenges registered by the request User, if the token is valid.")
 	@GetMapping("auth/challenges")
 	public ResponseEntity<List<Challenge>> findAllByUser(@RequestHeader("Authorization") String token){
 		try {
@@ -96,7 +96,7 @@ public class ChallengeResource {
 		}
 	}
 
-	@ApiOperation("Returns a page with Challenges registered in the service.")
+	@Operation(summary = "Returns a page with Challenges registered in the service.")
 	@GetMapping("challenges")
 	public ResponseEntity<Page<Challenge>> findAllChallenges(
 			@RequestParam(value = "word", required = false) String word,

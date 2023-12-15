@@ -1,11 +1,10 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
-import javax.validation.Valid;
-
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ public class UserResource {
 	@Autowired
 	private UserService userService;
 
-	@ApiOperation("Returns a User if the token is valid.")
+	@Operation(summary = "Returns a User if the token is valid.")
 	@GetMapping("auth/users")
 	public ResponseEntity<User> find(@RequestHeader ("Authorization") String token) {
 		try{
@@ -32,7 +31,7 @@ public class UserResource {
 		}
 	}
 
-	@ApiOperation("Register a new User to the service.")
+	@Operation(summary = "Register a new User to the service.")
 	@PostMapping("users")
 	public ResponseEntity<UserDTO> insert(@Valid @RequestBody UserRegisterDTO userRegister) {
 		try{
@@ -42,7 +41,7 @@ public class UserResource {
 		}
 	}
 
-	@ApiOperation("Updates User information, if the token is valid.")
+	@Operation(summary = "Updates User information, if the token is valid.")
 	@PutMapping("auth/users")
 	public ResponseEntity<UserDTO> update(@Valid @RequestBody UserRegisterDTO registerDTO,
 										  @RequestHeader("Authorization") String token){
@@ -53,7 +52,7 @@ public class UserResource {
 		}
 	}
 
-	@ApiOperation("Deletes the user from the service, if the token is valid.")
+	@Operation(summary = "Deletes the user from the service, if the token is valid.")
 	@DeleteMapping("auth/users")
 	public ResponseEntity<UserDTO> delete(@RequestHeader("Authorization") String token) {
 		try {
