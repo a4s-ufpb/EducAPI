@@ -1,11 +1,10 @@
 package br.ufpb.dcx.apps4society.educapi.dto.context;
 
-import java.io.Serializable;
-import javax.validation.constraints.NotEmpty;
-
+import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import jakarta.validation.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Length;
 
-import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import java.io.Serializable;
 
 public class ContextDTO  implements Serializable{
 	private static final long serialVersionUID = 1L;

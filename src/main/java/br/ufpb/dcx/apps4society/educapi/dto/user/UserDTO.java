@@ -2,12 +2,10 @@ package br.ufpb.dcx.apps4society.educapi.dto.user;
 
 import java.io.Serializable;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotEmpty;
-
+import jakarta.validation.constraints.Email;
 import org.hibernate.validator.constraints.Length;
-
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import jakarta.validation.constraints.NotEmpty;
 
 public class UserDTO implements Serializable{
 	private static final long serialVersionUID = 1L;

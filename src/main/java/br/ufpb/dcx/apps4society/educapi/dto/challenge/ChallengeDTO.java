@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.validation.constraints.NotEmpty;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import org.hibernate.validator.constraints.Length;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
+import jakarta.validation.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Length;
 
 public class ChallengeDTO implements Serializable{
 	private static final long serialVersionUID = 1L;
