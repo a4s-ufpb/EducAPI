@@ -1,29 +1,29 @@
 package br.ufpb.dcx.apps4society.educapi.filter;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.PrematureJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.AlgorithmMismatchException;
+import com.auth0.jwt.exceptions.MissingClaimException;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class TokenFilter extends GenericFilterBean {
 
     public static int TOKEN_INDEX = 7;
 
-    @Value("${app.token.key}")
+    @Value("${app.token.key:token_key}")
     private String TOKEN_KEY;
-
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
@@ -33,7 +33,7 @@ public class TokenFilter extends GenericFilterBean {
 
         String header = request.getHeader("Authorization");
 
-        if (header == null || !header.startsWith("Bearer ")){
+        if (header == null || !header.startsWith("Bearer ")) {
             ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED,
                     "Missing or badly formatted token.");
             return;
@@ -42,9 +42,10 @@ public class TokenFilter extends GenericFilterBean {
         String token = header.substring(TOKEN_INDEX);
 
         try {
-            Jwts.parser().setSigningKey(this.TOKEN_KEY).parseClaimsJws(token).getBody();
-        }catch (SignatureException | ExpiredJwtException | MalformedJwtException | PrematureJwtException
-                | UnsupportedJwtException | IllegalArgumentException error ){
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+            JWT.require(algorithm).build().verify(token);
+        } catch (TokenExpiredException | MissingClaimException
+                | SignatureVerificationException | AlgorithmMismatchException | IllegalArgumentException error) {
             ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED, error.getMessage());
             return;
         }
