@@ -31,13 +31,13 @@ public class UserService {
 	}
 
 	public User find(String token) throws InvalidUserException {
-		Optional<String> userEmail = jwtService.recoverUser(token);
+		String userEmail = jwtService.recoverUser(token);
 
 		if (userEmail.isEmpty()){
 			throw new InvalidUserException("Invalid user! Please check the token.");
 		}
 
-		Optional<User> obgOptional = userRepository.findByEmail(userEmail.get());
+		Optional<User> obgOptional = userRepository.findByEmail(userEmail);
 		return obgOptional.get();
 	}
 

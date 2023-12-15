@@ -43,7 +43,7 @@ public class ChallengeService {
     }
 
     public Challenge find(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
-        Optional<String> userEmail = jwtService.recoverUser(token);
+        String userEmail = jwtService.recoverUser(token);
         if (userEmail.isEmpty()) {
             throw new InvalidUserException();
         }
@@ -128,12 +128,12 @@ public class ChallengeService {
     }
 
     private User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {
-        Optional<String> userEmail = jwtService.recoverUser(token);
+        String userEmail = jwtService.recoverUser(token);
         if (userEmail.isEmpty()) {
             throw new InvalidUserException();
         }
 
-        Optional<User> userOptional = userRepository.findByEmail(userEmail.get());
+        Optional<User> userOptional = userRepository.findByEmail(userEmail);
         if (userOptional.isEmpty()) {
             throw new ObjectNotFoundException();
         }
