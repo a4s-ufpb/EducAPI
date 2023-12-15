@@ -65,7 +65,7 @@ public class JWTServiceTest {
         LoginResponse response = this.service.authenticate(userLoginDTO);
         String token = tokenFormat(response.getToken());
 
-        String userRecovered = this.service.recoverUser(token).get();
+        String userRecovered = this.service.recoverUser(token);
 
         assertEquals(userRecovered, this.userLoginDTO.getEmail());
     }
