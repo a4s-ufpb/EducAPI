@@ -216,7 +216,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void findUserByMalformedOrInvalidToken_ShouldReturn500Test() throws Exception {
+    public void findUserByMalformedOrInvalidToken_ShouldReturn403Test() throws Exception {
 
         given()
                 .headers(
@@ -229,7 +229,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                 .get(baseURI+":"+port+basePath+"auth/users")
                 .then()
-                .assertThat().statusCode(500);
+                .assertThat().statusCode(403);
     }
 
 
@@ -366,7 +366,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void updateUserByMalformedOrInvalidToken_ShouldReturn500Test() throws Exception {
+    public void updateUserByMalformedOrInvalidToken_ShouldReturn403Test() throws Exception {
 
         given()
                 .headers(
@@ -381,7 +381,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
-                .assertThat().statusCode(500);
+                .assertThat().statusCode(403);
     }
 
     @Test
@@ -403,7 +403,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                     .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
-                    .assertThat().statusCode(304);
+                    .assertThat().statusCode(200);
 
 
         USER_RequestsUtil.reverseUserData(token);
@@ -461,7 +461,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void deleteUserByMalformedOrInvalidToken_ShouldReturn500Test() throws Exception {
+    public void deleteUserByMalformedOrInvalidToken_ShouldReturn403Test() throws Exception {
 
         given()
                 .headers(
@@ -476,6 +476,6 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                 .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
-                .assertThat().statusCode(500);
+                .assertThat().statusCode(403);
     }
 }
