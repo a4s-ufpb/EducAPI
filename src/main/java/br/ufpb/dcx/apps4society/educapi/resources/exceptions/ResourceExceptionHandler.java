@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources.exceptions;
 
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class ResourceExceptionHandler {
