@@ -31,26 +31,14 @@ public class ContextResource {
     @ApiOperation("Returns a Context, if the Context ID are valid.")
     @GetMapping("contexts/{idContext}")
     public ResponseEntity<Context> find(@PathVariable Long idContext) {
-        try {
-            return new ResponseEntity<>(contextService.find(idContext), HttpStatus.OK);
-        }catch (ObjectNotFoundException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return ResponseEntity.ok(contextService.find(idContext));
     }
 
     @ApiOperation("Adds a new Context to the service, if the token is valid.")
     @PostMapping("auth/contexts")
     public ResponseEntity<ContextDTO> insert(@RequestHeader("Authorization") String token,
                                              @Valid @RequestBody ContextRegisterDTO objDto) {
-        try {
-            return new ResponseEntity<>(contextService.insert(token, objDto), HttpStatus.CREATED);
-        }catch (ObjectNotFoundException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (InvalidUserException | SecurityException exception){
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        } catch (ContextAlreadyExistsException e) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(contextService.insert(token, objDto));
     }
 
     @ApiOperation("Updates a User Context, if the token and the Context ID are valid.")
@@ -58,28 +46,14 @@ public class ContextResource {
     public ResponseEntity<ContextDTO> update(@RequestHeader("Authorization") String token,
                                              @Valid @RequestBody ContextRegisterDTO objDto,
                                              @PathVariable Long idContext) {
-        try {
-            return new ResponseEntity<>(contextService.update(token, objDto, idContext), HttpStatus.OK);
-        }catch (ObjectNotFoundException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (InvalidUserException | SecurityException exception){
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }catch (InvalidContextException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
-        }
+       return ResponseEntity.ok(contextService.update(token,objDto,idContext));
     }
 
     @ApiOperation("Deletes a User Context from the service, if the token and the Context ID are valid.")
     @DeleteMapping("auth/contexts/{idContext}")
     public ResponseEntity<ContextDTO> delete(@RequestHeader("Authorization") String token,
                                              @PathVariable Long idContext) {
-        try {
-            return new ResponseEntity<>(contextService.delete(token, idContext), HttpStatus.OK);
-        }catch (ObjectNotFoundException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (InvalidUserException | SecurityException exception){
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+        return ResponseEntity.ok(contextService.delete(token,idContext));
     }
 
     @ApiOperation("Returns a list of Contexts registered in the service.")
@@ -98,13 +72,7 @@ public class ContextResource {
     @ApiOperation("Returns a list of all Contexts registered by the request User, if the token is valid.")
     @GetMapping("auth/contexts")
     public ResponseEntity<List<ContextDTO>> findAllByUser(@RequestHeader("Authorization") String token) {
-        try {
-            return new ResponseEntity<>(contextService.findContextsByCreator(token), HttpStatus.OK);
-        }catch (ObjectNotFoundException exception){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (InvalidUserException | SecurityException exception){
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+        return ResponseEntity.ok(contextService.findContextsByCreator(token));
     }
 
 }

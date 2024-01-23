@@ -31,13 +31,7 @@ public class ChallengeResource {
 	@GetMapping("auth/challenges/{idChallenge}")
 	public ResponseEntity<Challenge> find(@RequestHeader("Authorization") String token,
 										  @PathVariable Long idChallenge) {
-		try {
-			return new ResponseEntity<>(challengeService.find(token, idChallenge), HttpStatus.OK);
-		}catch (ObjectNotFoundException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}catch (InvalidUserException | SecurityException exception){
-			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-		}
+		return ResponseEntity.ok(challengeService.find(token, idChallenge));
 	}
 
 	@ApiOperation("Adds a new Challenge to a Context, if the token and the Context ID are valid.")
@@ -45,13 +39,7 @@ public class ChallengeResource {
 	public ResponseEntity<Challenge> insert(@RequestHeader("Authorization") String token,
 											@Valid @RequestBody ChallengeRegisterDTO objDto,
 											@PathVariable Long idContext) throws ChallengeAlreadyExistsException{
-		try {
-			return new ResponseEntity<>(challengeService.insert(token, objDto, idContext), HttpStatus.CREATED);
-		}catch (ObjectNotFoundException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}catch (InvalidUserException | SecurityException exception){
-			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-		}
+		return ResponseEntity.status(HttpStatus.CREATED).body(challengeService.insert(token, objDto, idContext));
 	}
 
 	@ApiOperation("Updates a User Challenge, if the token and the Challenge ID are valid.")
@@ -59,41 +47,21 @@ public class ChallengeResource {
 	public ResponseEntity<Challenge> update(@RequestHeader("Authorization") String token,
 											@Valid @RequestBody ChallengeRegisterDTO objDto,
 											@PathVariable Long idChallenge){
-		try {
-			return new ResponseEntity<>(challengeService.update(token, objDto, idChallenge), HttpStatus.OK);
-		}catch (ObjectNotFoundException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}catch (InvalidUserException | SecurityException exception){
-			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-		}catch (InvalidChallengeException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
-		}
+		return ResponseEntity.ok(challengeService.update(token, objDto, idChallenge));
 	}
 
 	@ApiOperation("Deletes a User Challenge, if the token and the Challenge ID are valid.")
 	@DeleteMapping("auth/challenges/{idChallenge}")
 	public ResponseEntity<Void> delete(@RequestHeader("Authorization") String token,
 									   @PathVariable Long idChallenge){
-		try {
-			challengeService.delete(token, idChallenge);
-			return ResponseEntity.ok().build();
-		}catch (ObjectNotFoundException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}catch (InvalidUserException | SecurityException exception){
-			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-		}
+		challengeService.delete(token, idChallenge);
+		return ResponseEntity.status(HttpStatus.OK).build();
 	}
 
 	@ApiOperation("Returns a list of all Challenges registered by the request User, if the token is valid.")
 	@GetMapping("auth/challenges")
 	public ResponseEntity<List<Challenge>> findAllByUser(@RequestHeader("Authorization") String token){
-		try {
-			return new ResponseEntity<>(challengeService.findChallengesByCreator(token), HttpStatus.OK);
-		}catch (ObjectNotFoundException exception){
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}catch (InvalidUserException exception){
-			return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-		}
+		return ResponseEntity.ok(challengeService.findChallengesByCreator(token));
 	}
 
 	@ApiOperation("Returns a page with Challenges registered in the service.")

@@ -21,19 +21,7 @@ public class LoginResource {
     @ApiOperation("Returns a user authentication token.")
     @PostMapping("auth/login")
     public ResponseEntity<LoginResponse> authenticate(@RequestBody UserLoginDTO userLoginDTO){
-        try{
-            return new ResponseEntity<>(jwtService.authenticate(userLoginDTO), HttpStatus.OK);
-        }catch (InvalidUserException exception){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+        return ResponseEntity.ok(jwtService.authenticate(userLoginDTO));
     }
-
-    @ApiOperation("Returns a timestamp.")
-    @GetMapping ("timestamp")
-    public ResponseEntity<Long> timestamp(){
-        return new ResponseEntity<>(System.currentTimeMillis(), HttpStatus.OK);
-
-    }
-
 
 }
