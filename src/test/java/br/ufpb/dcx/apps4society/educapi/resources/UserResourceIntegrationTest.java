@@ -403,7 +403,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                     .put(baseURI+":"+port+basePath+"auth/users")
                 .then()
-                    .assertThat().statusCode(304);
+                    .assertThat().statusCode(200);
 
 
         USER_RequestsUtil.reverseUserData(token);
