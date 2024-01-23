@@ -38,7 +38,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void insertUserByNameEmailPasswordAlreadyExists_shouldReturn201Test() throws Exception {
+    public void insertUserByNameEmailPasswordAlreadyExists_shouldReturn409Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
@@ -48,7 +48,7 @@ public class UserResourceIntegrationTest extends EducApiApplicationTests {
         .when()
                 .post(baseURI+":"+port+basePath+"users")
         .then()
-                .assertThat().statusCode(204);
+                .assertThat().statusCode(409);
 
         USER_RequestsUtil.reverseUserData();
     }
