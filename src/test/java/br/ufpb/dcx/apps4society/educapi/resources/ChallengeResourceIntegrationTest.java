@@ -272,7 +272,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/")
+                .get(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -302,7 +302,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                 .body(FileUtils.getJsonFromFile("CHALLENGE_POST_ExpectedRegisterDTOBody.json"))
                 .contentType(ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/")
+                .get(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(400);
 
@@ -337,7 +337,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/")
+                .get(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(404);
 
@@ -369,7 +369,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/")
+                .get(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(500);
 
@@ -435,7 +435,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"auth/challenges/")
+                .get(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -631,7 +631,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"challenges/" + "?word=&page=0&size=20")
+                .get(baseURI+":"+port+basePath+"challenges" + "?word=&page=0&size=20")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -773,7 +773,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .put(baseURI+":"+port+basePath+"auth/challenges/")
+                .put(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(405);
 
@@ -1029,7 +1029,7 @@ public class ChallengeResourceIntegrationTest extends EducApiApplicationTests {
                         "content-type", ContentType.JSON,
                         "Accept", ContentType.JSON)
                 .when()
-                .delete(baseURI+":"+port+basePath+"auth/challenges/")
+                .delete(baseURI+":"+port+basePath+"auth/challenges")
                 .then()
                 .assertThat().statusCode(405);
 
