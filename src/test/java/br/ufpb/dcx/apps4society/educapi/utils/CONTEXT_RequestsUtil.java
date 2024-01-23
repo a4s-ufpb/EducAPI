@@ -8,7 +8,8 @@ import static io.restassured.RestAssured.*;
 
 public class CONTEXT_RequestsUtil {
 
-    private static String CONTEXT_POST_DELETE_ENDPOINT = baseURI+":"+port+basePath+"auth/contexts/";
+    private static String CONTEXT_POST_ENDPOINT = baseURI+":"+port+basePath+"auth/contexts";
+    private static String CONTEXT_DELETE_ENDPOINT = baseURI+":"+port+basePath+"auth/contexts/";
 
     @BeforeEach
     public void setUp(){
@@ -30,7 +31,7 @@ public class CONTEXT_RequestsUtil {
                         ContentType.JSON,
                         "Accept",
                         ContentType.JSON).when()
-                .post(CONTEXT_POST_DELETE_ENDPOINT)
+                .post(CONTEXT_POST_ENDPOINT)
                 .then()
                 .extract().response();
 
@@ -48,7 +49,7 @@ public class CONTEXT_RequestsUtil {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .delete(CONTEXT_POST_DELETE_ENDPOINT + ID);
+                .delete(CONTEXT_DELETE_ENDPOINT + ID);
     }
 
 }
