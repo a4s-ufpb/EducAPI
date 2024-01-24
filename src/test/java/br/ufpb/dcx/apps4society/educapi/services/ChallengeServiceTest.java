@@ -10,7 +10,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidChallengeException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.utils.builder.ChallengeBuilder;
@@ -258,7 +257,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException, InvalidChallengeException{
+    public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
         
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Mockito.when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());

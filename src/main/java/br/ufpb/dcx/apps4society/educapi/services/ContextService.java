@@ -63,7 +63,7 @@ public class ContextService {
         return new ContextDTO(context);
     }
 
-    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException, InvalidContextException {
+    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException{
         User user = validateUser(token);
 
 
@@ -71,13 +71,6 @@ public class ContextService {
 
         if (!contextOptional.isPresent()){
             throw new ObjectNotFoundException();
-        }
-
-        if(Objects.equals(contextRegisterDTO.getName(), contextOptional.get().getName())
-                && Objects.equals(contextRegisterDTO.getImageUrl(), contextOptional.get().getImageUrl())
-                && Objects.equals(contextRegisterDTO.getSoundUrl(), contextOptional.get().getSoundUrl())
-                && Objects.equals(contextRegisterDTO.getVideoUrl(), contextOptional.get().getVideoUrl())){
-            throw new InvalidContextException();
         }
 
         Context newObj = find(id);

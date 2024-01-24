@@ -50,35 +50,35 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
         USER_RequestsUtil.delete(token);
     }
 
-//    @Test
-//    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn409Test() throws Exception {
-//
-//        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
-//
-//        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
-//
-//        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-//
-//        given()
-//                .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
-//                .contentType(ContentType.JSON)
-//                .headers("Authorization",
-//                        "Bearer " + token,
-//                        "Content-Type",
-//                        ContentType.JSON,
-//                        "Accept",
-//                        ContentType.JSON)
-//                .when()
-//                .post(baseURI+":"+port+basePath+"auth/contexts")
-//                .then()
-//                .assertThat().statusCode(409);
-//
-//        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-//
-//
-//        CONTEXT_RequestsUtil.delete(token, contextDTOAtual.getString("id"));
-//        USER_RequestsUtil.delete(token);
-//    }
+    @Test
+    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn409Test() throws Exception {
+
+        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
+
+        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
+
+        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
+
+        given()
+                .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
+                .contentType(ContentType.JSON)
+                .headers("Authorization",
+                        "Bearer " + token,
+                        "Content-Type",
+                        ContentType.JSON,
+                        "Accept",
+                        ContentType.JSON)
+                .when()
+                .post(baseURI+":"+port+basePath+"auth/contexts")
+                .then()
+                .assertThat().statusCode(409);
+
+        JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
+
+
+        CONTEXT_RequestsUtil.delete(token, contextDTOAtual.getString("id"));
+        USER_RequestsUtil.delete(token);
+    }
 
     @Test
     public void insertContextWithTokenImageURLSoundURLVideoURLWithoutName_ShouldReturn400Test() throws Exception {
@@ -444,36 +444,6 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
         CONTEXT_RequestsUtil.delete(token, contextDTOJSONUpdated.getString("id"));
         USER_RequestsUtil.delete(token);
     }
-
-//    @Test
-//    public void updateContextByTokenImageURLSoundURLVideoURLButSameName_ShouldReturn304Test() throws Exception {
-//
-//        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
-//        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
-//        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-//
-//        JSONObject contextDTOJSONExpected = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-//        String contextDTOIDExpected = contextDTOJSONExpected.getString("id");
-//
-//        given()
-//                .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
-//                .contentType(ContentType.JSON)
-//                .headers("Authorization",
-//                        "Bearer " + token,
-//                        "Content-Type",
-//                        ContentType.JSON,
-//                        "Accept",
-//                        ContentType.JSON)
-//                .when()
-//                .put(baseURI+":"+port+basePath+"auth/contexts/" + contextDTOIDExpected)
-//                .then()
-//                .assertThat().statusCode(304)
-//                .extract().response();
-//
-//
-//        CONTEXT_RequestsUtil.delete(token, contextDTOIDExpected);
-//        USER_RequestsUtil.delete(token);
-//    }
 
     @Test
     public void updateContextByNonName_ShouldReturn400Test() throws Exception {

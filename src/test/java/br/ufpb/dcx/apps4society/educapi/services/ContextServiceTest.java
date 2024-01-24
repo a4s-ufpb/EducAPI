@@ -195,7 +195,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException, InvalidContextException {
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 

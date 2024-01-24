@@ -67,18 +67,6 @@ public class ResourceExceptionHandler {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
 	}
 
-	@ExceptionHandler(InvalidChallengeException.class)
-	public ResponseEntity<StandardError> invalidChallengeException(InvalidChallengeException e, HttpServletRequest request){
-		StandardError err = new StandardError(HttpStatus.BAD_REQUEST.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
-	}
-
-	@ExceptionHandler(InvalidContextException.class)
-	public ResponseEntity<StandardError> invalidContextException(InvalidContextException e, HttpServletRequest request){
-		StandardError err = new StandardError(HttpStatus.BAD_REQUEST.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
-	}
-
 	@ExceptionHandler(InvalidUserException.class)
 	public ResponseEntity<StandardError> invalidUserException(InvalidUserException e, HttpServletRequest request){
 		StandardError err = new StandardError(HttpStatus.UNAUTHORIZED.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
