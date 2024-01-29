@@ -57,7 +57,7 @@ public class ChallengeService {
 
     @Transactional
     public Challenge insert(String token, ChallengeRegisterDTO obj, Long contextID)
-            throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException {
+            throws ObjectNotFoundException, InvalidUserException{
         User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(contextID);

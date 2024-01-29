@@ -49,18 +49,6 @@ public class ResourceExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
 	}
 
-	@ExceptionHandler(ChallengeAlreadyExistsException.class)
-	public ResponseEntity<StandardError> challengeAlreadyExistsException(ChallengeAlreadyExistsException e, HttpServletRequest request){
-		StandardError err = new StandardError(HttpStatus.CONFLICT.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
-	}
-
-	@ExceptionHandler(ContextAlreadyExistsException.class)
-	public ResponseEntity<StandardError> contextAlreadyExistsException(ContextAlreadyExistsException e, HttpServletRequest request){
-		StandardError err = new StandardError(HttpStatus.CONFLICT.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
-	}
-
 	@ExceptionHandler(UserAlreadyExistsException.class)
 	public ResponseEntity<StandardError> userAlreadyExistsException(UserAlreadyExistsException e, HttpServletRequest request){
 		StandardError err = new StandardError(HttpStatus.CONFLICT.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());

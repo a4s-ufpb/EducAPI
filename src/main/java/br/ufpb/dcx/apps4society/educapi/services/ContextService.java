@@ -53,12 +53,6 @@ public class ContextService {
 
         context.setCreator(user);
 
-        Optional<Context> contextOptional = contextRepository.findContextByNameIgnoreCase(context.getName());
-
-        if (contextOptional.isPresent()){
-            throw new ContextAlreadyExistsException("There is already a context with this name registered for this user!");
-        }
-
         contextRepository.save(context);
         return new ContextDTO(context);
     }

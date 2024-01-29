@@ -51,7 +51,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn409Test() throws Exception {
+    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn201Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
@@ -71,7 +71,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/contexts")
                 .then()
-                .assertThat().statusCode(409);
+                .assertThat().statusCode(201);
 
         JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
 
