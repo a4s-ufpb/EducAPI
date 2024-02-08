@@ -3,7 +3,7 @@ package br.ufpb.dcx.apps4society.educapi.dto.challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import java.io.Serializable;
 
 public class ChallengeRegisterDTO implements Serializable {

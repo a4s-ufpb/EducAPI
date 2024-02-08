@@ -1,7 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.dto.context;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.hibernate.validator.constraints.Length;
 

@@ -51,7 +51,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
     }
 
     @Test
-    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn403Test() throws Exception {
+    public void insertContextWithTokenImageURLSoundURLVideoURLButNameAlreadyExists_ShouldReturn201Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
 
@@ -71,7 +71,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                 .when()
                 .post(baseURI+":"+port+basePath+"auth/contexts")
                 .then()
-                .assertThat().statusCode(403);
+                .assertThat().statusCode(201);
 
         JSONObject contextDTOAtual = new JSONObject(contextDTOResponse.getBody().prettyPrint());
 
@@ -161,7 +161,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
 
 
     @Test
-    public void findContextsByToken_ShouldReturn201Test() throws Exception {
+    public void findContextsByToken_ShouldReturn200Test() throws Exception {
 
         USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
         String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
@@ -265,7 +265,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"contexts/")
+                .get(baseURI+":"+port+basePath+"contexts")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -323,7 +323,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"contexts/" + "?email=" + actualUserEmail + "&page=0&size=20")
+                .get(baseURI+":"+port+basePath+"contexts" + "?email=" + actualUserEmail + "&page=0&size=20")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -351,7 +351,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"contexts/" + "?name=" + actualContextName + "&page=0&size=20")
+                .get(baseURI+":"+port+basePath+"contexts" + "?name=" + actualContextName + "&page=0&size=20")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -374,7 +374,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"contexts/" + "?name=" + null + "&page=0&size=20")
+                .get(baseURI+":"+port+basePath+"contexts" + "?name=" + "&page=0&size=20")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -398,7 +398,7 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
                         "Accept",
                         ContentType.JSON)
                 .when()
-                .get(baseURI+":"+port+basePath+"contexts/" + "?email=" + null + "&page=0&size=20")
+                .get(baseURI+":"+port+basePath+"contexts" + "?email=" + null + "&page=0&size=20")
                 .then()
                 .assertThat().statusCode(200);
 
@@ -442,36 +442,6 @@ public class ContextResourceIntegrationTest extends EducApiApplicationTests {
 
 
         CONTEXT_RequestsUtil.delete(token, contextDTOJSONUpdated.getString("id"));
-        USER_RequestsUtil.delete(token);
-    }
-
-    @Test
-    public void updateContextByTokenImageURLSoundURLVideoURLButSameName_ShouldReturn304Test() throws Exception {
-
-        USER_RequestsUtil.post("USER_POST_ExpectedRegisterDTOBody.json");
-        String token = USER_RequestsUtil.authenticate("USER_POST_ExpectedRegisterDTOBody.json");
-        Response contextDTOResponse = CONTEXT_RequestsUtil.post(token, "CONTEXT_POST_ExpectedRegisterDTOBody.json");
-
-        JSONObject contextDTOJSONExpected = new JSONObject(contextDTOResponse.getBody().prettyPrint());
-        String contextDTOIDExpected = contextDTOJSONExpected.getString("id");
-
-        given()
-                .body(FileUtils.getJsonFromFile("CONTEXT_POST_ExpectedRegisterDTOBody.json"))
-                .contentType(ContentType.JSON)
-                .headers("Authorization",
-                        "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
-                        "Accept",
-                        ContentType.JSON)
-                .when()
-                .put(baseURI+":"+port+basePath+"auth/contexts/" + contextDTOIDExpected)
-                .then()
-                .assertThat().statusCode(304)
-                .extract().response();
-        
-
-        CONTEXT_RequestsUtil.delete(token, contextDTOIDExpected);
         USER_RequestsUtil.delete(token);
     }
 

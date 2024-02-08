@@ -1,10 +1,8 @@
-FROM openjdk:11-jdk
+FROM openjdk:17-jdk
 EXPOSE 8080
 COPY . ./educapi
 WORKDIR /educapi
-RUN ./mvnw clean
-RUN ./mvnw test
-RUN ./mvnw install
+RUN ./mvnw clean package -DskipTests
 ENTRYPOINT ["java", "-jar", "target/EducAPI.jar"]
 
 

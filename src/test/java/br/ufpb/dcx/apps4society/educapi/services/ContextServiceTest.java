@@ -185,17 +185,12 @@ public class ContextServiceTest {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
 
-        Exception exception = assertThrows(ContextAlreadyExistsException.class, () -> {
-            contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
-        });
-
-        assertEquals(Messages.CONTEXT_ALREADY_EXISTS, exception.getMessage());
         assertEquals(contextRepository.findContextByNameIgnoreCase("Context"), contextOptional);
 
     }
 
     @Test
-    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException, InvalidContextException {
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 

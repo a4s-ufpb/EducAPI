@@ -1,37 +1,38 @@
 package br.ufpb.dcx.apps4society.educapi.config;
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-@EnableSwagger2
 public class SwaggerConfig {
     @Bean
-    public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .apis(RequestHandlerSelectors.basePackage("br.ufpb.dcx.apps4society.educapi.resources"))
-                .paths(PathSelectors.any())
-                .build()
-                .apiInfo(apiInfo());
+    OpenAPI openAPI(){
+        return new OpenAPI().addSecurityItem(new SecurityRequirement()
+                        .addList("Bearer Authentication"))
+                .components(new Components().addSecuritySchemes("Bearer Authentication",securityScheme())).info(info());
     }
 
-    private ApiInfo apiInfo() {
-        return new ApiInfo(
-                "EducAPI",
-                "Plataforma colaborativa de contextos para aplicativos de alfabetização.",
-                "Versão API 1.0",
-                "Termos de uso",
-                "apps4society@dcx.ufpb.br",
-                "API License",
-                "API License URL"
-        );
+    private Info info(){
+        return new Info()
+                .title("EducAPI")
+                .description("Plataforma colaborativa de contextos para aplicativos de alfabetização.")
+                .version("Versão API 1.0")
+                .termsOfService("apps4society@dcx.ufpb.br")
+                .license(new License()
+                        .name("API License").url("API License URL"));
+    }
+
+    private SecurityScheme securityScheme(){
+        return new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .bearerFormat("JWT")
+                .scheme("bearer");
     }
 
 }

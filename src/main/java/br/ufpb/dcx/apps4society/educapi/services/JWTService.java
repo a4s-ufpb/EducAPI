@@ -6,15 +6,17 @@ import br.ufpb.dcx.apps4society.educapi.filter.TokenFilter;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 @Service
@@ -41,11 +43,17 @@ public class JWTService {
     }
 
     private String generateToken(UserLoginDTO userLoginDTO){
-        return Jwts.builder()
-                .setSubject(userLoginDTO.getEmail())
-                .signWith(SignatureAlgorithm.HS512, TOKEN_KEY)
-                .setExpiration(new Date(System.currentTimeMillis() + 30 * 60 * 1000)).compact();
+        Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+        return JWT.create()
+                .withSubject(userLoginDTO.getEmail())
+                .withExpiresAt(expirationToken())
+                .sign(algorithm)
+                .strip();
 
+    }
+
+    private Instant expirationToken() {
+        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
     }
 
     public Optional<String> recoverUser(String header){
@@ -57,11 +65,12 @@ public class JWTService {
         String subject;
 
         try {
-            subject = Jwts.parser().setSigningKey(TOKEN_KEY).parseClaimsJws(token).getBody().getSubject();
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_KEY.getBytes());
+            subject = JWT.require(algorithm).build().verify(token).getSubject();
             if(!emailValidator(subject)){
                 return Optional.empty();
             }
-        }catch (SignatureException error){
+        }catch (JWTVerificationException error){
            throw new SecurityException("Token invalid or expired!");
         }        
 
