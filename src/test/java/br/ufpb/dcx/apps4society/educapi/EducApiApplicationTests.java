@@ -1,9 +1,10 @@
 package br.ufpb.dcx.apps4society.educapi;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static io.restassured.RestAssured.*;
-
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class EducApiApplicationTests {
 
 	public static String invalidToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb3NlMTdAZWR1Y2FwaS5jb20iLCJleHAiOjE2ODA2OTc2MjN9." +
@@ -11,7 +12,6 @@ public class EducApiApplicationTests {
 
 	@BeforeAll
 	public static void setUp(){
-
 		baseURI = "http://localhost";
 		port = 8080;
 		basePath = "/v1/api/";

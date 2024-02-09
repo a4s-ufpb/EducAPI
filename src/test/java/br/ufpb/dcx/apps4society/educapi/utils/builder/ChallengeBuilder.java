@@ -3,7 +3,6 @@ package br.ufpb.dcx.apps4society.educapi.utils.builder;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 
 import java.util.Optional;
@@ -48,18 +47,6 @@ public class ChallengeBuilder {
 
     public Optional<Challenge> buildOptionalChallenge() {
         return Optional.ofNullable(new Challenge(this.id, this.word, this.creator, this.imageUrl, this.soundUrl, this.videoUrl ));
-    }
-
-    public ChallengeDTO buildChallengeDTO(){
-
-        ChallengeDTO challengeDTO = new ChallengeDTO();
-        challengeDTO.setId(this.id);
-        challengeDTO.setWord(this.word);
-        challengeDTO.setImageUrl(this.imageUrl);
-        challengeDTO.setSoundUrl(this.soundUrl);
-        challengeDTO.setVideoUrl(this.videoUrl);
-
-        return challengeDTO;
     }
 
     public ChallengeRegisterDTO buildChallengeRegisterDTO(){

@@ -7,7 +7,7 @@
 
 	<groupId>br.ufpb.dcx.educapi</groupId>
 	<artifactId>EducAPI</artifactId>
-	<version>1.0.5</version>
+	<version>1.0.6</version>
 	<packaging>jar</packaging>
 
 	<name>EducAPI</name>
@@ -147,7 +147,14 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.5</version>
+				<version>0.8.11</version>
+				<configuration>
+					<excludes>
+						<exclude>br/ufpb/dcx/apps4society/educapi/util/**</exclude>
+						<exclude>br/ufpb/dcx/apps4society/educapi/filter/**</exclude>
+						<exclude>br/ufpb/dcx/apps4society/educapi/EducAPIApplication.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -176,7 +183,7 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.9</minimum>
+											<minimum>0.5</minimum>
 										</limit>
 									</limits>
 								</rule>

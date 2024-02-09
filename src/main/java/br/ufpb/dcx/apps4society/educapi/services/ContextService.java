@@ -46,7 +46,7 @@ public class ContextService {
     }
 
     @Transactional
-    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO) throws ContextAlreadyExistsException, ObjectNotFoundException, InvalidUserException {
+    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO){
         User user = validateUser(token);
 
         Context context = contextRegisterDTO.contextRegisterDTOToContext();

@@ -1,0 +1,7 @@
+app:
+    token:
+        key: educapi-dev
+    version: 1.0.6
+spring:
+    profiles:
+        active: test
