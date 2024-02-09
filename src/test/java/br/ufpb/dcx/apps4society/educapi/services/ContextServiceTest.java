@@ -94,7 +94,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
+    public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException{
 
         Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contextListByCreator);
 
@@ -162,7 +162,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void insertAContextTest() throws ContextAlreadyExistsException, InvalidUserException, ObjectNotFoundException {
+    public void insertAContextTest() throws  InvalidUserException, ObjectNotFoundException {
 
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
@@ -190,7 +190,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, ContextAlreadyExistsException {
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException{
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
@@ -211,7 +211,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException, ContextAlreadyExistsException {
+    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
@@ -237,7 +237,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void deleteAContextByIdTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
+    public void deleteAContextByIdTest() throws InvalidUserException,  ObjectNotFoundException {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
@@ -259,7 +259,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void deleteAInvalidContextTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException {
+    public void deleteAInvalidContextTest() throws InvalidUserException,  ObjectNotFoundException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
@@ -285,7 +285,7 @@ public class ContextServiceTest {
     }
     
     @Test
-    public void findContextsByParamsTest() throws InvalidUserException, ContextAlreadyExistsException, ObjectNotFoundException{
+    public void findContextsByParamsTest() throws InvalidUserException,  ObjectNotFoundException{
         
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);

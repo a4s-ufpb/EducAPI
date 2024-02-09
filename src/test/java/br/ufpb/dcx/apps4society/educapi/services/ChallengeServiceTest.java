@@ -9,7 +9,6 @@ import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
 import br.ufpb.dcx.apps4society.educapi.utils.builder.ChallengeBuilder;
@@ -121,7 +120,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void findChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void findChallengeTest() throws InvalidUserException, ObjectNotFoundException{
         
         Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);             
         Mockito.lenient().when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());
@@ -158,7 +157,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void findNotFoundChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void findNotFoundChallengeTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.when(challengeRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -175,7 +174,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void insertChallengeTest() throws ChallengeAlreadyExistsException, InvalidUserException, ObjectNotFoundException {        
+    public void insertChallengeTest() throws InvalidUserException, ObjectNotFoundException {
         
         Mockito.lenient().when(contextRepository.findById(context.getId())).thenReturn(contextOptional);
 
@@ -191,7 +190,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void insertAChallengeButThereIsNoContextWithTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void insertAChallengeButThereIsNoContextWithTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -237,7 +236,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void findChallengesByCreatorTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void findChallengesByCreatorTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Mockito.when(challengeRepository.findChallengesByCreator(creator)).thenReturn(challenges);
@@ -257,7 +256,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void updateChallengeTest() throws InvalidUserException, ObjectNotFoundException{
         
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         Mockito.when(challengeRegisterDTO.challengeRegisterDTOToChallenge()).thenReturn(challengeOptional.get());
@@ -276,7 +275,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void updateChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void updateChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(Optional.of(creator2));
         Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2"))
@@ -300,7 +299,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void deleteChallengeTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
 
@@ -315,7 +314,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void deleteChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException, ChallengeAlreadyExistsException{
+    public void deleteChallengeInvalidUserTest() throws InvalidUserException, ObjectNotFoundException{
 
         Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
         Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(userOptional2);
@@ -337,7 +336,7 @@ public class ChallengeServiceTest {
     }
 
     @Test
-    public void findChallengesByParamsTest() throws ObjectNotFoundException, InvalidUserException, ChallengeAlreadyExistsException{  
+    public void findChallengesByParamsTest() throws ObjectNotFoundException, InvalidUserException{  
        
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
         

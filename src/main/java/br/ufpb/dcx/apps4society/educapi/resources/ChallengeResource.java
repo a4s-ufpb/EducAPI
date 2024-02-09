@@ -3,7 +3,6 @@ package br.ufpb.dcx.apps4society.educapi.resources;
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.ChallengeService;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +31,7 @@ public class ChallengeResource {
 	@PostMapping("auth/challenges/{idContext}")
 	public ResponseEntity<Challenge> insert(@RequestHeader("Authorization") String token,
 											@Valid @RequestBody ChallengeRegisterDTO objDto,
-											@PathVariable Long idContext) throws ChallengeAlreadyExistsException{
+											@PathVariable Long idContext){
 		return ResponseEntity.status(HttpStatus.CREATED).body(challengeService.insert(token, objDto, idContext));
 	}
 

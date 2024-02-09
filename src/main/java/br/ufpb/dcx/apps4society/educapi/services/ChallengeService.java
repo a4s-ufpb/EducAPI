@@ -4,7 +4,6 @@ import java.util.*;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.ChallengeAlreadyExistsException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
