@@ -1,6 +1,6 @@
 app:
     token:
-        key: ${TOKEN_KEY}
+        key: educapi-dev
     version: 1.0.6
 spring:
     profiles:
