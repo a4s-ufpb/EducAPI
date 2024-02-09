@@ -21,7 +21,7 @@ public class TokenFilter extends GenericFilterBean {
 
     public static int TOKEN_INDEX = 7;
 
-    @Value("${app.token.key}")
+    @Value("${app.token.key:secret}")
     private String TOKEN_KEY;
 
 

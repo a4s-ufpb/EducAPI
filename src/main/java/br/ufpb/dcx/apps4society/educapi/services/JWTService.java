@@ -25,7 +25,7 @@ public class JWTService {
     @Autowired
     private UserRepository userRepository;
 
-    @Value("${app.token.key}")
+    @Value("${app.token.key:secret}")
     private String TOKEN_KEY;
 
     public JWTService(UserRepository userRepository) {

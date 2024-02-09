@@ -1,0 +1,7 @@
+app:
+    token:
+        key: ${TOKEN_KEY}
+    version: 1.0.6
+spring:
+    profiles:
+        active: test
