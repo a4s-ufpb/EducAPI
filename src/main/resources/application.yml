@@ -1,7 +1,7 @@
 app:
     token:
-        key: educapi-dev
-    version: 1.0.6
+        key: ${TOKEN_KEY}
+    version: ${EDUCAPI_VERSION}
 spring:
     profiles:
-        active: test
+        active: ${PROFILE_ACTIVE}
