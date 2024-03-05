@@ -1,6 +1,8 @@
 FROM amazoncorretto:17.0.10-alpine3.19
-WORKDIR /educapi
-ARG JAR_FILE=target/EducAPI.jar
-COPY ${JAR_FILE} app.jar
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+COPY . ./educapi
+WORKDIR /educapi
+RUN ./mvnw clean
+RUN ./mvnw test
+RUN ./mvnw install
+ENTRYPOINT ["java", "-jar", "target/EducAPI.jar"]

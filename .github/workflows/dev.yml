@@ -12,8 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 17
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2
       with:
+        distribution: adopt
         java-version: 17
     - name: Build with Maven
       run: ./mvnw install
@@ -25,8 +26,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 17
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2
       with:
+        distribution: adopt
         java-version: 17
     - name: Run unit tests
       run: ./mvnw test
