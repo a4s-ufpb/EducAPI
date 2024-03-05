@@ -1,5 +1,5 @@
 FROM amazoncorretto:17.0.10-alpine3.19
-WORKDIR /app
+WORKDIR /educapi
 ARG JAR_FILE=target/EducAPI.jar
 COPY ${JAR_FILE} app.jar
 EXPOSE 8080
