@@ -84,4 +84,4 @@
           username: ${{ secrets.SERVER_LOGIN }}
           key: ${{ secrets.SERVER_PASSWORD }}
           # Change to pass environment variables via command
-          script: docker stop educapi && docker rm -f educapi && cd educapi/ && docker-compose -f docker-compose-prod.yml up educapi --build -d -e DB_URL=${{ secret.DB_URL }} -e DB_USER=${{ secret.DB_USER }} -e DB_PASSWORD=${{ secret.DB_PASSWORD }} -e TOKEN_KEY=${{ secret.TOKEN_KEY }}
+          script: docker stop educapi && docker rm -f educapi && cd educapi/ && docker-compose -f docker-compose-prod.yml up educapi --build -d -e DB_URL=${{ secrets.DB_URL }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} -e TOKEN_KEY=${{ secrets.TOKEN_KEY }}
