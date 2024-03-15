@@ -1,8 +1,10 @@
+FROM maven:3.9.6-amazoncorretto-17-al2023 as build
+COPY . .
+RUN mvn clean
+RUN mvn install
+
 FROM amazoncorretto:17.0.10-alpine3.19
-EXPOSE 8080
-COPY . ./educapi
 WORKDIR /educapi
-RUN ./mvnw clean
-RUN ./mvnw test
-RUN ./mvnw install
-ENTRYPOINT ["java", "-jar", "target/EducAPI.jar"]
+COPY --from=build target/EducAPI.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

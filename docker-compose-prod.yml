@@ -4,7 +4,7 @@ services:
 
     educapi:
         container_name: educapi
-        image: a4sufpb/educapi:1.0.4
+        image: a4sufpb/educapi:1.0.7
         restart: always
         ports:
             - "8080:8080"
