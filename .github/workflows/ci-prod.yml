@@ -1,62 +1,35 @@
- name: CI Deploy EducAPI
+name: Build Docker Image And Push Docker Hub
 
- on:
-     push:
-         branches: [ master ]
+on:
+  push:
+    branches: [main]
 
- jobs:
-  # This action compile the project.
-  compile:
-    runs-on: ubuntu-latest
-    name: Compile Spring Boot project
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          distribution: adopt
-          java-version: 17
-      - name: Build with Maven
-        run: ./mvnw compile
+jobs:
 
-  # This action run all project tests.
-  tests:
+  build-and-push:
+    name: Build And Push
     runs-on: ubuntu-latest
-    name: Runing tests
-    needs: [compile]
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: adopt
-          java-version: 17
-      - name: Run unit tests
-        run: ./mvnw test
-    
-  # https://github.com/marketplace/actions/build-and-push-docker-images
-  docker-login:
-    runs-on: ubuntu-latest
-    name: Docker login
-    needs: [tests]
-    steps:
-      - uses: docker/login-action@v1.8.0
+          distribution: 'corretto'
+          java-version: '17'
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USER }}
+          username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-  # https://github.com/marketplace/actions/build-and-push-docker-images
-  build-and-push-dockerfile:
-    runs-on: ubuntu-latest
-    name: Build and push Dockerfile
-    needs: [docker-login]
-    steps:
-      - uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USER }}/educapi:latest
+      - name: Build Docker Image
+        run: docker build -t ${{secrets.DOCKER_USERNAME}}/quizapi .
+
+      - name: Push Image to Docker Hub
+        run: docker push ${{secrets.DOCKER_USERNAME}}/quizapi
 
 #  # https://github.com/appleboy/ssh-action
 #  connect-server:
