@@ -13,22 +13,22 @@ services:
         depends_on:
             - db
         env_file:
-            - prod.env
+            - ./prod.env
     db:
         container_name: postgres-educapi
         image: postgres:12.3
         restart: always
         ports:
-            - "5432:5432"
+            - "5444:5432"
         networks:
             - educapi-network
         volumes:
             - educapi:/var/lib/postgresql/data
         env_file:
-            - prod.env
+            - ./prod.env
 
 volumes:
-    educapi:
+    educapi: {}
 
 networks:
     educapi-network:
