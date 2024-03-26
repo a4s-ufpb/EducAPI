@@ -248,5 +248,4 @@ GitHub.sublime-settings
 # End of https://www.gitignore.io/api/java,maven,eclipse,netbeans,intellij,sublimetext,visualstudiocode
 
 # .env
-.env
-.env-prod
+*.env
