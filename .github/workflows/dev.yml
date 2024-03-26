@@ -6,29 +6,21 @@ name: Development workflow
 on: pull_request
 
 jobs:
-  compile:
+  build-and-test:
     runs-on: ubuntu-latest
-    name: Compile Spring Boot project
+    name: Build and Test Spring Boot project
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 17
-      uses: actions/setup-java@v2
-      with:
-        distribution: adopt
-        java-version: 17
-    - name: Build with Maven
-      run: ./mvnw install
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  tests:
-    runs-on: ubuntu-latest
-    name: Runing tests
-    needs: [compile]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 17
-      uses: actions/setup-java@v2
-      with:
-        distribution: adopt
-        java-version: 17
-    - name: Run unit tests
-      run: ./mvnw test
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+
+      - name: Build with Maven
+        run:  mvn package -DskipTests
+
+      - name: Run unit tests
+        run: mvn test
