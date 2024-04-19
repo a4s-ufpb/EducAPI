@@ -31,30 +31,15 @@ jobs:
       - name: Push Image to Docker Hub
         run: docker push ${{secrets.DOCKER_USER}}/educapi
 
-#  # https://github.com/appleboy/ssh-action
-#  connect-server:
-#    runs-on: ubuntu-latest
-#    name: Connect Server
-#    needs: [build-and-push-dockerfile]
-#    steps:
-#      - uses: appleboy/scp-action@master
-#        with:
-#          host: ${{ secrets.SERVER_IP }}
-#          username: ${{ secrets.SERVER_LOGIN }}
-#          key: ${{ secrets.SERVER_PASSWORD }}
-#          source: "./docker-compose-prod.yml"
-#          target: "/home/deploy/EducAPI"
-#
-#  # https://github.com/appleboy/ssh-action
-#  run-project-server:
-#     runs-on: ubuntu-latest
-#     name: Run the project on the server
-#     needs: [connect-server]
-#     steps:
-#      - uses: appleboy/ssh-action@master
-#        with:
-#          host: ${{ secrets.SERVER_IP }}
-#          username: ${{ secrets.SERVER_LOGIN }}
-#          key: ${{ secrets.SERVER_PASSWORD }}
-#          # Change to pass environment variables via command
-#          script: docker stop educapi && docker rm -f educapi && cd educapi/ && docker-compose -f docker-compose-prod.yml up educapi --build -d -e DB_URL=${{ secrets.DB_URL }} -e DB_USER=${{ secrets.DB_USER }} -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} -e TOKEN_KEY=${{ secrets.TOKEN_KEY }}
+      - name: Connecting and Deploying to the SSH Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd EducAPI
+            docker rm -f educapi
+            docker pull a4sufpb/educapi
+            docker compose up -d
