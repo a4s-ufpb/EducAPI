@@ -40,8 +40,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /
-            cd /docker
-            cd /educapi
+            cd /docker/educapi
             docker rm -f educapi
             docker rmi a4sufpb/educapi
             docker compose up -d
