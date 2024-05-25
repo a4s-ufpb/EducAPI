@@ -31,15 +31,17 @@ jobs:
       - name: Push Image to Docker Hub
         run: docker push ${{secrets.DOCKER_USER}}/educapi
 
-#      - name: Connecting and Deploying to the SSH Server
-#        uses: appleboy/ssh-action@v1.0.3
-#        with:
-#          host: ${{ secrets.SSH_HOST }}
-#          username: ${{ secrets.SSH_USERNAME }}
-#          key: ${{ secrets.SSH_SECRET_KEY }}
-#          port: ${{ secrets.SSH_PORT }}
-#          script: |
-#            cd EducAPI
-#            docker rm -f educapi
-#            docker pull a4sufpb/educapi
-#            docker compose up -d
+      - name: Connecting and Deploying to the SSH Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_SECRET_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /
+            cd /docker
+            cd /educapi
+            docker rm -f educapi
+            docker rmi a4sufpb/educapi
+            docker compose up -d
