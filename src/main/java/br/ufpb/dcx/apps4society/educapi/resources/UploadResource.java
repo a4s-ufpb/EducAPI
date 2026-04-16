@@ -1,20 +1,26 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import br.ufpb.dcx.apps4society.educapi.services.MinioService;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-
-import java.io.InputStream;
-import java.util.UUID;
 
 
 @RestController
-@RequestMapping(value="/v1/api/")
+@RequestMapping(value = "/v1/api/")
 @CrossOrigin("*")
 public class UploadResource {
 
@@ -55,36 +61,40 @@ public class UploadResource {
 
             // valida o tipo
             String contentType = file.getContentType();
-            if (contentType == null ||
-                (!contentType.equals("image/png") &&
-                 !contentType.equals("image/jpeg"))) {
+            if (contentType == null
+                    || (!contentType.equals("image/png")
+                    && !contentType.equals("image/jpeg"))) {
 
 
                 return ResponseEntity.badRequest().body("Apenas imagens PNG ou JPEG são permitidas");
             }
 
-
-            // 🔒 nome seguro
             String originalName = file.getOriginalFilename();
-            String safeFileName = UUID.randomUUID() + "_" + originalName;
+            if (originalName == null) {
+                originalName = "file";
+            }
 
 
             InputStream inputStream = file.getInputStream();
 
-
             String result = minioService.uploadFile(
-                    safeFileName,
+                    originalName,
                     inputStream,
                     file.getSize(),
                     contentType
             );
 
 
-            return ResponseEntity.ok(result);
+            Map<String, String> response = new HashMap<>();
+            response.put("url", result);
+
+
+            return ResponseEntity.ok(response);
 
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Erro no upload");
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 }

@@ -48,9 +48,9 @@ services:
         entrypoint: >
             /bin/sh -c "
             sleep 5;
-            mc alias set myminio http://minio:9000 minioadmin minioadmin;
-            mc mb myminio/educapi-context-images;
-            mc anonymous set download myminio/educapi-context-images;
+            mc alias set myminio http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD};
+            mc mb myminio/${MINIO_BUCKET};
+            mc anonymous set download myminio/${MINIO_BUCKET};
             exit 0;
             "
 

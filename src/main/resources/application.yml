@@ -6,5 +6,8 @@ spring:
     profiles:
         active: ${PROFILE_ACTIVE:test}
 minio:
+   minio:
     url: http://minio:9000
-    bucket: educapi-context-images
+    access-key: ${MINIO_USER}
+    secret-key: ${MINIO_PASSWORD}
+    bucket: ${MINIO_BUCKET}

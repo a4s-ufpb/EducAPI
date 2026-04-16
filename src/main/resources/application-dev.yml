@@ -13,6 +13,6 @@ spring:
         show-sql: true
 minio:
     url: http://minio:9000
-    access-key: minioadmin
-    secret-key: minioadmin
-    bucket: educapi-context-images
+    access-key: ${MINIO_USER}
+    secret-key: ${MINIO_PASSWORD}
+    bucket: ${MINIO_BUCKET}

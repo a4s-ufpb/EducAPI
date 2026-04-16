@@ -1,15 +1,15 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
+import java.io.InputStream;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-
-import java.io.InputStream;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 
 
 @Service
@@ -37,7 +37,6 @@ public class MinioService {
 
     public String uploadFile(String fileName, InputStream inputStream, long size, String contentType) {
         try {
-            // 🔹 Garante que o bucket existe
             boolean exists = minioClient.bucketExists(
                     BucketExistsArgs.builder().bucket(bucket).build()
             );
@@ -49,12 +48,8 @@ public class MinioService {
                 );
             }
 
-
-            // 🔹 Evita sobrescrever arquivos
             String safeFileName = System.currentTimeMillis() + "_" + fileName;
 
-
-            // 🔹 Upload correto com tamanho real
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucket)
@@ -64,8 +59,7 @@ public class MinioService {
                             .build()
             );
 
-
-            return safeFileName;
+            return "http://localhost:9000/" + bucket + "/" + safeFileName;
 
 
         } catch (Exception e) {
