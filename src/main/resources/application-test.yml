@@ -11,3 +11,8 @@ spring:
             hibernate:
                 format_sql: true
         show-sql: true
+minio:
+    url: http://minio:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket: educapi-context-images

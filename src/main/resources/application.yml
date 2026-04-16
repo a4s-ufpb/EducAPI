@@ -5,3 +5,6 @@ app:
 spring:
     profiles:
         active: ${PROFILE_ACTIVE:test}
+minio:
+    url: http://minio:9000
+    bucket: educapi-context-images

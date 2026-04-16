@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.*;
-
 public class ContextResourceIntegrationTest extends EducApiApplicationTests {
 
     @Test
