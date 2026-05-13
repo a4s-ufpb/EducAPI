@@ -26,6 +26,7 @@ import java.util.List;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.io.IOException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowableOfType;
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,7 +95,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException{
+    public void findContextsByCreatorTest() throws ObjectNotFoundException, InvalidUserException, IOException {
 
         Mockito.when(contextRepository.findContextsByCreator(creator)).thenReturn(contextListByCreator);
 
@@ -162,7 +163,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void insertAContextTest() throws  InvalidUserException, ObjectNotFoundException {
+    public void insertAContextTest() throws  InvalidUserException, ObjectNotFoundException, IOException {
 
         Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO.getEmail(), userLoginDTO.getPassword())).thenReturn(userOptional);
         Mockito.when(userRepository.findByEmail(userLoginDTO.getEmail())).thenReturn(userOptional);
@@ -190,7 +191,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException{
+    public void updateAContextTest() throws ObjectNotFoundException, InvalidUserException, IOException{
 
         Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
 
@@ -211,7 +212,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException{
+    public void updateAInvalidContextTest() throws InvalidUserException, ObjectNotFoundException, IOException{
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
@@ -237,7 +238,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void deleteAContextByIdTest() throws InvalidUserException,  ObjectNotFoundException {
+    public void deleteAContextByIdTest() throws InvalidUserException,  ObjectNotFoundException, IOException {
 
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);
@@ -259,7 +260,7 @@ public class ContextServiceTest {
     }
 
     @Test
-    public void deleteAInvalidContextTest() throws InvalidUserException,  ObjectNotFoundException {
+    public void deleteAInvalidContextTest() throws InvalidUserException,  ObjectNotFoundException, IOException {
 
         Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
         Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
@@ -285,7 +286,7 @@ public class ContextServiceTest {
     }
     
     @Test
-    public void findContextsByParamsTest() throws InvalidUserException,  ObjectNotFoundException{
+    public void findContextsByParamsTest() throws InvalidUserException,  ObjectNotFoundException, IOException {
         
         loginResponse = jwtService.authenticate(userLoginDTO);
         ContextDTO contextDTO = contextService.insert(jwtService.tokenBearerFormat(loginResponse.getToken()), contextRegisterDTO);

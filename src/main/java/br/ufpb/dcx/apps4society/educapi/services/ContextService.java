@@ -1,26 +1,29 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
+import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
+import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
+import java.io.IOException;
 
 @Service
-public class ContextService {    
+public class ContextService {
+
     @Autowired
     private JWTService jwtService;
 
@@ -30,10 +33,14 @@ public class ContextService {
     @Autowired
     private UserRepository userRepository;
 
-    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository) {
+    @Autowired
+    private UploadImageService uploadImageService;
+
+    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository, UploadImageService uploadImageService) {
         this.jwtService = jwtService;
         this.contextRepository = contextRepository;
         this.userRepository = userRepository;
+        this.uploadImageService = uploadImageService;
     }
 
     public Context find(Long id) throws ObjectNotFoundException {
@@ -46,35 +53,100 @@ public class ContextService {
     }
 
     @Transactional
-    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO){
+    public ContextDTO insert(
+            String token,
+            ContextRegisterDTO contextRegisterDTO
+    ) throws IOException {
+
         User user = validateUser(token);
 
         Context context = contextRegisterDTO.contextRegisterDTOToContext();
 
         context.setCreator(user);
 
+        if (contextRegisterDTO.getFile() != null
+                && !contextRegisterDTO.getFile().isEmpty()) {
+
+            MultipartFile file = contextRegisterDTO.getFile();
+
+            String folder
+                    = "user_" + user.getId()
+                    + "/context_" + context.getName();
+
+            String imageUrl = uploadImageService.uploadFile(
+                    folder,
+                    file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getSize(),
+                    file.getContentType()
+            );
+
+            String imageBackup
+                    = uploadImageService.generateBase64Thumbnail(file);
+
+            context.setImageUrl(imageUrl);
+            context.setImageBackup(imageBackup);
+        }
+
         contextRepository.save(context);
+
         return new ContextDTO(context);
     }
 
-    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException{
-        User user = validateUser(token);
+    public ContextDTO update(
+            String token,
+            ContextRegisterDTO contextRegisterDTO,
+            Long id
+    ) throws ObjectNotFoundException,
+            InvalidUserException,
+            IOException {
 
+        User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(id);
 
-        if (!contextOptional.isPresent()){
+        if (!contextOptional.isPresent()) {
             throw new ObjectNotFoundException();
         }
 
         Context newObj = find(id);
+
         if (!newObj.getCreator().equals(user)) {
-            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
-                    + newObj.getName() + ".");
+            throw new InvalidUserException(
+                    "User: " + user.getName()
+                    + " is not the owner of the context: "
+                    + newObj.getName() + "."
+            );
         }
 
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
+
+        if (contextRegisterDTO.getFile() != null
+                && !contextRegisterDTO.getFile().isEmpty()) {
+
+            MultipartFile file = contextRegisterDTO.getFile();
+
+            String folder
+                    = "user_" + user.getId()
+                    + "/context_" + newObj.getName();
+
+            String imageUrl = uploadImageService.uploadFile(
+                    folder,
+                    file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getSize(),
+                    file.getContentType()
+            );
+
+            String imageBackup
+                    = uploadImageService.generateBase64Thumbnail(file);
+
+            newObj.setImageUrl(imageUrl);
+            newObj.setImageBackup(imageBackup);
+        }
+
         contextRepository.save(newObj);
+
         return new ContextDTO(newObj);
     }
 
@@ -83,7 +155,7 @@ public class ContextService {
 
         Optional<Context> contextOptional = contextRepository.findById(id);
 
-        if (!contextOptional.isPresent()){
+        if (!contextOptional.isPresent()) {
             throw new ObjectNotFoundException();
         }
 
@@ -98,22 +170,22 @@ public class ContextService {
     }
 
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {
-        if (email != null && name != null){
+        if (email != null && name != null) {
             return contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(email, name, pageable);
-        }else if (email != null){
+        } else if (email != null) {
             return contextRepository.findAllByCreatorEmailEqualsIgnoreCase(email, pageable);
-        }else if (name != null){
+        } else if (name != null) {
             return contextRepository.findAllByNameStartsWithIgnoreCase(name, pageable);
-        }else{
+        } else {
             return contextRepository.findAll(pageable);
         }
     }
 
-    public List<ContextDTO> findContextsByCreator(String token) throws  ObjectNotFoundException, InvalidUserException {
+    public List<ContextDTO> findContextsByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
-        if(contextListByCreator.isEmpty()) {
+        if (contextListByCreator.isEmpty()) {
             throw new ObjectNotFoundException();
         }
 

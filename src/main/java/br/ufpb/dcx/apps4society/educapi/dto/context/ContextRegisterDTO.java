@@ -1,30 +1,77 @@
 package br.ufpb.dcx.apps4society.educapi.dto.context;
 
-import br.ufpb.dcx.apps4society.educapi.domain.Context;
-import org.hibernate.validator.constraints.Length;
-
-import jakarta.validation.constraints.NotEmpty;
 import java.io.Serializable;
 
+import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+
 public class ContextRegisterDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    @NotEmpty(message="Required")
-    @Length(min=2, max=50, message="The size must be between 2 and 50 characters")
+    @NotEmpty(message = "Required")
+    @Length(min = 2, max = 50, message = "The size must be between 2 and 50 characters")
     private String name;
 
     private String imageUrl;
     private String soundUrl;
     private String videoUrl;
 
-    public ContextRegisterDTO(String name, String imageUrl, String soundUrl, String videoUrl){
+    private MultipartFile file;
+
+    // base64 da imagem para backup, caso o upload falhe
+    @JsonIgnore @Schema(hidden = true)
+    private String imageBackup;
+
+    public ContextRegisterDTO(
+            String name,
+            String imageUrl,
+            String soundUrl,
+            String videoUrl,
+            MultipartFile file,
+            String imageBackup
+    ) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.soundUrl = soundUrl;
+        this.videoUrl = videoUrl;
+        this.file = file;
+        this.imageBackup = imageBackup;
+    }
+
+    public ContextRegisterDTO(
+            String name,
+            String imageUrl,
+            String soundUrl,
+            String videoUrl
+    ) {
         this.name = name;
         this.imageUrl = imageUrl;
         this.soundUrl = soundUrl;
         this.videoUrl = videoUrl;
     }
 
-    public Context contextRegisterDTOToContext(){ return new Context(name, imageUrl, soundUrl, videoUrl);
+    public ContextRegisterDTO() {
+    }
+
+    public Context contextRegisterDTOToContext() {
+
+        Context context = new Context(
+                name,
+                imageUrl,
+                soundUrl,
+                videoUrl
+        );
+
+        context.setImageBackup(imageBackup);
+
+        return context;
     }
 
     public String getName() {
@@ -57,6 +104,22 @@ public class ContextRegisterDTO implements Serializable {
 
     public void setVideoUrl(String videoUrl) {
         this.videoUrl = videoUrl;
+    }
+
+    public MultipartFile getFile() {
+        return file;
+    }
+
+    public void setFile(MultipartFile file) {
+        this.file = file;
+    }
+
+    public String getImageBackup() {
+        return imageBackup;
+    }
+
+    public void setImageBackup(String imageBackup) {
+        this.imageBackup = imageBackup;
     }
 
 }

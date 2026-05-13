@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -30,25 +31,42 @@ public class ContextResource {
     }
 
     @Operation(summary = "Adds a new Context to the service, if the token is valid.")
-    @PostMapping("auth/contexts")
-    public ResponseEntity<ContextDTO> insert(@RequestHeader("Authorization") String token,
-                                             @Valid @RequestBody ContextRegisterDTO objDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(contextService.insert(token, objDto));
+    @PostMapping(
+            value = "auth/contexts",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<ContextDTO> insert(
+            @RequestHeader("Authorization") String token,
+            @Valid @ModelAttribute ContextRegisterDTO objDto
+    ) throws IOException {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(contextService.insert(token, objDto));
     }
 
     @Operation(summary = "Updates a User Context, if the token and the Context ID are valid.")
-    @PutMapping("auth/contexts/{idContext}")
-    public ResponseEntity<ContextDTO> update(@RequestHeader("Authorization") String token,
-                                             @Valid @RequestBody ContextRegisterDTO objDto,
-                                             @PathVariable Long idContext) {
-       return ResponseEntity.ok(contextService.update(token,objDto,idContext));
+    @PutMapping(
+            value = "auth/contexts/{idContext}",
+            consumes = "multipart/form-data"
+    )
+    public ResponseEntity<ContextDTO> update(
+            @RequestHeader("Authorization") String token,
+            @Valid @ModelAttribute ContextRegisterDTO objDto,
+            @PathVariable Long idContext
+    ) throws IOException {
+
+        return ResponseEntity.ok(
+                contextService.update(token, objDto, idContext)
+        );
     }
 
     @Operation(summary = "Deletes a User Context from the service, if the token and the Context ID are valid.")
     @DeleteMapping("auth/contexts/{idContext}")
     public ResponseEntity<ContextDTO> delete(@RequestHeader("Authorization") String token,
-                                             @PathVariable Long idContext) {
-        return ResponseEntity.ok(contextService.delete(token,idContext));
+            @PathVariable Long idContext
+    ) {
+        return ResponseEntity.ok(contextService.delete(token, idContext));
     }
 
     @Operation(summary = "Returns a list of Contexts registered in the service.")
@@ -58,15 +76,16 @@ public class ContextResource {
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "size", defaultValue = "20") Integer size,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
-            Pageable pageable){
+            Pageable pageable
+    ) {
         return new ResponseEntity<>(contextService.findContextsByParams(email, name, pageable), HttpStatus.OK);
 
     }
 
-
     @Operation(summary = "Returns a list of all Contexts registered by the request User, if the token is valid.")
     @GetMapping("auth/contexts")
-    public ResponseEntity<List<ContextDTO>> findAllByUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<ContextDTO>> findAllByUser(@RequestHeader("Authorization") String token
+    ) {
         return ResponseEntity.ok(contextService.findContextsByCreator(token));
     }
 
