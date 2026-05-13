@@ -53,7 +53,13 @@ public class ServicesBuilder {
     }
 
     public ChallengeService buildChallengeService() {
-        return new ChallengeService(this.jwtService, this.challengeRepository, this.contextRepository, this.userRepository);
+        return new ChallengeService(
+                this.jwtService,
+                this.challengeRepository,
+                this.contextRepository,
+                this.userRepository,
+                mock(UploadImageService.class)
+        );
     }
 
     public ContextService buildContextService() {

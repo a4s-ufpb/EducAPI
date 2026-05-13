@@ -150,6 +150,18 @@ Exemplo:
 user_1/context_Animais/1710000000000_imagem.png
 ```
 
+No upload integrado em Challenge, o folder usado e:
+
+```text
+user_<id-do-usuario>/context_<nome-do-contexto>/challenges
+```
+
+Exemplo:
+
+```text
+user_1/context_Animais/challenges/1710000000000_imagem.png
+```
+
 ## Por que `imageBackup` e interno
 
 O `imageBackup` guarda uma representacao Base64 reduzida da imagem. Ele parece existir como copia auxiliar da imagem, mas nao e retornado no `ContextDTO`.
@@ -162,20 +174,27 @@ Motivos identificados no codigo para ser interno:
 
 ## O que ainda falta fazer em Challenge
 
-No estado atual do codigo, Challenge possui apenas os campos textuais:
+Challenge esta preparado na entidade, no DTO, no resource e no service para receber e salvar imagem.
 
+Na entidade `Challenge`, existe o campo `imageBackup`, persistido como `TEXT` e escondido do JSON.
+
+No DTO `ChallengeRegisterDTO`, existem os campos `file` e `imageBackup`. O campo `imageBackup` e interno e fica escondido do JSON/Swagger, seguindo o mesmo padrao usado em `ContextRegisterDTO`.
+
+O upload funcional em `ChallengeService` segue o mesmo fluxo usado em Context: se `file` vier preenchido, o arquivo e lido uma vez em bytes, esses bytes geram o `imageBackup` e tambem sao enviados para o MinIO. `imageUrl` recebe a URL retornada e `imageBackup` recebe o thumbnail Base64.
+
+No estado atual dos endpoints, `ChallengeResource` ja aceita `multipart/form-data` no cadastro e na atualizacao de Challenge.
+
+Campos aceitos pelo DTO:
+
+- `word`
 - `imageUrl`
 - `soundUrl`
 - `videoUrl`
+- `file`
 
-O cadastro e atualizacao de Challenge recebem JSON por `@RequestBody ChallengeRegisterDTO`.
+O cadastro e atualizacao de Challenge recebem `ChallengeRegisterDTO` por `@ModelAttribute`.
 
-Não identificado no código atual:
-
-- upload multipart integrado em Challenge;
-- campo `file` em `ChallengeRegisterDTO`;
-- campo `imageBackup` em `Challenge`;
-- envio de imagem de Challenge para o MinIO dentro de `ChallengeService`.
+No update, quando ha arquivo novo, o service usa o primeiro contexto associado ao Challenge para montar o folder.
 
 ## Observacoes
 

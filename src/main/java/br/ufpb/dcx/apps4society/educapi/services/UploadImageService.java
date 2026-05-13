@@ -73,8 +73,21 @@ public class UploadImageService {
 
     public String generateBase64Thumbnail(MultipartFile file) {
         try {
+            return generateBase64Thumbnail(file.getBytes());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar thumbnail Base64", e);
+        }
+    }
 
-            BufferedImage originalImage = ImageIO.read(file.getInputStream());
+    public String generateBase64Thumbnail(byte[] imageBytes) {
+        try {
+            BufferedImage originalImage = ImageIO.read(
+                    new java.io.ByteArrayInputStream(imageBytes)
+            );
+
+            if (originalImage == null) {
+                throw new RuntimeException("Não foi possível ler a imagem enviada para gerar thumbnail");
+            }
 
             int width = 200;
             int height = 200;
@@ -91,19 +104,14 @@ public class UploadImageService {
                     BufferedImage.TYPE_INT_RGB
             );
 
-            System.out.println("IMAGE: " + originalImage);
-
             Graphics2D graphics = thumbnail.createGraphics();
             graphics.drawImage(scaledImage, 0, 0, null);
             graphics.dispose();
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
             ImageIO.write(thumbnail, "jpg", outputStream);
 
-            byte[] imageBytes = outputStream.toByteArray();
-
-            return Base64.getEncoder().encodeToString(imageBytes);
+            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao gerar thumbnail Base64", e);

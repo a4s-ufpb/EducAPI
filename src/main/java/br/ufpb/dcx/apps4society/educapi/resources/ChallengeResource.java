@@ -28,17 +28,23 @@ public class ChallengeResource {
 	}
 
 	@Operation(summary = "Adds a new Challenge to a Context, if the token and the Context ID are valid.")
-	@PostMapping("auth/challenges/{idContext}")
+	@PostMapping(
+			value = "auth/challenges/{idContext}",
+			consumes = "multipart/form-data"
+	)
 	public ResponseEntity<Challenge> insert(@RequestHeader("Authorization") String token,
-											@Valid @RequestBody ChallengeRegisterDTO objDto,
+											@Valid @ModelAttribute ChallengeRegisterDTO objDto,
 											@PathVariable Long idContext){
 		return ResponseEntity.status(HttpStatus.CREATED).body(challengeService.insert(token, objDto, idContext));
 	}
 
 	@Operation(summary = "Updates a User Challenge, if the token and the Challenge ID are valid.")
-	@PutMapping("auth/challenges/{idChallenge}")
+	@PutMapping(
+			value = "auth/challenges/{idChallenge}",
+			consumes = "multipart/form-data"
+	)
 	public ResponseEntity<Challenge> update(@RequestHeader("Authorization") String token,
-											@Valid @RequestBody ChallengeRegisterDTO objDto,
+											@Valid @ModelAttribute ChallengeRegisterDTO objDto,
 											@PathVariable Long idChallenge){
 		return ResponseEntity.ok(challengeService.update(token, objDto, idChallenge));
 	}

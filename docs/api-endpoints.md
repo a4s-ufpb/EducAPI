@@ -240,22 +240,27 @@ Authorization: Bearer <token>
 - Metodo: `POST`
 - Rota: `/v1/api/auth/challenges/{idContext}`
 - Authorization: sim
-- Body: JSON
+- Body: `multipart/form-data`
 - Objetivo: criar um desafio associado ao contexto informado.
 
-Exemplo:
+Campos esperados:
 
-```http
-POST /v1/api/auth/challenges/1
-Authorization: Bearer <token>
-Content-Type: application/json
+- `word`
+- `imageUrl`
+- `soundUrl`
+- `videoUrl`
+- `file`
 
-{
-  "word": "gato",
-  "imageUrl": "http://example.com/gato.png",
-  "soundUrl": "",
-  "videoUrl": ""
-}
+Exemplo com `curl`:
+
+```bash
+curl -X POST http://localhost:8080/v1/api/auth/challenges/1 \
+  -H "Authorization: Bearer <token>" \
+  -F "word=gato" \
+  -F "imageUrl=http://example.com/gato.png" \
+  -F "soundUrl=" \
+  -F "videoUrl=" \
+  -F "file=@imagem.png"
 ```
 
 ### Atualizar desafio
@@ -263,22 +268,27 @@ Content-Type: application/json
 - Metodo: `PUT`
 - Rota: `/v1/api/auth/challenges/{idChallenge}`
 - Authorization: sim
-- Body: JSON
+- Body: `multipart/form-data`
 - Objetivo: atualizar um desafio do usuario autenticado.
 
-Exemplo:
+Campos esperados:
 
-```http
-PUT /v1/api/auth/challenges/1
-Authorization: Bearer <token>
-Content-Type: application/json
+- `word`
+- `imageUrl`
+- `soundUrl`
+- `videoUrl`
+- `file`
 
-{
-  "word": "cachorro",
-  "imageUrl": "http://example.com/cachorro.png",
-  "soundUrl": "",
-  "videoUrl": ""
-}
+Exemplo com `curl`:
+
+```bash
+curl -X PUT http://localhost:8080/v1/api/auth/challenges/1 \
+  -H "Authorization: Bearer <token>" \
+  -F "word=cachorro" \
+  -F "imageUrl=http://example.com/cachorro.png" \
+  -F "soundUrl=" \
+  -F "videoUrl=" \
+  -F "file=@imagem.png"
 ```
 
 ### Remover desafio
@@ -360,4 +370,4 @@ Resposta esperada:
 
 - Os parametros `size` e `page` aparecem nos controllers de listagem, mas o metodo tambem recebe `Pageable`. No codigo atual, quem e passado ao service e o `Pageable`.
 - O endpoint generico de upload valida tipo e tamanho do arquivo. O upload integrado em Context nao possui as mesmas validacoes no controller/service.
-- Challenge ainda usa JSON com `imageUrl`; não identificado no código atual upload multipart integrado para Challenge.
+- POST e PUT de Challenge aceitam `multipart/form-data`; quando `file` vem preenchido, `ChallengeService` envia a imagem para o MinIO.
