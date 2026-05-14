@@ -69,6 +69,8 @@ Quando `file` e enviado e nao esta vazio:
 7. O contexto e salvo no banco.
 8. A resposta retorna `ContextDTO`, que contem `id`, `name`, `imageUrl`, `soundUrl` e `videoUrl`.
 
+Na atualizacao de Context, se nenhum novo `file` for enviado, `imageBackup` e mantido. Se `imageUrl` vier preenchida, a URL manual e atualizada; se `imageUrl` vier vazia ou nula, a URL antiga e mantida.
+
 ## `imageUrl`, `file` e `imageBackup`
 
 ### `file`
@@ -195,6 +197,10 @@ Campos aceitos pelo DTO:
 O cadastro e atualizacao de Challenge recebem `ChallengeRegisterDTO` por `@ModelAttribute`.
 
 No update, quando ha arquivo novo, o service usa o primeiro contexto associado ao Challenge para montar o folder.
+
+Na atualizacao de Challenge, se nenhum novo `file` for enviado, `imageBackup` e mantido. Se `imageUrl` vier preenchida, a URL manual e atualizada; se `imageUrl` vier vazia ou nula, a URL antiga e mantida.
+
+Em chamadas multipart de atualizacao pelo Swagger ou curl, o campo `file` pode ser omitido quando nao houver nova imagem. Se o cliente enviar `file=` como valor vazio, os resources tratam esse valor como ausencia de arquivo.
 
 ## Observacoes
 

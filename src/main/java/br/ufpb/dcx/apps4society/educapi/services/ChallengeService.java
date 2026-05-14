@@ -171,7 +171,9 @@ public class ChallengeService {
         newObj.setWord(obj.getWord());
         newObj.setSoundUrl(obj.getSoundUrl());
         newObj.setVideoUrl(obj.getVideoUrl());
-        newObj.setImageUrl(obj.getImageUrl());
+        if (obj.getImageUrl() != null && !obj.getImageUrl().isBlank()) {
+            newObj.setImageUrl(obj.getImageUrl());
+        }
     }
 
     private void uploadImage(User user, Context context, Challenge challenge, MultipartFile file) {

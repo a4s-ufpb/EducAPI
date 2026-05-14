@@ -10,8 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.beans.PropertyEditorSupport;
 import java.util.List;
 
 @RestController
@@ -19,6 +22,18 @@ import java.util.List;
 public class ChallengeResource {
 	@Autowired
 	private ChallengeService challengeService;
+
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+			@Override
+			public void setAsText(String text) {
+				if (text == null || text.isBlank()) {
+					setValue(null);
+				}
+			}
+		});
+	}
 
 	@Operation(summary = "Returns a Challenge present in the service, if the token and the Challenge ID are valid.")
 	@GetMapping("auth/challenges/{idChallenge}")

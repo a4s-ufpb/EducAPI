@@ -176,6 +176,8 @@ curl -X POST http://localhost:8080/v1/api/auth/contexts \
 - Body: `multipart/form-data`
 - Objetivo: atualizar um contexto do usuario autenticado, com possibilidade de enviar nova imagem.
 
+Se nao houver nova imagem, o campo `file` pode ser omitido. Quando `imageUrl` vier vazio, a URL antiga e mantida.
+
 Exemplo com `curl`:
 
 ```bash
@@ -270,6 +272,8 @@ curl -X POST http://localhost:8080/v1/api/auth/challenges/1 \
 - Authorization: sim
 - Body: `multipart/form-data`
 - Objetivo: atualizar um desafio do usuario autenticado.
+
+Se nao houver nova imagem, o campo `file` pode ser omitido. Quando `imageUrl` vier vazio, a URL antiga e mantida.
 
 Campos esperados:
 

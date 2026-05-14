@@ -194,7 +194,9 @@ public class ContextService {
 
     private void updateData(Context newObj, Context obj) {
         newObj.setName(obj.getName());
-        newObj.setImageUrl(obj.getImageUrl());
+        if (obj.getImageUrl() != null && !obj.getImageUrl().isBlank()) {
+            newObj.setImageUrl(obj.getImageUrl());
+        }
         newObj.setSoundUrl(obj.getSoundUrl());
         newObj.setVideoUrl(obj.getVideoUrl());
     }
