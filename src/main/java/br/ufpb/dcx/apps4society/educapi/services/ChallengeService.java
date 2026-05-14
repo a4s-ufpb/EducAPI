@@ -121,12 +121,20 @@ public class ChallengeService {
 
         updateData(newObj, obj.challengeRegisterDTOToChallenge());
 
-        if (obj.getFile() != null && !obj.getFile().isEmpty()) {
+        String oldImageUrl = newObj.getImageUrl();
+        boolean hasNewImage = obj.getFile() != null && !obj.getFile().isEmpty();
+
+        if (hasNewImage) {
             Context context = newObj.getContexts().iterator().next();
             uploadImage(user, context, newObj, obj.getFile());
         }
 
         challengeRepository.save(newObj);
+
+        if (hasNewImage) {
+            deleteOldChallengeImage(oldImageUrl, newObj.getImageUrl());
+        }
+
         return newObj;
     }
 
@@ -135,11 +143,15 @@ public class ChallengeService {
 
         Challenge obj = find(token, id);
         if (obj.getCreator().equals(user)) {
+            String imageUrl = obj.getImageUrl();
+
             for (Context x : obj.getContexts()) {
                 x.getChallenges().remove(obj);
                 contextRepository.save(x);
             }
             challengeRepository.deleteById(id);
+
+            deleteChallengeImage(imageUrl);
         } else {
             throw new InvalidUserException();
         }
@@ -218,6 +230,26 @@ public class ChallengeService {
                     "Erro ao processar imagem do Challenge: " + e.getMessage(),
                     e
             );
+        }
+    }
+
+    private void deleteOldChallengeImage(String oldImageUrl, String newImageUrl) {
+        if (oldImageUrl == null || oldImageUrl.isBlank() || oldImageUrl.equals(newImageUrl)) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(oldImageUrl);
+        } catch (RuntimeException e) {
+            logger.warn("Nao foi possivel remover imagem antiga do Challenge no MinIO. imageUrl={}", oldImageUrl, e);
+        }
+    }
+
+    private void deleteChallengeImage(String imageUrl) {
+        try {
+            uploadImageService.deleteFileByUrl(imageUrl);
+        } catch (RuntimeException e) {
+            logger.warn("Nao foi possivel remover imagem do Challenge no MinIO. imageUrl={}", imageUrl, e);
         }
     }
 

@@ -202,6 +202,10 @@ Na atualizacao de Challenge, se nenhum novo `file` for enviado, `imageBackup` e 
 
 Em chamadas multipart de atualizacao pelo Swagger ou curl, o campo `file` pode ser omitido quando nao houver nova imagem. Se o cliente enviar `file=` como valor vazio, os resources tratam esse valor como ausencia de arquivo.
 
+Quando um Challenge e atualizado com uma nova imagem, a imagem antiga do Challenge e removida do MinIO depois que a nova imagem foi enviada e o Challenge foi salvo com sucesso. Se a remocao da imagem antiga falhar, o update permanece valido e a falha fica registrada em log.
+
+Quando um Challenge e deletado diretamente, a imagem associada ao `imageUrl` dele tambem e removida do MinIO. Essa remocao nao se aplica a delecao de Context nem a delecao em cascata de imagens de Challenges por Context.
+
 ## Observacoes
 
 - O endpoint generico valida tamanho e tipo do arquivo, mas o upload integrado em Context nao replica essas validacoes.

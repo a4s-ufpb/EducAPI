@@ -17,6 +17,7 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 
 @Service
 public class UploadImageService {
@@ -68,6 +69,34 @@ public class UploadImageService {
 
         } catch (Exception e) {
             throw new RuntimeException("Erro ao fazer upload para o MinIO", e);
+        }
+    }
+
+    public void deleteFileByUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        String bucketMarker = "/" + bucket + "/";
+        int bucketIndex = imageUrl.indexOf(bucketMarker);
+        if (bucketIndex < 0) {
+            return;
+        }
+
+        String objectName = imageUrl.substring(bucketIndex + bucketMarker.length());
+        if (objectName.isBlank()) {
+            return;
+        }
+
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(objectName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao remover arquivo do MinIO", e);
         }
     }
 
