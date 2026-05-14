@@ -1,18 +1,20 @@
 spring:
-    datasource:
-        driverClassName: org.h2.Driver
-        password: ''
-        url: jdbc:h2:file:./data
-        username: sa
-    jpa:
-        hibernate:
-            ddl-auto: update
-        properties:
-            hibernate:
-                format_sql: true
-        show-sql: true
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: ''
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
 minio:
-    url: http://minio:9000
-    access-key: ${MINIO_USER}
-    secret-key: ${MINIO_PASSWORD}
-    bucket: ${MINIO_BUCKET}
+  url: http://minio:9000
+  access-key: ${MINIO_USER:minioadmin}
+  secret-key: ${MINIO_PASSWORD:minioadmin}
+  bucket: ${MINIO_BUCKET:educapi-images}

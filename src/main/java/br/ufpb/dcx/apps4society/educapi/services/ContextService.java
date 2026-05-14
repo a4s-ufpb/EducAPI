@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,8 @@ import java.io.IOException;
 
 @Service
 public class ContextService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContextService.class);
 
     @Autowired
     private JWTService jwtService;
@@ -121,8 +125,11 @@ public class ContextService {
 
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
 
-        if (contextRegisterDTO.getFile() != null
-                && !contextRegisterDTO.getFile().isEmpty()) {
+        String oldImageUrl = newObj.getImageUrl();
+        boolean hasNewImage = contextRegisterDTO.getFile() != null
+                && !contextRegisterDTO.getFile().isEmpty();
+
+        if (hasNewImage) {
 
             MultipartFile file = contextRegisterDTO.getFile();
 
@@ -146,6 +153,10 @@ public class ContextService {
         }
 
         contextRepository.save(newObj);
+
+        if (hasNewImage) {
+            deleteOldContextImage(oldImageUrl, newObj.getImageUrl());
+        }
 
         return new ContextDTO(newObj);
     }
@@ -213,6 +224,18 @@ public class ContextService {
         }
 
         return userOptional.get();
+    }
+
+    private void deleteOldContextImage(String oldImageUrl, String newImageUrl) {
+        if (oldImageUrl == null || oldImageUrl.isBlank() || oldImageUrl.equals(newImageUrl)) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(oldImageUrl);
+        } catch (RuntimeException e) {
+            logger.warn("Nao foi possivel remover imagem antiga do Context no MinIO. imageUrl={}", oldImageUrl, e);
+        }
     }
 
 }

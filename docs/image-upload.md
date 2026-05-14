@@ -71,6 +71,8 @@ Quando `file` e enviado e nao esta vazio:
 
 Na atualizacao de Context, se nenhum novo `file` for enviado, `imageBackup` e mantido. Se `imageUrl` vier preenchida, a URL manual e atualizada; se `imageUrl` vier vazia ou nula, a URL antiga e mantida.
 
+Quando um Context e atualizado com uma nova imagem, a imagem antiga do Context e removida do MinIO depois que a nova imagem foi enviada e o Context foi salvo com sucesso. Se a remocao da imagem antiga falhar, o update permanece valido e a falha fica registrada em log.
+
 ## `imageUrl`, `file` e `imageBackup`
 
 ### `file`
