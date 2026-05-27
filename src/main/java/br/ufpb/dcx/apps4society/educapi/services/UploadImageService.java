@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Base64;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
@@ -73,18 +75,8 @@ public class UploadImageService {
     }
 
     public void deleteFileByUrl(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) {
-            return;
-        }
-
-        String bucketMarker = "/" + bucket + "/";
-        int bucketIndex = imageUrl.indexOf(bucketMarker);
-        if (bucketIndex < 0) {
-            return;
-        }
-
-        String objectName = imageUrl.substring(bucketIndex + bucketMarker.length());
-        if (objectName.isBlank()) {
+        Optional<String> objectName = extractObjectNameFromUrl(imageUrl);
+        if (objectName.isEmpty()) {
             return;
         }
 
@@ -92,12 +84,47 @@ public class UploadImageService {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(bucket)
-                            .object(objectName)
+                            .object(objectName.get())
                             .build()
             );
         } catch (Exception e) {
             throw new RuntimeException("Erro ao remover arquivo do MinIO", e);
         }
+    }
+
+    public byte[] getFileBytesByUrl(String imageUrl) {
+        String objectName = extractObjectNameFromUrl(imageUrl)
+                .orElseThrow(() -> new RuntimeException("URL de imagem invalida para o bucket configurado"));
+
+        try (InputStream inputStream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(objectName)
+                        .build()
+        )) {
+            return inputStream.readAllBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao baixar arquivo do MinIO", e);
+        }
+    }
+
+    private Optional<String> extractObjectNameFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return Optional.empty();
+        }
+
+        String bucketMarker = "/" + bucket + "/";
+        int bucketIndex = imageUrl.indexOf(bucketMarker);
+        if (bucketIndex < 0) {
+            return Optional.empty();
+        }
+
+        String objectName = imageUrl.substring(bucketIndex + bucketMarker.length());
+        if (objectName.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(objectName);
     }
 
     public String generateBase64Thumbnail(MultipartFile file) {

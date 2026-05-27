@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -163,6 +164,38 @@ public class ChallengeService {
         }
 
         return challengeRepository.findAll(pageable);
+    }
+
+    public byte[] getChallengeImage(Long idChallenge) throws ObjectNotFoundException {
+        Optional<Challenge> challengeOptional = challengeRepository.findById(idChallenge);
+        if (challengeOptional.isEmpty()) {
+            throw new ObjectNotFoundException("Object not found! Id: " + idChallenge + ", Type: " + Challenge.class.getName());
+        }
+
+        Challenge challenge = challengeOptional.get();
+
+        if (challenge.getImageUrl() != null && !challenge.getImageUrl().isBlank()) {
+            try {
+                return uploadImageService.getFileBytesByUrl(challenge.getImageUrl());
+            } catch (RuntimeException e) {
+                logger.warn(
+                        "Nao foi possivel carregar imagem principal do Challenge no MinIO. challengeId={}, imageUrl={}",
+                        idChallenge,
+                        challenge.getImageUrl(),
+                        e
+                );
+            }
+        }
+
+        if (challenge.getImageBackup() == null || challenge.getImageBackup().isBlank()) {
+            throw new ObjectNotFoundException("Imagem do Challenge nao encontrada. Id: " + idChallenge);
+        }
+
+        try {
+            return Base64.getDecoder().decode(challenge.getImageBackup());
+        } catch (IllegalArgumentException e) {
+            throw new ObjectNotFoundException("Imagem de backup do Challenge invalida. Id: " + idChallenge, e);
+        }
     }
 
     private User validateUser(String token) throws ObjectNotFoundException, InvalidUserException {

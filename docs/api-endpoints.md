@@ -237,6 +237,22 @@ GET /v1/api/auth/challenges/1
 Authorization: Bearer <token>
 ```
 
+### Buscar imagem de desafio
+
+- Metodo: `GET`
+- Rota: `/v1/api/challenges/{idChallenge}/image`
+- Authorization: nao
+- Body: nenhum
+- Objetivo: retornar a imagem do desafio como bytes, para uso direto em tags `img`.
+
+O endpoint tenta baixar a imagem principal pelo `imageUrl` salvo no MinIO. Se a imagem principal nao estiver disponivel, usa o `imageBackup` interno do Challenge como fallback e retorna `image/jpeg`. Se nenhuma imagem estiver disponivel, retorna 404.
+
+Exemplo:
+
+```http
+GET /v1/api/challenges/1/image
+```
+
 ### Criar desafio em um contexto
 
 - Metodo: `POST`

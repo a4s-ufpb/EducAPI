@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -76,6 +77,28 @@ public class ChallengeResource {
 	@GetMapping("auth/challenges")
 	public ResponseEntity<List<Challenge>> findAllByUser(@RequestHeader("Authorization") String token){
 		return ResponseEntity.ok(challengeService.findChallengesByCreator(token));
+	}
+
+	@Operation(summary = "Returns the Challenge image bytes, using the MinIO image first and imageBackup as fallback.")
+	@GetMapping("challenges/{idChallenge}/image")
+	public ResponseEntity<byte[]> getImage(@PathVariable Long idChallenge) {
+		byte[] imageBytes = challengeService.getChallengeImage(idChallenge);
+
+		return ResponseEntity.ok()
+				.contentType(resolveImageContentType(imageBytes))
+				.body(imageBytes);
+	}
+
+	private MediaType resolveImageContentType(byte[] imageBytes) {
+		if (imageBytes.length >= 8
+				&& imageBytes[0] == (byte) 0x89
+				&& imageBytes[1] == 0x50
+				&& imageBytes[2] == 0x4E
+				&& imageBytes[3] == 0x47) {
+			return MediaType.IMAGE_PNG;
+		}
+
+		return MediaType.IMAGE_JPEG;
 	}
 
 	@Operation(summary = "Returns a page with Challenges registered in the service.")
