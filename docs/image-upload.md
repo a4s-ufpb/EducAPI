@@ -134,6 +134,20 @@ Formato da URL retornada:
 http://localhost:9000/<bucket>/<folder>/<timestamp>_<nome-original>
 ```
 
+## Acesso publico de leitura no MinIO
+
+As imagens sao armazenadas no MinIO. O upload continua sendo feito pelo backend, usando as credenciais configuradas em `minio.access-key` e `minio.secret-key`.
+
+Para que o frontend consiga carregar a imagem diretamente pela `imageUrl`, o bucket configurado em `MINIO_BUCKET` deve permitir leitura/download publico dos objetos. Isso nao deve liberar upload publico: o envio de arquivos continua restrito a API.
+
+No Docker Compose, o servico `minio-init` deve criar o bucket definido em `MINIO_BUCKET` e aplicar politica equivalente a:
+
+```bash
+mc anonymous set download myminio/$MINIO_BUCKET
+```
+
+Essa politica permite `GetObject` publico para download das imagens, sem permitir `PutObject` publico direto no bucket.
+
 ## Organizacao dos folders no bucket
 
 No endpoint generico de upload, o folder usado e:
@@ -206,7 +220,9 @@ Em chamadas multipart de atualizacao pelo Swagger ou curl, o campo `file` pode s
 
 Quando um Challenge e atualizado com uma nova imagem, a imagem antiga do Challenge e removida do MinIO depois que a nova imagem foi enviada e o Challenge foi salvo com sucesso. Se a remocao da imagem antiga falhar, o update permanece valido e a falha fica registrada em log.
 
-Quando um Challenge e deletado diretamente, a imagem associada ao `imageUrl` dele tambem e removida do MinIO. Essa remocao nao se aplica a delecao de Context nem a delecao em cascata de imagens de Challenges por Context.
+Quando um Challenge e deletado diretamente, a imagem associada ao `imageUrl` dele tambem e removida do MinIO.
+
+Quando um Context e deletado, os Challenges associados a ele tambem sao removidos do banco no mesmo fluxo. A imagem do Context e as imagens dos Challenges associados devem ser removidas do MinIO usando as URLs salvas em `imageUrl`. Se alguma remocao no MinIO falhar, a falha e registrada em log como warning e nao impede a delecao dos registros no banco.
 
 ## Observacoes
 

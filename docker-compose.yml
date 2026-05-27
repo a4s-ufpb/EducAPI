@@ -45,13 +45,18 @@ services:
         image: minio/mc
         depends_on:
             - minio
+        env_file:
+            - .env
         entrypoint: >
             /bin/sh -c "
-            sleep 5;
-            mc alias set myminio http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD};
-            mc mb myminio/${MINIO_BUCKET};
-            mc anonymous set download myminio/${MINIO_BUCKET};
-            exit 0;
+            set -e;
+            : \"$${MINIO_BUCKET:?MINIO_BUCKET is required}\";
+            until mc alias set myminio http://minio:9000 \"$${MINIO_USER}\" \"$${MINIO_PASSWORD}\"; do
+                echo 'Waiting for MinIO...';
+                sleep 2;
+            done;
+            mc mb --ignore-existing myminio/\"$${MINIO_BUCKET}\";
+            mc anonymous set download myminio/\"$${MINIO_BUCKET}\";
             "
 
 

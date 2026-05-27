@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
@@ -33,6 +36,9 @@ public class ContextService {
 
     @Autowired
     private ContextRepository contextRepository;
+
+    @Autowired
+    private ChallengeRepository challengeRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -68,8 +74,15 @@ public class ContextService {
 
         context.setCreator(user);
 
-        if (contextRegisterDTO.getFile() != null
-                && !contextRegisterDTO.getFile().isEmpty()) {
+        if (contextRegisterDTO.getFile() == null
+                || contextRegisterDTO.getFile().isEmpty()) {
+            contextRepository.save(context);
+            return new ContextDTO(context);
+        }
+
+        String uploadedImageUrl = null;
+
+        try {
 
             MultipartFile file = contextRegisterDTO.getFile();
 
@@ -77,7 +90,7 @@ public class ContextService {
                     = "user_" + user.getId()
                     + "/context_" + context.getName();
 
-            String imageUrl = uploadImageService.uploadFile(
+            uploadedImageUrl = uploadImageService.uploadFile(
                     folder,
                     file.getOriginalFilename(),
                     file.getInputStream(),
@@ -88,11 +101,23 @@ public class ContextService {
             String imageBackup
                     = uploadImageService.generateBase64Thumbnail(file);
 
-            context.setImageUrl(imageUrl);
+            context.setImageUrl(uploadedImageUrl);
             context.setImageBackup(imageBackup);
-        }
 
-        contextRepository.save(context);
+            contextRepository.save(context);
+            contextRepository.flush();
+
+        } catch (RuntimeException | IOException e) {
+            deleteUploadedContextImageAfterFailure(uploadedImageUrl, "insert");
+            logger.error(
+                    "Erro ao inserir Context apos upload de imagem. userId={}, contextName={}, uploadedImageUrl={}",
+                    user.getId(),
+                    context.getName(),
+                    uploadedImageUrl,
+                    e
+            );
+            throw e;
+        }
 
         return new ContextDTO(context);
     }
@@ -123,13 +148,21 @@ public class ContextService {
             );
         }
 
+        String oldImageUrl = newObj.getImageUrl();
+
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
 
-        String oldImageUrl = newObj.getImageUrl();
         boolean hasNewImage = contextRegisterDTO.getFile() != null
                 && !contextRegisterDTO.getFile().isEmpty();
 
-        if (hasNewImage) {
+        if (!hasNewImage) {
+            contextRepository.save(newObj);
+            return new ContextDTO(newObj);
+        }
+
+        String uploadedImageUrl = null;
+
+        try {
 
             MultipartFile file = contextRegisterDTO.getFile();
 
@@ -137,7 +170,7 @@ public class ContextService {
                     = "user_" + user.getId()
                     + "/context_" + newObj.getName();
 
-            String imageUrl = uploadImageService.uploadFile(
+            uploadedImageUrl = uploadImageService.uploadFile(
                     folder,
                     file.getOriginalFilename(),
                     file.getInputStream(),
@@ -148,19 +181,32 @@ public class ContextService {
             String imageBackup
                     = uploadImageService.generateBase64Thumbnail(file);
 
-            newObj.setImageUrl(imageUrl);
+            newObj.setImageUrl(uploadedImageUrl);
             newObj.setImageBackup(imageBackup);
+
+            contextRepository.save(newObj);
+            contextRepository.flush();
+
+        } catch (RuntimeException | IOException e) {
+            deleteUploadedContextImageAfterFailure(uploadedImageUrl, "update");
+            logger.error(
+                    "Erro ao atualizar Context apos upload de imagem. userId={}, contextId={}, contextName={}, oldImageUrl={}, uploadedImageUrl={}",
+                    user.getId(),
+                    newObj.getId(),
+                    newObj.getName(),
+                    oldImageUrl,
+                    uploadedImageUrl,
+                    e
+            );
+            throw e;
         }
 
-        contextRepository.save(newObj);
-
-        if (hasNewImage) {
-            deleteOldContextImage(oldImageUrl, newObj.getImageUrl());
-        }
+        deleteOldContextImage(oldImageUrl, newObj.getImageUrl());
 
         return new ContextDTO(newObj);
     }
 
+    @Transactional
     public ContextDTO delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
@@ -170,14 +216,26 @@ public class ContextService {
             throw new ObjectNotFoundException();
         }
 
-        Context context = find(id);
+        Context context = contextOptional.get();
         if (!context.getCreator().equals(user)) {
             throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
                     + context.getName() + ".");
         }
 
-        contextRepository.deleteById(id);
-        return new ContextDTO(context);
+        ContextDTO deletedContextDTO = new ContextDTO(context);
+        List<Challenge> challenges = new ArrayList<>(context.getChallenges());
+
+        for (Challenge challenge : challenges) {
+            challenge.getContexts().remove(context);
+            context.getChallenges().remove(challenge);
+            deleteImageFromMinio(challenge.getImageUrl(), "Challenge", challenge.getId());
+            challengeRepository.delete(challenge);
+        }
+
+        deleteImageFromMinio(context.getImageUrl(), "Context", context.getId());
+        contextRepository.delete(context);
+
+        return deletedContextDTO;
     }
 
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {
@@ -235,6 +293,41 @@ public class ContextService {
             uploadImageService.deleteFileByUrl(oldImageUrl);
         } catch (RuntimeException e) {
             logger.warn("Nao foi possivel remover imagem antiga do Context no MinIO. imageUrl={}", oldImageUrl, e);
+        }
+    }
+
+    private void deleteUploadedContextImageAfterFailure(String imageUrl, String operation) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(imageUrl);
+        } catch (RuntimeException e) {
+            logger.warn(
+                    "Nao foi possivel remover imagem recem-enviada do Context no MinIO apos falha no {}. imageUrl={}",
+                    operation,
+                    imageUrl,
+                    e
+            );
+        }
+    }
+
+    private void deleteImageFromMinio(String imageUrl, String entityName, Long entityId) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(imageUrl);
+        } catch (RuntimeException e) {
+            logger.warn(
+                    "Nao foi possivel remover imagem do {} no MinIO. id={}, imageUrl={}",
+                    entityName,
+                    entityId,
+                    imageUrl,
+                    e
+            );
         }
     }
 
