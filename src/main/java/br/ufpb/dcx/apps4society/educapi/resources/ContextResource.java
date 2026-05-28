@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +45,16 @@ public class ContextResource {
     @GetMapping("contexts/{idContext}")
     public ResponseEntity<Context> find(@PathVariable Long idContext) {
         return ResponseEntity.ok(contextService.find(idContext));
+    }
+
+    @Operation(summary = "Returns the Context image bytes, using the MinIO image first and imageBackup as fallback.")
+    @GetMapping("contexts/{idContext}/image")
+    public ResponseEntity<byte[]> getImage(@PathVariable Long idContext) {
+        byte[] imageBytes = contextService.getContextImage(idContext);
+
+        return ResponseEntity.ok()
+                .contentType(resolveImageContentType(imageBytes))
+                .body(imageBytes);
     }
 
     @Operation(summary = "Adds a new Context to the service, if the token is valid.")
@@ -103,6 +114,18 @@ public class ContextResource {
     public ResponseEntity<List<ContextDTO>> findAllByUser(@RequestHeader("Authorization") String token
     ) {
         return ResponseEntity.ok(contextService.findContextsByCreator(token));
+    }
+
+    private MediaType resolveImageContentType(byte[] imageBytes) {
+        if (imageBytes.length >= 8
+                && imageBytes[0] == (byte) 0x89
+                && imageBytes[1] == 0x50
+                && imageBytes[2] == 0x4E
+                && imageBytes[3] == 0x47) {
+            return MediaType.IMAGE_PNG;
+        }
+
+        return MediaType.IMAGE_JPEG;
     }
 
 }

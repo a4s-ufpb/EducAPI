@@ -224,7 +224,22 @@ Quando um Challenge e deletado diretamente, a imagem associada ao `imageUrl` del
 
 Quando um Context e deletado, os Challenges associados a ele tambem sao removidos do banco no mesmo fluxo. A imagem do Context e as imagens dos Challenges associados devem ser removidas do MinIO usando as URLs salvas em `imageUrl`. Se alguma remocao no MinIO falhar, a falha e registrada em log como warning e nao impede a delecao dos registros no banco.
 
-## Endpoint de imagem de Challenge
+## Endpoints de imagem com fallback
+
+Existe um endpoint publico para retornar a imagem de um Context como arquivo/bytes:
+
+```http
+GET /v1/api/contexts/{idContext}/image
+```
+
+Esse endpoint nao retorna JSON e nao expoe `imageBackup`. O fluxo e:
+
+1. Busca o Context pelo ID.
+2. Tenta baixar a imagem principal do MinIO usando `context.imageUrl`.
+3. Se a imagem principal estiver disponivel, retorna os bytes da imagem.
+4. Se a imagem principal falhar ou nao estiver disponivel, usa `context.imageBackup`.
+5. O `imageBackup` e decodificado de Base64 e retornado como `image/jpeg`.
+6. Se nao houver imagem principal nem `imageBackup`, a API retorna 404.
 
 Existe um endpoint publico para retornar a imagem de um Challenge como arquivo/bytes:
 
@@ -241,7 +256,7 @@ Esse endpoint nao retorna JSON e nao expoe `imageBackup`. O fluxo e:
 5. O `imageBackup` e decodificado de Base64 e retornado como `image/jpeg`.
 6. Se nao houver imagem principal nem `imageBackup`, a API retorna 404.
 
-O campo `imageBackup` continua interno e escondido do JSON principal. Ele serve apenas como fallback para esse endpoint de imagem.
+O campo `imageBackup` continua interno e escondido do JSON principal. Ele serve apenas como fallback para esses endpoints de imagem.
 
 ## Observacoes
 

@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -259,6 +260,33 @@ public class ContextService {
         }
 
         return contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
+    }
+
+    public byte[] getContextImage(Long idContext) throws ObjectNotFoundException {
+        Context context = find(idContext);
+
+        if (context.getImageUrl() != null && !context.getImageUrl().isBlank()) {
+            try {
+                return uploadImageService.getFileBytesByUrl(context.getImageUrl());
+            } catch (RuntimeException e) {
+                logger.warn(
+                        "Nao foi possivel carregar imagem principal do Context no MinIO. contextId={}, imageUrl={}",
+                        idContext,
+                        context.getImageUrl(),
+                        e
+                );
+            }
+        }
+
+        if (context.getImageBackup() == null || context.getImageBackup().isBlank()) {
+            throw new ObjectNotFoundException("Imagem do Context nao encontrada. Id: " + idContext);
+        }
+
+        try {
+            return Base64.getDecoder().decode(context.getImageBackup());
+        } catch (IllegalArgumentException e) {
+            throw new ObjectNotFoundException("Imagem de backup do Context invalida. Id: " + idContext, e);
+        }
     }
 
     private void updateData(Context newObj, Context obj) {

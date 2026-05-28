@@ -125,6 +125,22 @@ Exemplo:
 GET /v1/api/contexts/1
 ```
 
+### Buscar imagem de contexto
+
+- Metodo: `GET`
+- Rota: `/v1/api/contexts/{idContext}/image`
+- Authorization: nao
+- Body: nenhum
+- Objetivo: retornar a imagem do contexto como bytes, para uso direto em tags `img`.
+
+O endpoint tenta baixar a imagem principal pelo `imageUrl` salvo no MinIO. Se a imagem principal nao estiver disponivel, usa o `imageBackup` interno do Context como fallback e retorna `image/jpeg`. Se nenhuma imagem estiver disponivel, retorna 404.
+
+Exemplo:
+
+```http
+GET /v1/api/contexts/1/image
+```
+
 ### Listar contextos
 
 - Metodo: `GET`
