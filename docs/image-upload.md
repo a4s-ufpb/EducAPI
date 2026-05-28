@@ -159,26 +159,28 @@ uploads
 No upload integrado em Context, o folder usado e:
 
 ```text
-user_<id-do-usuario>/context_<nome-do-contexto>
+user_<id-do-usuario>/context_<id-do-contexto>
 ```
 
 Exemplo:
 
 ```text
-user_1/context_Animais/1710000000000_imagem.png
+user_1/context_1/1710000000000_imagem.png
 ```
 
 No upload integrado em Challenge, o folder usado e:
 
 ```text
-user_<id-do-usuario>/context_<nome-do-contexto>/challenges
+user_<id-do-usuario>/context_<id-do-contexto>/challenges
 ```
 
 Exemplo:
 
 ```text
-user_1/context_Animais/challenges/1710000000000_imagem.png
+user_1/context_1/challenges/1710000000000_imagem.png
 ```
+
+O nome do Context nao e usado como identificador de pasta porque ele pode ser editado. Novos uploads usam o ID do Context, que permanece estavel mesmo quando o nome muda. Arquivos antigos que ainda tenham sido salvos com `context_<nome-do-contexto>` nao sao migrados automaticamente nesta etapa.
 
 ## Por que `imageBackup` e interno
 

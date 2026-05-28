@@ -63,7 +63,7 @@ public class ContextService {
         return obgOptional.get();
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ContextDTO insert(
             String token,
             ContextRegisterDTO contextRegisterDTO
@@ -84,12 +84,12 @@ public class ContextService {
         String uploadedImageUrl = null;
 
         try {
+            contextRepository.save(context);
+            contextRepository.flush();
 
             MultipartFile file = contextRegisterDTO.getFile();
 
-            String folder
-                    = "user_" + user.getId()
-                    + "/context_" + context.getName();
+            String folder = buildContextFolder(user, context);
 
             uploadedImageUrl = uploadImageService.uploadFile(
                     folder,
@@ -111,8 +111,9 @@ public class ContextService {
         } catch (RuntimeException | IOException e) {
             deleteUploadedContextImageAfterFailure(uploadedImageUrl, "insert");
             logger.error(
-                    "Erro ao inserir Context apos upload de imagem. userId={}, contextName={}, uploadedImageUrl={}",
+                    "Erro ao inserir Context com imagem. userId={}, contextId={}, contextName={}, uploadedImageUrl={}",
                     user.getId(),
+                    context.getId(),
                     context.getName(),
                     uploadedImageUrl,
                     e
@@ -167,9 +168,7 @@ public class ContextService {
 
             MultipartFile file = contextRegisterDTO.getFile();
 
-            String folder
-                    = "user_" + user.getId()
-                    + "/context_" + newObj.getName();
+            String folder = buildContextFolder(user, newObj);
 
             uploadedImageUrl = uploadImageService.uploadFile(
                     folder,
@@ -357,6 +356,11 @@ public class ContextService {
                     e
             );
         }
+    }
+
+    private String buildContextFolder(User user, Context context) {
+        return "user_" + user.getId()
+                + "/context_" + context.getId();
     }
 
 }

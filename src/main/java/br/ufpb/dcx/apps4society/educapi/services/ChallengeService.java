@@ -229,7 +229,7 @@ public class ChallengeService {
 
         String folder
                 = "user_" + user.getId()
-                + "/context_" + context.getName()
+                + "/context_" + context.getId()
                 + "/challenges";
 
         try {
