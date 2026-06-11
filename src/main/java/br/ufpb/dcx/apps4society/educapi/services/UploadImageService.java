@@ -4,7 +4,10 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -125,6 +128,36 @@ public class UploadImageService {
         }
 
         return Optional.of(objectName);
+    }
+
+    public byte[] downloadImageFromUrl(String imageUrl) {
+        try {
+            URL url = new URL(imageUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                throw new RuntimeException("Falha ao baixar imagem. HTTP status: " + responseCode);
+            }
+
+            try (InputStream inputStream = connection.getInputStream()) {
+                return inputStream.readAllBytes();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao baixar imagem da URL: " + imageUrl, e);
+        }
+    }
+
+    public boolean isExternalUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return false;
+        }
+        String bucketMarker = "/" + bucket + "/";
+        return !imageUrl.contains(bucketMarker);
     }
 
     public String generateBase64Thumbnail(MultipartFile file) {

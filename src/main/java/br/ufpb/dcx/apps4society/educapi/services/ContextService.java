@@ -77,6 +77,9 @@ public class ContextService {
 
         if (contextRegisterDTO.getFile() == null
                 || contextRegisterDTO.getFile().isEmpty()) {
+            if (context.getImageUrl() != null && !context.getImageUrl().isBlank()) {
+                generateBackupFromExternalUrl(context, "Context.insert");
+            }
             contextRepository.save(context);
             return new ContextDTO(context);
         }
@@ -158,6 +161,9 @@ public class ContextService {
                 && !contextRegisterDTO.getFile().isEmpty();
 
         if (!hasNewImage) {
+            if (contextRegisterDTO.getImageUrl() != null && !contextRegisterDTO.getImageUrl().isBlank()) {
+                generateBackupFromExternalUrl(newObj, "Context.update");
+            }
             contextRepository.save(newObj);
             return new ContextDTO(newObj);
         }
@@ -266,10 +272,13 @@ public class ContextService {
 
         if (context.getImageUrl() != null && !context.getImageUrl().isBlank()) {
             try {
+                if (uploadImageService.isExternalUrl(context.getImageUrl())) {
+                    return uploadImageService.downloadImageFromUrl(context.getImageUrl());
+                }
                 return uploadImageService.getFileBytesByUrl(context.getImageUrl());
             } catch (RuntimeException e) {
                 logger.warn(
-                        "Nao foi possivel carregar imagem principal do Context no MinIO. contextId={}, imageUrl={}",
+                        "Nao foi possivel carregar imagem principal do Context. contextId={}, imageUrl={}",
                         idContext,
                         context.getImageUrl(),
                         e
@@ -309,6 +318,17 @@ public class ContextService {
         }
 
         return userOptional.get();
+    }
+
+    private void generateBackupFromExternalUrl(Context context, String operation) {
+        try {
+            byte[] imageBytes = uploadImageService.downloadImageFromUrl(context.getImageUrl());
+            String imageBackup = uploadImageService.generateBase64Thumbnail(imageBytes);
+            context.setImageBackup(imageBackup);
+        } catch (Exception e) {
+            logger.warn("Nao foi possivel gerar backup da imageUrl externa do Context. operation={}, url={}",
+                    operation, context.getImageUrl(), e);
+        }
     }
 
     private void deleteOldContextImage(String oldImageUrl, String newImageUrl) {

@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping(value = "/v1/api/")
 @CrossOrigin("*")
@@ -18,8 +20,14 @@ public class LoginResource {
 
     @Operation(summary = "Returns a user authentication token.")
     @PostMapping("auth/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody UserLoginDTO userLoginDTO){
+    public ResponseEntity<LoginResponse> authenticate(@RequestBody UserLoginDTO userLoginDTO) {
         return ResponseEntity.ok(jwtService.authenticate(userLoginDTO));
     }
 
+    @Operation(summary = "Autentica via Google ID Token e retorna o JWT do sistema.")
+    @PostMapping("auth/login/google")
+    public ResponseEntity<LoginResponse> authenticateWithGoogle(@RequestBody Map<String, String> body) {
+        String googleIdToken = body.get("googleIdToken");
+        return ResponseEntity.ok(jwtService.authenticateWithGoogle(googleIdToken));
+    }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value="/v1/api/")
+@CrossOrigin("*")
 public class ChallengeResource {
 	@Autowired
 	private ChallengeService challengeService;
@@ -43,24 +44,46 @@ public class ChallengeResource {
 		return ResponseEntity.ok(challengeService.find(token, idChallenge));
 	}
 
-	@Operation(summary = "Adds a new Challenge to a Context, if the token and the Context ID are valid.")
+	@Operation(summary = "Adds a new Challenge to a Context via file upload, if the token and the Context ID are valid.")
 	@PostMapping(
 			value = "auth/challenges/{idContext}",
 			consumes = "multipart/form-data"
 	)
-	public ResponseEntity<Challenge> insert(@RequestHeader("Authorization") String token,
+	public ResponseEntity<Challenge> insertWithFile(@RequestHeader("Authorization") String token,
 											@Valid @ModelAttribute ChallengeRegisterDTO objDto,
 											@PathVariable Long idContext){
 		return ResponseEntity.status(HttpStatus.CREATED).body(challengeService.insert(token, objDto, idContext));
 	}
 
-	@Operation(summary = "Updates a User Challenge, if the token and the Challenge ID are valid.")
+	@Operation(summary = "Adds a new Challenge to a Context via JSON (imageUrl), if the token and the Context ID are valid.")
+	@PostMapping(
+			value = "auth/challenges/{idContext}",
+			consumes = "application/json"
+	)
+	public ResponseEntity<Challenge> insertWithJson(@RequestHeader("Authorization") String token,
+											@Valid @RequestBody ChallengeRegisterDTO objDto,
+											@PathVariable Long idContext){
+		return ResponseEntity.status(HttpStatus.CREATED).body(challengeService.insert(token, objDto, idContext));
+	}
+
+	@Operation(summary = "Updates a User Challenge via file upload, if the token and the Challenge ID are valid.")
 	@PutMapping(
 			value = "auth/challenges/{idChallenge}",
 			consumes = "multipart/form-data"
 	)
-	public ResponseEntity<Challenge> update(@RequestHeader("Authorization") String token,
+	public ResponseEntity<Challenge> updateWithFile(@RequestHeader("Authorization") String token,
 											@Valid @ModelAttribute ChallengeRegisterDTO objDto,
+											@PathVariable Long idChallenge){
+		return ResponseEntity.ok(challengeService.update(token, objDto, idChallenge));
+	}
+
+	@Operation(summary = "Updates a User Challenge via JSON (imageUrl), if the token and the Challenge ID are valid.")
+	@PutMapping(
+			value = "auth/challenges/{idChallenge}",
+			consumes = "application/json"
+	)
+	public ResponseEntity<Challenge> updateWithJson(@RequestHeader("Authorization") String token,
+											@Valid @RequestBody ChallengeRegisterDTO objDto,
 											@PathVariable Long idChallenge){
 		return ResponseEntity.ok(challengeService.update(token, objDto, idChallenge));
 	}

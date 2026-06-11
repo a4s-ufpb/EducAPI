@@ -84,6 +84,8 @@ public class ChallengeService {
 
         if (obj.getFile() != null && !obj.getFile().isEmpty()) {
             uploadImage(user, context, challenge, obj.getFile());
+        } else if (challenge.getImageUrl() != null && !challenge.getImageUrl().isBlank()) {
+            generateBackupFromExternalUrl(challenge, "Challenge.insert");
         }
 
         challenge.getContexts().add(context);
@@ -128,6 +130,9 @@ public class ChallengeService {
         if (hasNewImage) {
             Context context = newObj.getContexts().iterator().next();
             uploadImage(user, context, newObj, obj.getFile());
+        } else if (obj.getImageUrl() != null && !obj.getImageUrl().isBlank()) {
+            newObj.setImageUrl(obj.getImageUrl());
+            generateBackupFromExternalUrl(newObj, "Challenge.update");
         }
 
         challengeRepository.save(newObj);
@@ -176,10 +181,13 @@ public class ChallengeService {
 
         if (challenge.getImageUrl() != null && !challenge.getImageUrl().isBlank()) {
             try {
+                if (uploadImageService.isExternalUrl(challenge.getImageUrl())) {
+                    return uploadImageService.downloadImageFromUrl(challenge.getImageUrl());
+                }
                 return uploadImageService.getFileBytesByUrl(challenge.getImageUrl());
             } catch (RuntimeException e) {
                 logger.warn(
-                        "Nao foi possivel carregar imagem principal do Challenge no MinIO. challengeId={}, imageUrl={}",
+                        "Nao foi possivel carregar imagem principal do Challenge. challengeId={}, imageUrl={}",
                         idChallenge,
                         challenge.getImageUrl(),
                         e
@@ -263,6 +271,17 @@ public class ChallengeService {
                     "Erro ao processar imagem do Challenge: " + e.getMessage(),
                     e
             );
+        }
+    }
+
+    private void generateBackupFromExternalUrl(Challenge challenge, String context) {
+        try {
+            byte[] imageBytes = uploadImageService.downloadImageFromUrl(challenge.getImageUrl());
+            String imageBackup = uploadImageService.generateBase64Thumbnail(imageBytes);
+            challenge.setImageBackup(imageBackup);
+        } catch (Exception e) {
+            logger.warn("Nao foi possivel gerar backup da imageUrl externa do Challenge. context={}, url={}",
+                    context, challenge.getImageUrl(), e);
         }
     }
 

@@ -27,8 +27,10 @@ public class JWTServiceTest {
     private final Optional<User> userOptional = UserBuilder.anUser().withId(1L).buildOptionalUser();
     private final String invalidToken = "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtYWlhd2VlZUB0ZXN0LmNvbSIsImV4cCI6MTYxNTM" +
             "5OTkyN30.1qNJIgwjlnm6YcZuIDFLZrQLs58qOwLFkCtXOcaUD-fQZyTa4usOMVgGa19Em_e8WdoXfnaJSv9O-c8IRp-C9Q";
+
     @Mock
     UserRepository userRepository;
+
     @InjectMocks
     JWTService service;
 
@@ -39,14 +41,17 @@ public class JWTServiceTest {
     @BeforeEach
     public void setUp() {
         ReflectionTestUtils.setField(service, "TOKEN_KEY", "it's a token key");
+        // Necessário após adicionar GOOGLE_CLIENT_ID no JWTService
+        ReflectionTestUtils.setField(service, "GOOGLE_CLIENT_ID", "test-client-id");
     }
 
     @Test
     public void authenticateTest() throws InvalidUserException {
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword())).thenReturn(this.userOptional);
+        Mockito.when(this.userRepository.findByEmailAndPassword(
+                        this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
+                .thenReturn(this.userOptional);
 
         LoginResponse response = this.service.authenticate(this.userLoginDTO);
-
         assertNotNull(response.getToken());
     }
 
@@ -59,12 +64,12 @@ public class JWTServiceTest {
 
     @Test
     public void recoverUserTest() throws InvalidUserException {
-        Mockito.when(this.userRepository.findByEmailAndPassword(this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
+        Mockito.when(this.userRepository.findByEmailAndPassword(
+                        this.userLoginDTO.getEmail(), this.userLoginDTO.getPassword()))
                 .thenReturn(this.userOptional);
 
         LoginResponse response = this.service.authenticate(userLoginDTO);
         String token = tokenFormat(response.getToken());
-
         String userRecovered = this.service.recoverUser(token).get();
 
         assertEquals(userRecovered, this.userLoginDTO.getEmail());
@@ -77,7 +82,6 @@ public class JWTServiceTest {
         });
         assertNotNull(exception);
     }
-
 
     @Test
     public void revocerUserWithInvalidTokenTest() {

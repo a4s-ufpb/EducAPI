@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Length;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 
 public class ContextDTO  implements Serializable{
 	private static final long serialVersionUID = 1L;
@@ -18,6 +19,7 @@ public class ContextDTO  implements Serializable{
 	private String imageUrl;
 	private String soundUrl;
 	private String videoUrl;
+	private User creator;
 
 	public ContextDTO() {}
 
@@ -27,10 +29,19 @@ public class ContextDTO  implements Serializable{
 		this.imageUrl = obj.getImageUrl();
 		this.soundUrl = obj.getSoundUrl();
 		this.videoUrl = obj.getVideoUrl();
+		this.creator = obj.getCreator();
 	}
 
 	public Context contextDTOToContext(){
 		return new Context(id, name, imageUrl, soundUrl, videoUrl);
+	}
+
+	public User getCreator() {
+		return creator;
+	}
+
+	public void setCreator(User creator) {
+		this.creator = creator;
 	}
 
 	@Override

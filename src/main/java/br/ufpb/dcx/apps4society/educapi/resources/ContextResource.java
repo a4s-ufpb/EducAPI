@@ -57,32 +57,59 @@ public class ContextResource {
                 .body(imageBytes);
     }
 
-    @Operation(summary = "Adds a new Context to the service, if the token is valid.")
+    @Operation(summary = "Adds a new Context via file upload, if the token is valid.")
     @PostMapping(
             value = "auth/contexts",
             consumes = "multipart/form-data"
     )
-    public ResponseEntity<ContextDTO> insert(
+    public ResponseEntity<ContextDTO> insertWithFile(
             @RequestHeader("Authorization") String token,
             @Valid @ModelAttribute ContextRegisterDTO objDto
     ) throws IOException {
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(contextService.insert(token, objDto));
     }
 
-    @Operation(summary = "Updates a User Context, if the token and the Context ID are valid.")
+    @Operation(summary = "Adds a new Context via JSON (imageUrl), if the token is valid.")
+    @PostMapping(
+            value = "auth/contexts",
+            consumes = "application/json"
+    )
+    public ResponseEntity<ContextDTO> insertWithJson(
+            @RequestHeader("Authorization") String token,
+            @Valid @RequestBody ContextRegisterDTO objDto
+    ) throws IOException {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(contextService.insert(token, objDto));
+    }
+
+    @Operation(summary = "Updates a User Context via file upload, if the token and the Context ID are valid.")
     @PutMapping(
             value = "auth/contexts/{idContext}",
             consumes = "multipart/form-data"
     )
-    public ResponseEntity<ContextDTO> update(
+    public ResponseEntity<ContextDTO> updateWithFile(
             @RequestHeader("Authorization") String token,
             @Valid @ModelAttribute ContextRegisterDTO objDto,
             @PathVariable Long idContext
     ) throws IOException {
+        return ResponseEntity.ok(
+                contextService.update(token, objDto, idContext)
+        );
+    }
 
+    @Operation(summary = "Updates a User Context via JSON (imageUrl), if the token and the Context ID are valid.")
+    @PutMapping(
+            value = "auth/contexts/{idContext}",
+            consumes = "application/json"
+    )
+    public ResponseEntity<ContextDTO> updateWithJson(
+            @RequestHeader("Authorization") String token,
+            @Valid @RequestBody ContextRegisterDTO objDto,
+            @PathVariable Long idContext
+    ) throws IOException {
         return ResponseEntity.ok(
                 contextService.update(token, objDto, idContext)
         );
