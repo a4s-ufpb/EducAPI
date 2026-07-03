@@ -3,7 +3,9 @@ package br.ufpb.dcx.apps4society.educapi.services;
 import java.util.List;
 import java.util.Optional;
 
+import br.ufpb.dcx.apps4society.educapi.dto.user.UserChangePasswordDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.GoogleAccountException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +63,23 @@ public class UserService {
 		return new UserDTO(newObj);
 	}
 
+	public UserDTO changePassword(String token, UserChangePasswordDTO dto) throws InvalidUserException {
+		User user = find(token);
+
+		if (user.isGoogleAccount()) {
+			throw new GoogleAccountException(
+					"This account was created with Google Sign-In and has no local password. It's not possible to change the password.");
+		}
+
+		if (!user.getPassword().equals(dto.getCurrentPassword())) {
+			throw new InvalidUserException("Current password is incorrect.");
+		}
+
+		user.setPassword(dto.getNewPassword());
+		userRepository.save(user);
+		return new UserDTO(user);
+	}
+
 	public UserDTO delete(String token) throws InvalidUserException {
 		User user = find(token);
 		userRepository.deleteById(user.getId());
@@ -79,7 +98,11 @@ public class UserService {
 	private void updateData(User newObj, UserRegisterDTO obj) {
 		newObj.setName(obj.getName());
 		newObj.setEmail(obj.getEmail());
-		newObj.setPassword(obj.getPassword());
+		// Google accounts keep password = null; this endpoint never sets/overwrites
+		// a password for them. Use changePassword() for local-account password changes.
+		if (!newObj.isGoogleAccount()) {
+			newObj.setPassword(obj.getPassword());
+		}
 	}
 
 }

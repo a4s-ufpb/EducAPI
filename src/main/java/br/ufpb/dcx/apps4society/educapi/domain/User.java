@@ -142,7 +142,18 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
+	/**
+	 * Indicates whether this User authenticates exclusively via Google
+	 * (i.e. has no local password set). Used by clients to decide whether
+	 * to show the "change password" option.
+	 *
+	 * @return true if this User has no local password (Google account).
+	 */
+	public boolean isGoogleAccount() {
+		return this.password == null;
+	}
+
 	/**
 	 * Gets the user challenges.
 	 * 

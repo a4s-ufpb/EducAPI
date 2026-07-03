@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.resources;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
+import br.ufpb.dcx.apps4society.educapi.dto.user.UserChangePasswordDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.services.UserService;
@@ -36,6 +37,13 @@ public class UserResource {
 	public ResponseEntity<UserDTO> update(@Valid @RequestBody UserRegisterDTO registerDTO,
 										  @RequestHeader("Authorization") String token){
 		return ResponseEntity.ok(userService.update(token,registerDTO));
+	}
+
+	@Operation(summary = "Changes the User password, if the token is valid. Not allowed for Google accounts.")
+	@PutMapping("auth/users/password")
+	public ResponseEntity<UserDTO> changePassword(@Valid @RequestBody UserChangePasswordDTO changePasswordDTO,
+												   @RequestHeader("Authorization") String token) {
+		return ResponseEntity.ok(userService.changePassword(token, changePasswordDTO));
 	}
 
 	@Operation(summary = "Deletes the user from the service, if the token is valid.")

@@ -60,4 +60,10 @@ public class ResourceExceptionHandler {
 		StandardError err = new StandardError(HttpStatus.UNAUTHORIZED.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
 	}
+
+	@ExceptionHandler(GoogleAccountException.class)
+	public ResponseEntity<StandardError> googleAccountException(GoogleAccountException e, HttpServletRequest request){
+		StandardError err = new StandardError(HttpStatus.FORBIDDEN.value(), e.getMessage() ,System.currentTimeMillis(), request.getRequestURI());
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
+	}
 }
