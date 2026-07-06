@@ -3,16 +3,29 @@ package br.ufpb.dcx.apps4society.educapi.services;
 import java.util.List;
 import java.util.Optional;
 
+import br.ufpb.dcx.apps4society.educapi.domain.AcaoAuditoria;
+import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
+import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.Role;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserChangePasswordDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
+import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.GoogleAccountException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InsufficientPrivilegeException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidRoleTransitionException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.SelfActionNotAllowedException;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyExistsException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.UserAlreadyPromotedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
@@ -26,10 +39,23 @@ public class UserService {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private ContextRepository contextRepository;
+
+	@Autowired
+	private ChallengeRepository challengeRepository;
+
+	@Autowired
+	private LogAuditoriaService logAuditoriaService;
+
 	// To support ServicesBuilder
-	public UserService(JWTService jwtService, UserRepository userRepository) {
+	public UserService(JWTService jwtService, UserRepository userRepository, ContextRepository contextRepository,
+			ChallengeRepository challengeRepository, LogAuditoriaService logAuditoriaService) {
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
+		this.contextRepository = contextRepository;
+		this.challengeRepository = challengeRepository;
+		this.logAuditoriaService = logAuditoriaService;
 	}
 
 	public User find(String token) throws InvalidUserException {
@@ -80,9 +106,21 @@ public class UserService {
 		return new UserDTO(user);
 	}
 
+	/**
+	 * Deletes the caller's own account. Any Context/Challenge created by this
+	 * user is not removed: their {@code creator} is set to null so the
+	 * content is orphaned but remains in the system (same rule applied to
+	 * admin-triggered deletions in {@link #deleteByAdmin(String, Long)}).
+	 */
+	@Transactional
 	public UserDTO delete(String token) throws InvalidUserException {
 		User user = find(token);
+		orphanUserContent(user);
 		userRepository.deleteById(user.getId());
+
+		logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_USUARIO, "User", user.getId(),
+				"email=" + user.getEmail() + ", role=" + user.getRole() + ", autoexclusao (usuario excluiu a propria conta)");
+
 		return new UserDTO(user);
 	}
 
@@ -93,6 +131,150 @@ public class UserService {
 	public Page<User> findPage(Integer page, Integer linesPerPage, String orderBy, String direction){
 		PageRequest pageRequest = PageRequest.of(page, linesPerPage, Direction.valueOf(direction), orderBy);
 		return userRepository.findAll(pageRequest);
+	}
+
+	/**
+	 * Returns a paginated list of every User in the system, for administrative
+	 * user-management screens (promote to ADMIN, delete users). Restricted at
+	 * the controller level to ADMIN/SYSADMIN via {@code @PreAuthorize}.
+	 */
+	public Page<UserDTO> findAllForAdmin(Pageable pageable) {
+		return userRepository.findAll(pageable).map(UserDTO::new);
+	}
+
+	/**
+	 * Promotes a CLIENTE to ADMIN. Restricted to callers with the SYSADMIN role.
+	 *
+	 * @param token the requester's auth token; must belong to a SYSADMIN.
+	 * @param id    the id of the User to promote.
+	 */
+	public UserDTO promote(String token, Long id) throws InvalidUserException, ObjectNotFoundException {
+		User requester = find(token);
+
+		if (!requester.isSysAdmin()) {
+			throw new InsufficientPrivilegeException("Apenas o SYSADMIN pode promover usuarios a ADMIN.");
+		}
+
+		User target = findUserOrThrow(id);
+
+		if (target.getRole() != Role.CLIENTE) {
+			throw new UserAlreadyPromotedException(
+					"Usuario " + target.getEmail() + " ja possui privilegios administrativos (role=" + target.getRole() + ").");
+		}
+
+		target.setRole(Role.ADMIN);
+		userRepository.save(target);
+
+		logAuditoriaService.registrar(requester, AcaoAuditoria.PROMOCAO_ADMIN, "User", target.getId(),
+				"email=" + target.getEmail() + " promovido de CLIENTE para ADMIN");
+
+		return new UserDTO(target);
+	}
+
+	/**
+	 * Demotes an ADMIN back to CLIENTE. Restricted to callers with the
+	 * SYSADMIN role — the symmetric, inverse operation of {@link #promote}.
+	 * SYSADMIN accounts cannot be demoted through this action, and a
+	 * SYSADMIN cannot demote themselves.
+	 *
+	 * @param token the requester's auth token; must belong to a SYSADMIN.
+	 * @param id    the id of the User to demote.
+	 */
+	public UserDTO demote(String token, Long id) throws InvalidUserException, ObjectNotFoundException {
+		User requester = find(token);
+
+		if (!requester.isSysAdmin()) {
+			throw new InsufficientPrivilegeException("Apenas o SYSADMIN pode rebaixar usuarios.");
+		}
+
+		User target = findUserOrThrow(id);
+
+		if (requester.getId().equals(target.getId())) {
+			throw new SelfActionNotAllowedException("Nao e possivel alterar a propria role por este endpoint.");
+		}
+
+		if (target.getRole() != Role.ADMIN) {
+			throw new InvalidRoleTransitionException(
+					"Usuario " + target.getEmail() + " nao pode ser rebaixado (role atual=" + target.getRole() + "). "
+					+ "Apenas usuarios com role=ADMIN podem ser rebaixados para CLIENTE.");
+		}
+
+		target.setRole(Role.CLIENTE);
+		userRepository.save(target);
+
+		logAuditoriaService.registrar(requester, AcaoAuditoria.DEMOCAO_ADMIN, "User", target.getId(),
+				"email=" + target.getEmail() + " rebaixado de ADMIN para CLIENTE");
+
+		return new UserDTO(target);
+	}
+
+	/**
+	 * Deletes another User's account, as an administrative action.
+	 * SYSADMIN may delete any user (including ADMIN); ADMIN may only delete
+	 * CLIENTE accounts. Self-deletion through this endpoint is not allowed
+	 * (use {@link #delete(String)} instead).
+	 *
+	 * Any Context/Challenge created by the deleted user is not removed:
+	 * their {@code creator} is set to null so the content is orphaned but
+	 * remains in the system.
+	 *
+	 * @param token the requester's auth token; must belong to an ADMIN or SYSADMIN.
+	 * @param id    the id of the User to delete.
+	 */
+	@Transactional
+	public UserDTO deleteByAdmin(String token, Long id) throws InvalidUserException, ObjectNotFoundException {
+		User requester = find(token);
+		User target = findUserOrThrow(id);
+
+		if (requester.getId().equals(target.getId())) {
+			throw new SelfActionNotAllowedException("Nao e possivel excluir a propria conta por este endpoint.");
+		}
+
+		if (!requester.isAdmin()) {
+			throw new InsufficientPrivilegeException("Apenas ADMIN ou SYSADMIN podem excluir outros usuarios.");
+		}
+
+		if (!requester.isSysAdmin() && target.getRole() != Role.CLIENTE) {
+			throw new InsufficientPrivilegeException(
+					"ADMIN so pode excluir usuarios com role CLIENTE. Usuario alvo possui role=" + target.getRole() + ".");
+		}
+
+		orphanUserContent(target);
+
+		UserDTO deletedUserDTO = new UserDTO(target);
+		userRepository.deleteById(target.getId());
+
+		logAuditoriaService.registrar(requester, AcaoAuditoria.EXCLUSAO_USUARIO, "User", id,
+				"email=" + target.getEmail() + ", role=" + target.getRole()
+				+ ", excluido por " + requester.getRole() + " (" + requester.getEmail() + ")");
+
+		return deletedUserDTO;
+	}
+
+	private User findUserOrThrow(Long id) throws ObjectNotFoundException {
+		Optional<User> userOptional = userRepository.findById(id);
+		if (userOptional.isEmpty()) {
+			throw new ObjectNotFoundException("Object not found! Id: " + id + ", Type: " + User.class.getName());
+		}
+		return userOptional.get();
+	}
+
+	/**
+	 * Detaches all Context/Challenge entities created by the given user,
+	 * leaving them orphaned (creator = null) instead of cascade-deleting them.
+	 */
+	private void orphanUserContent(User target) {
+		List<Context> contexts = contextRepository.findContextsByCreator(target);
+		for (Context context : contexts) {
+			context.setCreator(null);
+			contextRepository.save(context);
+		}
+
+		List<Challenge> challenges = challengeRepository.findChallengesByCreator(target);
+		for (Challenge challenge : challenges) {
+			challenge.setCreator(null);
+			challengeRepository.save(challenge);
+		}
 	}
 
 	private void updateData(User newObj, UserRegisterDTO obj) {

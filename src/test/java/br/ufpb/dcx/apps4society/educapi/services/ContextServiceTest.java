@@ -1,6 +1,7 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.Role;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
@@ -284,7 +285,47 @@ public class ContextServiceTest {
         assertNull(messageResponse2);
 
     }
-    
+
+    @Test
+    public void deleteContextAsAdminBypassTest() throws InvalidUserException, ObjectNotFoundException, IOException {
+
+        // userOptional2 is NOT the owner of contextOptional (owned by userOptional, id=1),
+        // but has ADMIN role, so the Fase 4 bypass should allow the deletion.
+        User admin = userOptional2.get();
+        admin.setRole(Role.ADMIN);
+
+        Mockito.when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(Optional.of(admin));
+        Mockito.when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(Optional.of(admin));
+        Mockito.when(contextRepository.findById(1L)).thenReturn(contextOptional);
+
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
+        contextService.delete(jwtService.tokenBearerFormat(loginResponse2.getToken()), 1L);
+
+        Mockito.verify(contextRepository).delete(contextOptional.get());
+    }
+
+    @Test
+    public void deleteContextAsNonOwnerNonAdminStillThrowsTest() throws InvalidUserException, ObjectNotFoundException, IOException {
+
+        // Same setup as deleteAInvalidContextTest, but asserting explicitly that a
+        // CLIENTE (default role, non-owner) is still denied after the admin-bypass logic
+        // was introduced in Fase 4.
+        Mockito.lenient().when(userRepository.findByEmail(userLoginDTO2.getEmail())).thenReturn(userOptional2);
+        Mockito.lenient().when(userRepository.findByEmailAndPassword(userLoginDTO2.getEmail(), userLoginDTO2.getPassword())).thenReturn(userOptional2);
+        Mockito.lenient().when(contextRepository.findById(1L)).thenReturn(contextOptional);
+
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
+        assertEquals(Role.CLIENTE, userOptional2.get().getRole());
+
+        assertThrows(InvalidUserException.class, () ->
+                contextService.delete(jwtService.tokenBearerFormat(loginResponse2.getToken()), 1L));
+
+        Mockito.verify(contextRepository, Mockito.never()).delete(contextOptional.get());
+    }
+
+
     @Test
     public void findContextsByParamsTest() throws InvalidUserException,  ObjectNotFoundException, IOException {
         

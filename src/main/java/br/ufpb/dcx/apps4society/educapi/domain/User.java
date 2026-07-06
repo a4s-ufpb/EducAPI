@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 /**
  * Represents a User that created a Challenge or Context.
@@ -24,11 +26,14 @@ public class User implements Serializable {
 	private String email;
 	@JsonIgnore
 	private String password;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Role role = Role.CLIENTE;
 	@JsonIgnore
-	@OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "creator")
 	private Set<Challenge> challenges = new HashSet<>();
 	@JsonIgnore
-	@OneToMany(mappedBy = "creator", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "creator")
 	private Set<Context> contexts = new HashSet<>();
 	
 	/**
@@ -152,6 +157,41 @@ public class User implements Serializable {
 	 */
 	public boolean isGoogleAccount() {
 		return this.password == null;
+	}
+
+	/**
+	 * Gets the Role (access level) of this User.
+	 *
+	 * @return the Role of this User.
+	 */
+	public Role getRole() {
+		return this.role;
+	}
+
+	/**
+	 * Changes the Role (access level) of this User.
+	 *
+	 * @param role
+	 *            The new Role for this User.
+	 */
+	public void setRole(Role role) {
+		this.role = role;
+	}
+
+	/**
+	 * @return true if this User has ADMIN or SYSADMIN privileges.
+	 */
+	@JsonIgnore
+	public boolean isAdmin() {
+		return this.role == Role.ADMIN || this.role == Role.SYSADMIN;
+	}
+
+	/**
+	 * @return true if this User is the SYSADMIN.
+	 */
+	@JsonIgnore
+	public boolean isSysAdmin() {
+		return this.role == Role.SYSADMIN;
 	}
 
 	/**

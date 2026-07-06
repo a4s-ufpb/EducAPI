@@ -31,6 +31,9 @@ public class JWTServiceTest {
     @Mock
     UserRepository userRepository;
 
+    @Mock
+    LogAuditoriaService logAuditoriaService;
+
     @InjectMocks
     JWTService service;
 

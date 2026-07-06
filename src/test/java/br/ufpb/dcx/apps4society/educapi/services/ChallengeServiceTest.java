@@ -2,6 +2,7 @@ package br.ufpb.dcx.apps4society.educapi.services;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.Role;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.challenge.ChallengeRegisterDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
@@ -333,6 +334,50 @@ public class ChallengeServiceTest {
 
         });
 
+    }
+
+    @Test
+    public void deleteChallengeAsAdminBypassTest() throws InvalidUserException, ObjectNotFoundException{
+
+        // creator2 (user2@educapi.com) is NOT the owner of the challenge, but has ADMIN role,
+        // so the Fase 4 bypass should let the deletion go through instead of InvalidUserException.
+        User admin = userOptional2.get();
+        admin.setRole(Role.ADMIN);
+
+        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+        Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(Optional.of(admin));
+        Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2")).thenReturn(Optional.of(admin));
+
+        LoginResponse adminLoginResponse = jwtService.authenticate(userLoginDTO2);
+
+        Set<Context> contextsSet = new HashSet<>();
+        contextsSet.add(context);
+        challenge.setContexts(contextsSet);
+
+        challengeService.delete(jwtService.tokenBearerFormat(adminLoginResponse.getToken()), challenge.getId());
+
+        Mockito.verify(challengeRepository).deleteById(challenge.getId());
+    }
+
+    @Test
+    public void deleteChallengeAsNonOwnerNonAdminStillThrowsTest() throws InvalidUserException, ObjectNotFoundException{
+
+        // Same as deleteChallengeInvalidUserTest, but explicit about the Fase 4 rule:
+        // a CLIENTE (default role) that isn't the owner still cannot delete, even after
+        // the admin-bypass logic was introduced.
+        Mockito.lenient().when(challengeRepository.findById(1L)).thenReturn(challengeOptional);
+        Mockito.when(userRepository.findByEmail("user2@educapi.com")).thenReturn(userOptional2);
+        Mockito.when(userRepository.findByEmailAndPassword("user2@educapi.com", "testpassword2")).thenReturn(userOptional2);
+
+        LoginResponse loginResponse2 = jwtService.authenticate(userLoginDTO2);
+
+        assertEquals(Role.CLIENTE, userOptional2.get().getRole());
+
+        assertThrows(InvalidUserException.class, () -> {
+            challengeService.delete(jwtService.tokenBearerFormat(loginResponse2.getToken()), challenge.getId());
+        });
+
+        Mockito.verify(challengeRepository, Mockito.never()).deleteById(challenge.getId());
     }
 
     @Test

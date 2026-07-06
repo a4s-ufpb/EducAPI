@@ -1,8 +1,8 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
+import br.ufpb.dcx.apps4society.educapi.domain.AcaoAuditoria;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
-import br.ufpb.dcx.apps4society.educapi.filter.TokenFilter;
 import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
 import br.ufpb.dcx.apps4society.educapi.response.LoginResponse;
 import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
@@ -21,15 +21,23 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
 public class JWTService {
 
+    /**
+     * Length of the "Bearer " prefix in the Authorization header,
+     * used to extract the raw token substring.
+     */
+    public static final int TOKEN_INDEX = 7;
+
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private LogAuditoriaService logAuditoriaService;
 
     @Value("${app.token.key}")
     private String TOKEN_KEY;
@@ -38,8 +46,9 @@ public class JWTService {
     @Value("${google.client-id}")
     private String GOOGLE_CLIENT_ID;
 
-    public JWTService(UserRepository userRepository) {
+    public JWTService(UserRepository userRepository, LogAuditoriaService logAuditoriaService) {
         this.userRepository = userRepository;
+        this.logAuditoriaService = logAuditoriaService;
     }
 
     public LoginResponse authenticate(UserLoginDTO userLoginDTO) throws InvalidUserException {
@@ -48,6 +57,11 @@ public class JWTService {
         if (userOptional.isEmpty()) {
             throw new InvalidUserException();
         }
+
+        User user = userOptional.get();
+        logAuditoriaService.registrar(user, AcaoAuditoria.LOGIN, "User", user.getId(),
+                "login local (email/senha), role=" + user.getRole());
+
         return new LoginResponse(generateToken(userLoginDTO.getEmail()));
     }
 
@@ -91,10 +105,16 @@ public class JWTService {
 
             // Busca ou cria o usuário no banco
             Optional<User> userOpt = userRepository.findByEmail(email);
+            User user;
             if (userOpt.isEmpty()) {
-                User newUser = new User(name, email, null);
-                userRepository.save(newUser);
+                user = new User(name, email, null);
+                user = userRepository.save(user);
+            } else {
+                user = userOpt.get();
             }
+
+            logAuditoriaService.registrar(user, AcaoAuditoria.LOGIN, "User", user.getId(),
+                    "login via Google, role=" + user.getRole());
 
             return new LoginResponse(generateToken(email));
 
@@ -114,8 +134,15 @@ public class JWTService {
                 .strip();
     }
 
+    // Mesmo bug que já existia em LogAuditoria: LocalDateTime.now() sem fuso
+    // pega o relógio de parede no fuso padrão do container (UTC, não
+    // America/Sao_Paulo). Aqui esse horário UTC era então rotulado como se
+    // já estivesse em -03:00 ao converter para Instant, o que soma 3 horas
+    // erradas ao instante real — o token acaba expirando ~4h depois do
+    // login em vez de 1h. Corrigido usando Instant.now() (sempre UTC real,
+    // sem depender do fuso do container) e somando a duração diretamente.
     private Instant expirationToken() {
-        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
+        return Instant.now().plus(1, ChronoUnit.HOURS);
     }
 
     public Optional<String> recoverUser(String header) {
@@ -123,7 +150,7 @@ public class JWTService {
             throw new SecurityException();
         }
 
-        String token = header.substring(TokenFilter.TOKEN_INDEX);
+        String token = header.substring(TOKEN_INDEX);
         String subject;
 
         try {

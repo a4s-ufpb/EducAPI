@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ufpb.dcx.apps4society.educapi.domain.AcaoAuditoria;
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
@@ -47,11 +48,16 @@ public class ContextService {
     @Autowired
     private UploadImageService uploadImageService;
 
-    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository, UploadImageService uploadImageService) {
+    @Autowired
+    private LogAuditoriaService logAuditoriaService;
+
+    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository,
+            UploadImageService uploadImageService, LogAuditoriaService logAuditoriaService) {
         this.jwtService = jwtService;
         this.contextRepository = contextRepository;
         this.userRepository = userRepository;
         this.uploadImageService = uploadImageService;
+        this.logAuditoriaService = logAuditoriaService;
     }
 
     public Context find(Long id) throws ObjectNotFoundException {
@@ -81,6 +87,8 @@ public class ContextService {
                 generateBackupFromExternalUrl(context, "Context.insert");
             }
             contextRepository.save(context);
+            logAuditoriaService.registrar(user, AcaoAuditoria.CRIACAO_TEMA, "Context", context.getId(),
+                    "name=" + context.getName());
             return new ContextDTO(context);
         }
 
@@ -124,6 +132,9 @@ public class ContextService {
             throw e;
         }
 
+        logAuditoriaService.registrar(user, AcaoAuditoria.CRIACAO_TEMA, "Context", context.getId(),
+                "name=" + context.getName());
+
         return new ContextDTO(context);
     }
 
@@ -145,7 +156,10 @@ public class ContextService {
 
         Context newObj = find(id);
 
-        if (!newObj.getCreator().equals(user)) {
+        boolean isOwner = newObj.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+
+        if (!isOwner && !isAdminBypass) {
             throw new InvalidUserException(
                     "User: " + user.getName()
                     + " is not the owner of the context: "
@@ -223,10 +237,16 @@ public class ContextService {
         }
 
         Context context = contextOptional.get();
-        if (!context.getCreator().equals(user)) {
+
+        boolean isOwner = context.getCreator() != null && context.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+
+        if (!isOwner && !isAdminBypass) {
             throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
                     + context.getName() + ".");
         }
+
+        String via = exclusionMethodDescription(isAdminBypass, user);
 
         ContextDTO deletedContextDTO = new ContextDTO(context);
         List<Challenge> challenges = new ArrayList<>(context.getChallenges());
@@ -236,12 +256,28 @@ public class ContextService {
             context.getChallenges().remove(challenge);
             deleteImageFromMinio(challenge.getImageUrl(), "Challenge", challenge.getId());
             challengeRepository.delete(challenge);
+            logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_DESAFIO, "Challenge", challenge.getId(),
+                    "word=" + challenge.getWord() + " (excluido em cascata com o tema '" + context.getName()
+                    + "', " + via + ")");
         }
 
         deleteImageFromMinio(context.getImageUrl(), "Context", context.getId());
         contextRepository.delete(context);
 
+        logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_TEMA, "Context", id,
+                "name=" + context.getName() + " (" + via + ")");
+
         return deletedContextDTO;
+    }
+
+    /**
+     * Describes, for audit purposes, whether a deletion happened through
+     * normal ownership or through administrative bypass power.
+     */
+    private String exclusionMethodDescription(boolean isAdminBypass, User user) {
+        return isAdminBypass
+                ? "excluido via poder administrativo, role=" + user.getRole()
+                : "excluido via ownership";
     }
 
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.ufpb.dcx.apps4society.educapi.domain.AcaoAuditoria;
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
@@ -44,13 +45,18 @@ public class ChallengeService {
     @Autowired
     private UploadImageService uploadImageService;
 
+    @Autowired
+    private LogAuditoriaService logAuditoriaService;
+
     public ChallengeService(JWTService jwtService, ChallengeRepository challengeRepository,
-            ContextRepository contextRepository, UserRepository userRepository, UploadImageService uploadImageService) {
+            ContextRepository contextRepository, UserRepository userRepository, UploadImageService uploadImageService,
+            LogAuditoriaService logAuditoriaService) {
         this.jwtService = jwtService;
         this.challengeRepository = challengeRepository;
         this.contextRepository = contextRepository;
         this.userRepository = userRepository;
         this.uploadImageService = uploadImageService;
+        this.logAuditoriaService = logAuditoriaService;
     }
 
     public Challenge find(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
@@ -105,6 +111,10 @@ public class ChallengeService {
             );
             throw e;
         }
+
+        logAuditoriaService.registrar(user, AcaoAuditoria.CRIACAO_DESAFIO, "Challenge", challenge.getId(),
+                "word=" + challenge.getWord());
+
         return challenge;
 
     }
@@ -118,7 +128,9 @@ public class ChallengeService {
         User user = validateUser(token);
 
         Challenge newObj = find(token, id);
-        if (!newObj.getCreator().equals(user)) {
+        boolean isOwner = newObj.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+        if (!isOwner && !isAdminBypass) {
             throw new InvalidUserException();
         }
 
@@ -148,8 +160,13 @@ public class ChallengeService {
         User user = validateUser(token);
 
         Challenge obj = find(token, id);
-        if (obj.getCreator().equals(user)) {
+
+        boolean isOwner = obj.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+
+        if (isOwner || isAdminBypass) {
             String imageUrl = obj.getImageUrl();
+            String word = obj.getWord();
 
             for (Context x : obj.getContexts()) {
                 x.getChallenges().remove(obj);
@@ -158,9 +175,22 @@ public class ChallengeService {
             challengeRepository.deleteById(id);
 
             deleteChallengeImage(imageUrl);
+
+            String detalhes = "word=" + word + " (" + exclusionMethodDescription(isAdminBypass, user) + ")";
+            logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_DESAFIO, "Challenge", id, detalhes);
         } else {
             throw new InvalidUserException();
         }
+    }
+
+    /**
+     * Describes, for audit purposes, whether a deletion happened through
+     * normal ownership or through administrative bypass power.
+     */
+    private String exclusionMethodDescription(boolean isAdminBypass, User user) {
+        return isAdminBypass
+                ? "excluido via poder administrativo, role=" + user.getRole()
+                : "excluido via ownership";
     }
 
     public Page<Challenge> findChallengesByParams(String word, Pageable pageable) {

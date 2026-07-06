@@ -1,5 +1,6 @@
 package br.ufpb.dcx.apps4society.educapi.utils.builder;
 
+import br.ufpb.dcx.apps4society.educapi.domain.Role;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserDTO;
 import br.ufpb.dcx.apps4society.educapi.dto.user.UserLoginDTO;
@@ -28,6 +29,7 @@ public class UserBuilder {
     private String name = "User";
     private String email = "user@educapi.com";
     private String password = "testpassword";
+    private Role role = Role.CLIENTE;
     public static UserBuilder anUser() {
         return new UserBuilder();
     }
@@ -47,6 +49,10 @@ public class UserBuilder {
         this.password = password;
         return this;
     }
+    public UserBuilder withRole(Role role) {
+        this.role = role;
+        return this;
+    }
     public UserDTO buildUserDTO(){
 
         UserDTO userDTO = new UserDTO();
@@ -54,10 +60,15 @@ public class UserBuilder {
         userDTO.setName(this.name);
         userDTO.setEmail(this.email);
         userDTO.setPassword(this.password);
+        userDTO.setRole(this.role);
 
         return userDTO;
     }
-    public Optional<User> buildOptionalUser() { return Optional.ofNullable(new User(this.id, this.name, this.email, this.password)); }
+    public Optional<User> buildOptionalUser() {
+        User user = new User(this.id, this.name, this.email, this.password);
+        user.setRole(this.role);
+        return Optional.of(user);
+    }
 
     /**
      * Generate an UserRegisterDTO object containing custom or default data

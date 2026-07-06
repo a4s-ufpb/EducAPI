@@ -2,6 +2,8 @@ app:
   token:
     key: ${TOKEN_KEY:token}
   version: ${EDUCAPI_VERSION:1.0.7}
+  sysadmin:
+    email: ${SYSADMIN_EMAIL:}
 
 # Coloque seu Client ID do Google Cloud Console aqui ou passe via variável de ambiente
 google:
