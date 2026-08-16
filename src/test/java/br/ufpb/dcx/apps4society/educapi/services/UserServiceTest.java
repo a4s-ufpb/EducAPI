@@ -197,7 +197,7 @@ public class UserServiceTest {
 
         Mockito.when(userRepository.findByEmail(this.userRegisterDTO.getEmail())).thenReturn(userOptional);
 
-        userService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()));
+        userService.delete(jwtService.tokenBearerFormat(loginResponse.getToken()), false);
 
         catchThrowableOfType(() ->
                 userService.find(jwtService.tokenBearerFormat(loginResponse.getToken())), InvalidUserException.class);
@@ -407,12 +407,35 @@ public class UserServiceTest {
         LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
         String token = jwtService.tokenBearerFormat(loginResponse.getToken());
 
-        userService.delete(token);
+        userService.delete(token, false);
 
         assertNull(ownContext.getCreator());
         assertNull(ownChallenge.getCreator());
         verify(contextRepository).save(ownContext);
         verify(challengeRepository).save(ownChallenge);
+        verify(userRepository).deleteById(1L);
+        verify(logAuditoriaService).registrar(eq(self), eq(AcaoAuditoria.EXCLUSAO_USUARIO), eq("User"), eq(1L), any());
+    }
+
+    @Test
+    public void deleteUserSelf_withDeleteChallengesTrue_shouldDeleteContentAndLogTest() throws Exception {
+
+        User self = userOptional.get();
+        Context ownContext = ContextBuilder.anContext().withId(1L).withCreator(self).buildContext();
+        Challenge ownChallenge = ChallengeBuilder.anChallenge().withId(1L).withCreator(self).buildOptionalChallenge().get();
+
+        Mockito.when(contextRepository.findContextsByCreator(self)).thenReturn(List.of(ownContext));
+        Mockito.when(challengeRepository.findChallengesByCreator(self)).thenReturn(List.of(ownChallenge));
+
+        LoginResponse loginResponse = jwtService.authenticate(userLoginDTO);
+        String token = jwtService.tokenBearerFormat(loginResponse.getToken());
+
+        userService.delete(token, true);
+
+        verify(challengeRepository).deleteAll(List.of(ownChallenge));
+        verify(contextRepository).deleteAll(List.of(ownContext));
+        verify(contextRepository, never()).save(any());
+        verify(challengeRepository, never()).save(any());
         verify(userRepository).deleteById(1L);
         verify(logAuditoriaService).registrar(eq(self), eq(AcaoAuditoria.EXCLUSAO_USUARIO), eq("User"), eq(1L), any());
     }

@@ -49,10 +49,13 @@ public class UserResource {
 		return ResponseEntity.ok(userService.changePassword(token, changePasswordDTO));
 	}
 
-	@Operation(summary = "Deletes the user from the service, if the token is valid.")
+	@Operation(summary = "Deletes the user from the service, if the token is valid. "
+			+ "By default the User's Contexts/Challenges are kept (orphaned, creator set to null); "
+			+ "pass deleteChallenges=true to also delete the Challenges created by the user.")
 	@DeleteMapping("auth/users")
-	public ResponseEntity<UserDTO> delete(@RequestHeader("Authorization") String token) {
-		return ResponseEntity.ok(userService.delete(token));
+	public ResponseEntity<UserDTO> delete(@RequestHeader("Authorization") String token,
+										   @RequestParam(value = "deleteChallenges", defaultValue = "false") boolean deleteChallenges) {
+		return ResponseEntity.ok(userService.delete(token, deleteChallenges));
 	}
 
 	@Operation(summary = "Returns a paginated list of every User in the system, for administrative user-management. Restricted to SYSADMIN.")

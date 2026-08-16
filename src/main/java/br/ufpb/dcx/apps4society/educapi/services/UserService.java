@@ -107,19 +107,30 @@ public class UserService {
 	}
 
 	/**
-	 * Deletes the caller's own account. Any Context/Challenge created by this
-	 * user is not removed: their {@code creator} is set to null so the
-	 * content is orphaned but remains in the system (same rule applied to
-	 * admin-triggered deletions in {@link #deleteByAdmin(String, Long)}).
+	 * Deletes the caller's own account. By default the Contexts/Challenges
+	 * created by this user are orphaned (creator = null) and stay in the
+	 * system, mirroring admin-triggered deletions in
+	 * {@link #deleteByAdmin(String, Long)}. If {@code deleteChallenges} is
+	 * true, the user's own Challenges and Contexts (themes) are permanently
+	 * deleted instead of being orphaned.
 	 */
 	@Transactional
-	public UserDTO delete(String token) throws InvalidUserException {
+	public UserDTO delete(String token, boolean deleteChallenges) throws InvalidUserException {
 		User user = find(token);
-		orphanUserContent(user);
+
+		if (deleteChallenges) {
+			deleteUserChallenges(user);
+			deleteUserContexts(user);
+		} else {
+			orphanUserContent(user);
+		}
+
 		userRepository.deleteById(user.getId());
 
 		logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_USUARIO, "User", user.getId(),
-				"email=" + user.getEmail() + ", role=" + user.getRole() + ", autoexclusao (usuario excluiu a propria conta)");
+				"email=" + user.getEmail() + ", role=" + user.getRole()
+				+ ", autoexclusao (usuario excluiu a propria conta)"
+				+ (deleteChallenges ? ", temas e desafios do usuario tambem foram excluidos" : ", temas e desafios do usuario foram mantidos (orfaos)"));
 
 		return new UserDTO(user);
 	}
@@ -264,17 +275,50 @@ public class UserService {
 	 * leaving them orphaned (creator = null) instead of cascade-deleting them.
 	 */
 	private void orphanUserContent(User target) {
-		List<Context> contexts = contextRepository.findContextsByCreator(target);
-		for (Context context : contexts) {
-			context.setCreator(null);
-			contextRepository.save(context);
-		}
+		orphanUserContexts(target);
 
 		List<Challenge> challenges = challengeRepository.findChallengesByCreator(target);
 		for (Challenge challenge : challenges) {
 			challenge.setCreator(null);
 			challengeRepository.save(challenge);
 		}
+	}
+
+	/**
+	 * Detaches all Context entities created by the given user, leaving them
+	 * orphaned (creator = null) instead of removing them. Contexts are always
+	 * kept, regardless of what happens to the user's Challenges, since other
+	 * Challenges (not created by this user) may still belong to them.
+	 */
+	private void orphanUserContexts(User target) {
+		List<Context> contexts = contextRepository.findContextsByCreator(target);
+		for (Context context : contexts) {
+			context.setCreator(null);
+			contextRepository.save(context);
+		}
+	}
+
+	/**
+	 * Permanently deletes every Challenge created by the given user, used when
+	 * self-deletion is requested with deleteChallenges=true. Own Challenges are
+	 * deleted before the user's Contexts so that Challenges belonging to other
+	 * creators aren't touched by the Context's cascade removal below.
+	 */
+	private void deleteUserChallenges(User target) {
+		List<Challenge> challenges = challengeRepository.findChallengesByCreator(target);
+		challengeRepository.deleteAll(challenges);
+	}
+
+	/**
+	 * Permanently deletes every Context (theme) created by the given user,
+	 * used when self-deletion is requested with deleteChallenges=true. Note
+	 * that removing a Context cascades to remove any Challenges still linked
+	 * to it (same behavior as deleting a single theme from the Themes page),
+	 * so this must run after {@link #deleteUserChallenges(User)}.
+	 */
+	private void deleteUserContexts(User target) {
+		List<Context> contexts = contextRepository.findContextsByCreator(target);
+		contextRepository.deleteAll(contexts);
 	}
 
 	private void updateData(User newObj, UserRegisterDTO obj) {
