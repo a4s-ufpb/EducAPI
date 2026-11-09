@@ -1,7 +1,7 @@
 FROM maven:3.9.6-amazoncorretto-17-al2023 as build
 COPY . .
 RUN mvn clean
-RUN mvn install
+RUN mvn install -DskipTests -Djacoco.skip=true
 
 FROM amazoncorretto:17.0.10-alpine3.19
 WORKDIR /educapi

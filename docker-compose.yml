@@ -1,5 +1,3 @@
-version: '3.5'
-
 services:
 
     educapi:
@@ -30,6 +28,39 @@ services:
         env_file:
             - .env
 
+    minio:
+        image: minio/minio
+        container_name: minio-educapi
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        environment:
+            MINIO_ROOT_USER: ${MINIO_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+
+        command: server /data --console-address ":9001"
+        volumes:
+            - minio-data:/data
+    minio-init:
+        image: minio/mc
+        depends_on:
+            - minio
+        env_file:
+            - .env
+        entrypoint: >
+            /bin/sh -c "
+            set -e;
+            : \"$${MINIO_BUCKET:?MINIO_BUCKET is required}\";
+            until mc alias set myminio http://minio:9000 \"$${MINIO_USER}\" \"$${MINIO_PASSWORD}\"; do
+                echo 'Waiting for MinIO...';
+                sleep 2;
+            done;
+            mc mb --ignore-existing myminio/\"$${MINIO_BUCKET}\";
+            mc anonymous set download myminio/\"$${MINIO_BUCKET}\";
+            "
+
+
 volumes:
     postgres-educapi:
+    minio-data:
 

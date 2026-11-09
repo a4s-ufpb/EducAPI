@@ -7,6 +7,7 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -31,6 +32,10 @@ public class Challenge implements Serializable {
 	private String imageUrl;
 	private String soundUrl;
 	private String videoUrl;
+
+	@JsonIgnore
+	@Column(columnDefinition = "TEXT")
+	private String imageBackup;
 
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@ManyToMany
@@ -215,6 +220,14 @@ public class Challenge implements Serializable {
 	 */
 	public void setVideoUrl(String videoUrl) {
 		this.videoUrl = videoUrl;
+	}
+
+	public String getImageBackup() {
+		return imageBackup;
+	}
+
+	public void setImageBackup(String imageBackup) {
+		this.imageBackup = imageBackup;
 	}
 
 	/**

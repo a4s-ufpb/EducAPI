@@ -1,7 +1,10 @@
 package br.ufpb.dcx.apps4society.educapi.dto.challenge;
 
 import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotEmpty;
 import java.io.Serializable;
@@ -15,7 +18,11 @@ public class ChallengeRegisterDTO implements Serializable {
     
     private String imageUrl;
     private String soundUrl;
-    private String videoUrl;    
+    private String videoUrl;
+    private MultipartFile file;
+
+    @JsonIgnore @Schema(hidden = true)
+    private String imageBackup;
 
     public ChallengeRegisterDTO() {
     }
@@ -27,8 +34,19 @@ public class ChallengeRegisterDTO implements Serializable {
         this.videoUrl = videoUrl;
     }
 
+    public ChallengeRegisterDTO(String word, String imageUrl, String soundUrl, String videoUrl, MultipartFile file, String imageBackup) {
+        this.word = word;
+        this.imageUrl = imageUrl;
+        this.soundUrl = soundUrl;
+        this.videoUrl = videoUrl;
+        this.file = file;
+        this.imageBackup = imageBackup;
+    }
+
     public Challenge challengeRegisterDTOToChallenge(){
-        return new Challenge(word, imageUrl, soundUrl, videoUrl);
+        Challenge challenge = new Challenge(word, imageUrl, soundUrl, videoUrl);
+        challenge.setImageBackup(imageBackup);
+        return challenge;
     }
 
     public String getWord() {
@@ -61,5 +79,21 @@ public class ChallengeRegisterDTO implements Serializable {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public MultipartFile getFile() {
+        return file;
+    }
+
+    public void setFile(MultipartFile file) {
+        this.file = file;
+    }
+
+    public String getImageBackup() {
+        return imageBackup;
+    }
+
+    public void setImageBackup(String imageBackup) {
+        this.imageBackup = imageBackup;
     }
 }

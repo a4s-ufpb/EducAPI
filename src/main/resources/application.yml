@@ -1,7 +1,21 @@
 app:
-    token:
-        key: ${TOKEN_KEY:token}
-    version: ${EDUCAPI_VERSION:1.0.7}
+  token:
+    key: ${TOKEN_KEY:token}
+  version: ${EDUCAPI_VERSION:1.0.7}
+  sysadmin:
+    email: ${SYSADMIN_EMAIL:}
+
+# Coloque seu Client ID do Google Cloud Console aqui ou passe via variável de ambiente
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+
 spring:
-    profiles:
-        active: ${PROFILE_ACTIVE:test}
+  profiles:
+    active: ${PROFILE_ACTIVE:test}
+
+minio:
+   minio:
+    url: http://minio:9000
+    access-key: ${MINIO_USER}
+    secret-key: ${MINIO_PASSWORD}
+    bucket: ${MINIO_BUCKET}

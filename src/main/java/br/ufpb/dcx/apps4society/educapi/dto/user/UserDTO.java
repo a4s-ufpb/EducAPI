@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 
 import org.hibernate.validator.constraints.Length;
 
+import br.ufpb.dcx.apps4society.educapi.domain.Role;
 import br.ufpb.dcx.apps4society.educapi.domain.User;
 
 public class UserDTO implements Serializable{
@@ -24,6 +25,8 @@ public class UserDTO implements Serializable{
 	@NotEmpty(message="Required")
 	@Length(min=8, max=12, message="The size must be between 8 and 12 characters")
 	private String password;
+
+	private Role role;
 	
 	public UserDTO() {}
 
@@ -36,6 +39,7 @@ public class UserDTO implements Serializable{
 		this.name = obj.getName();
 		this.email = obj.getEmail();
 		this.password = obj.getPassword();
+		this.role = obj.getRole();
 	}
 
 	@Override
@@ -45,6 +49,7 @@ public class UserDTO implements Serializable{
 				", name='" + name + '\'' +
 				", email='" + email + '\'' +
 				", password='" + password + '\'' +
+				", role=" + role +
 				'}';
 	}
 
@@ -79,6 +84,13 @@ public class UserDTO implements Serializable{
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
+	public Role getRole() {
+		return role;
+	}
+
+	public void setRole(Role role) {
+		this.role = role;
+	}
 	
 }

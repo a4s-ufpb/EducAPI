@@ -1,18 +1,22 @@
 package br.ufpb.dcx.apps4society.educapi.utils;
 
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 
-import static io.restassured.RestAssured.*;
+import static io.restassured.RestAssured.basePath;
+import static io.restassured.RestAssured.baseURI;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.port;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 
 public class CONTEXT_RequestsUtil {
 
-    private static String CONTEXT_POST_ENDPOINT = baseURI+":"+port+basePath+"auth/contexts";
-    private static String CONTEXT_DELETE_ENDPOINT = baseURI+":"+port+basePath+"auth/contexts/";
+    private static String CONTEXT_POST_ENDPOINT = baseURI + ":" + port + basePath + "auth/contexts";
+    private static String CONTEXT_DELETE_ENDPOINT = baseURI + ":" + port + basePath + "auth/contexts/";
 
     @BeforeEach
-    public void setUp(){
+    public void setUp() {
 
         baseURI = "http://localhost";
         port = 8080;
@@ -22,15 +26,20 @@ public class CONTEXT_RequestsUtil {
 
     public static Response post(String token, String body) throws Exception {
 
+        JSONObject json = new JSONObject(FileUtils.getJsonFromFile(body));
+
         Response contextDTOResponse = given()
-                .body(FileUtils.getJsonFromFile(body))
-                .contentType(ContentType.JSON)
-                .headers("Authorization",
+                .multiPart("name", json.getString("name"))
+                .multiPart("imageUrl", json.optString("imageUrl"))
+                .multiPart("soundUrl", json.optString("soundUrl"))
+                .multiPart("videoUrl", json.optString("videoUrl"))
+                .headers(
+                        "Authorization",
                         "Bearer " + token,
-                        "Content-Type",
-                        ContentType.JSON,
                         "Accept",
-                        ContentType.JSON).when()
+                        ContentType.JSON
+                )
+                .when()
                 .post(CONTEXT_POST_ENDPOINT)
                 .then()
                 .extract().response();
@@ -38,7 +47,7 @@ public class CONTEXT_RequestsUtil {
         return contextDTOResponse;
     }
 
-    public static void delete(String token, String ID){
+    public static void delete(String token, String ID) {
 
         given()
                 .headers(

@@ -2,6 +2,10 @@ app:
     token:
         key: educapi-dev
     version: 1.0.6
+
+# Valor fictício apenas para os testes subirem o contexto do Spring
+google:
+    client-id: test-client-id
 spring:
     datasource:
         driverClassName: org.h2.Driver
@@ -15,3 +19,8 @@ spring:
             hibernate:
                 format_sql: true
         show-sql: true
+    minio:
+        url: http://minio:9000
+        access-key: admin
+        secret-key: password123
+        bucket: educapi

@@ -1,26 +1,38 @@
 package br.ufpb.dcx.apps4society.educapi.services;
 
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import br.ufpb.dcx.apps4society.educapi.domain.User;
-import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
-import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
-import br.ufpb.dcx.apps4society.educapi.services.exceptions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import br.ufpb.dcx.apps4society.educapi.domain.AcaoAuditoria;
+import br.ufpb.dcx.apps4society.educapi.domain.Challenge;
 import br.ufpb.dcx.apps4society.educapi.domain.Context;
+import br.ufpb.dcx.apps4society.educapi.domain.User;
 import br.ufpb.dcx.apps4society.educapi.dto.context.ContextDTO;
+import br.ufpb.dcx.apps4society.educapi.dto.context.ContextRegisterDTO;
+import br.ufpb.dcx.apps4society.educapi.repositories.ChallengeRepository;
 import br.ufpb.dcx.apps4society.educapi.repositories.ContextRepository;
+import br.ufpb.dcx.apps4society.educapi.repositories.UserRepository;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.InvalidUserException;
+import br.ufpb.dcx.apps4society.educapi.services.exceptions.ObjectNotFoundException;
+import java.io.IOException;
 
 @Service
-public class ContextService {    
+public class ContextService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContextService.class);
+
     @Autowired
     private JWTService jwtService;
 
@@ -28,12 +40,24 @@ public class ContextService {
     private ContextRepository contextRepository;
 
     @Autowired
+    private ChallengeRepository challengeRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
-    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository) {
+    @Autowired
+    private UploadImageService uploadImageService;
+
+    @Autowired
+    private LogAuditoriaService logAuditoriaService;
+
+    public ContextService(JWTService jwtService, ContextRepository contextRepository, UserRepository userRepository,
+            UploadImageService uploadImageService, LogAuditoriaService logAuditoriaService) {
         this.jwtService = jwtService;
         this.contextRepository = contextRepository;
         this.userRepository = userRepository;
+        this.uploadImageService = uploadImageService;
+        this.logAuditoriaService = logAuditoriaService;
     }
 
     public Context find(Long id) throws ObjectNotFoundException {
@@ -45,84 +69,275 @@ public class ContextService {
         return obgOptional.get();
     }
 
-    @Transactional
-    public ContextDTO insert(String token, ContextRegisterDTO contextRegisterDTO){
+    @Transactional(rollbackFor = Exception.class)
+    public ContextDTO insert(
+            String token,
+            ContextRegisterDTO contextRegisterDTO
+    ) throws IOException {
+
         User user = validateUser(token);
 
         Context context = contextRegisterDTO.contextRegisterDTOToContext();
 
         context.setCreator(user);
 
-        contextRepository.save(context);
+        if (contextRegisterDTO.getFile() == null
+                || contextRegisterDTO.getFile().isEmpty()) {
+            if (context.getImageUrl() != null && !context.getImageUrl().isBlank()) {
+                generateBackupFromExternalUrl(context, "Context.insert");
+            }
+            contextRepository.save(context);
+            logAuditoriaService.registrar(user, AcaoAuditoria.CRIACAO_TEMA, "Context", context.getId(),
+                    "name=" + context.getName());
+            return new ContextDTO(context);
+        }
+
+        String uploadedImageUrl = null;
+
+        try {
+            contextRepository.save(context);
+            contextRepository.flush();
+
+            MultipartFile file = contextRegisterDTO.getFile();
+
+            String folder = buildContextFolder(user, context);
+
+            uploadedImageUrl = uploadImageService.uploadFile(
+                    folder,
+                    file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getSize(),
+                    file.getContentType()
+            );
+
+            String imageBackup
+                    = uploadImageService.generateBase64Thumbnail(file);
+
+            context.setImageUrl(uploadedImageUrl);
+            context.setImageBackup(imageBackup);
+
+            contextRepository.save(context);
+            contextRepository.flush();
+
+        } catch (RuntimeException | IOException e) {
+            deleteUploadedContextImageAfterFailure(uploadedImageUrl, "insert");
+            logger.error(
+                    "Erro ao inserir Context com imagem. userId={}, contextId={}, contextName={}, uploadedImageUrl={}",
+                    user.getId(),
+                    context.getId(),
+                    context.getName(),
+                    uploadedImageUrl,
+                    e
+            );
+            throw e;
+        }
+
+        logAuditoriaService.registrar(user, AcaoAuditoria.CRIACAO_TEMA, "Context", context.getId(),
+                "name=" + context.getName());
+
         return new ContextDTO(context);
     }
 
-    public ContextDTO update(String token, ContextRegisterDTO contextRegisterDTO, Long id) throws ObjectNotFoundException, InvalidUserException{
-        User user = validateUser(token);
+    public ContextDTO update(
+            String token,
+            ContextRegisterDTO contextRegisterDTO,
+            Long id
+    ) throws ObjectNotFoundException,
+            InvalidUserException,
+            IOException {
 
+        User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(id);
 
-        if (!contextOptional.isPresent()){
+        if (!contextOptional.isPresent()) {
             throw new ObjectNotFoundException();
         }
 
         Context newObj = find(id);
-        if (!newObj.getCreator().equals(user)) {
-            throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
-                    + newObj.getName() + ".");
+
+        boolean isOwner = newObj.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+
+        if (!isOwner && !isAdminBypass) {
+            throw new InvalidUserException(
+                    "User: " + user.getName()
+                    + " is not the owner of the context: "
+                    + newObj.getName() + "."
+            );
         }
 
+        String oldImageUrl = newObj.getImageUrl();
+
         updateData(newObj, contextRegisterDTO.contextRegisterDTOToContext());
-        contextRepository.save(newObj);
+
+        boolean hasNewImage = contextRegisterDTO.getFile() != null
+                && !contextRegisterDTO.getFile().isEmpty();
+
+        if (!hasNewImage) {
+            if (contextRegisterDTO.getImageUrl() != null && !contextRegisterDTO.getImageUrl().isBlank()) {
+                generateBackupFromExternalUrl(newObj, "Context.update");
+            }
+            contextRepository.save(newObj);
+            return new ContextDTO(newObj);
+        }
+
+        String uploadedImageUrl = null;
+
+        try {
+
+            MultipartFile file = contextRegisterDTO.getFile();
+
+            String folder = buildContextFolder(user, newObj);
+
+            uploadedImageUrl = uploadImageService.uploadFile(
+                    folder,
+                    file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getSize(),
+                    file.getContentType()
+            );
+
+            String imageBackup
+                    = uploadImageService.generateBase64Thumbnail(file);
+
+            newObj.setImageUrl(uploadedImageUrl);
+            newObj.setImageBackup(imageBackup);
+
+            contextRepository.save(newObj);
+            contextRepository.flush();
+
+        } catch (RuntimeException | IOException e) {
+            deleteUploadedContextImageAfterFailure(uploadedImageUrl, "update");
+            logger.error(
+                    "Erro ao atualizar Context apos upload de imagem. userId={}, contextId={}, contextName={}, oldImageUrl={}, uploadedImageUrl={}",
+                    user.getId(),
+                    newObj.getId(),
+                    newObj.getName(),
+                    oldImageUrl,
+                    uploadedImageUrl,
+                    e
+            );
+            throw e;
+        }
+
+        deleteOldContextImage(oldImageUrl, newObj.getImageUrl());
+
         return new ContextDTO(newObj);
     }
 
+    @Transactional
     public ContextDTO delete(String token, Long id) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         Optional<Context> contextOptional = contextRepository.findById(id);
 
-        if (!contextOptional.isPresent()){
+        if (!contextOptional.isPresent()) {
             throw new ObjectNotFoundException();
         }
 
-        Context context = find(id);
-        if (!context.getCreator().equals(user)) {
+        Context context = contextOptional.get();
+
+        boolean isOwner = context.getCreator() != null && context.getCreator().equals(user);
+        boolean isAdminBypass = !isOwner && user.isAdmin();
+
+        if (!isOwner && !isAdminBypass) {
             throw new InvalidUserException("User: " + user.getName() + " is not the owner of the context: "
                     + context.getName() + ".");
         }
 
-        contextRepository.deleteById(id);
-        return new ContextDTO(context);
+        String via = exclusionMethodDescription(isAdminBypass, user);
+
+        ContextDTO deletedContextDTO = new ContextDTO(context);
+        List<Challenge> challenges = new ArrayList<>(context.getChallenges());
+
+        for (Challenge challenge : challenges) {
+            challenge.getContexts().remove(context);
+            context.getChallenges().remove(challenge);
+            deleteImageFromMinio(challenge.getImageUrl(), "Challenge", challenge.getId());
+            challengeRepository.delete(challenge);
+            logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_DESAFIO, "Challenge", challenge.getId(),
+                    "word=" + challenge.getWord() + " (excluido em cascata com o tema '" + context.getName()
+                    + "', " + via + ")");
+        }
+
+        deleteImageFromMinio(context.getImageUrl(), "Context", context.getId());
+        contextRepository.delete(context);
+
+        logAuditoriaService.registrar(user, AcaoAuditoria.EXCLUSAO_TEMA, "Context", id,
+                "name=" + context.getName() + " (" + via + ")");
+
+        return deletedContextDTO;
+    }
+
+    /**
+     * Describes, for audit purposes, whether a deletion happened through
+     * normal ownership or through administrative bypass power.
+     */
+    private String exclusionMethodDescription(boolean isAdminBypass, User user) {
+        return isAdminBypass
+                ? "excluido via poder administrativo, role=" + user.getRole()
+                : "excluido via ownership";
     }
 
     public Page<Context> findContextsByParams(String email, String name, Pageable pageable) {
-        if (email != null && name != null){
+        if (email != null && name != null) {
             return contextRepository.findAllByCreatorEmailLikeAndNameStartsWithIgnoreCase(email, name, pageable);
-        }else if (email != null){
+        } else if (email != null) {
             return contextRepository.findAllByCreatorEmailEqualsIgnoreCase(email, pageable);
-        }else if (name != null){
+        } else if (name != null) {
             return contextRepository.findAllByNameStartsWithIgnoreCase(name, pageable);
-        }else{
+        } else {
             return contextRepository.findAll(pageable);
         }
     }
 
-    public List<ContextDTO> findContextsByCreator(String token) throws  ObjectNotFoundException, InvalidUserException {
+    public List<ContextDTO> findContextsByCreator(String token) throws ObjectNotFoundException, InvalidUserException {
         User user = validateUser(token);
 
         List<Context> contextListByCreator = contextRepository.findContextsByCreator(user);
-        if(contextListByCreator.isEmpty()) {
+        if (contextListByCreator.isEmpty()) {
             throw new ObjectNotFoundException();
         }
 
         return contextListByCreator.stream().map(ContextDTO::new).collect(Collectors.toList());
     }
 
+    public byte[] getContextImage(Long idContext) throws ObjectNotFoundException {
+        Context context = find(idContext);
+
+        if (context.getImageUrl() != null && !context.getImageUrl().isBlank()) {
+            try {
+                if (uploadImageService.isExternalUrl(context.getImageUrl())) {
+                    return uploadImageService.downloadImageFromUrl(context.getImageUrl());
+                }
+                return uploadImageService.getFileBytesByUrl(context.getImageUrl());
+            } catch (RuntimeException e) {
+                logger.warn(
+                        "Nao foi possivel carregar imagem principal do Context. contextId={}, imageUrl={}",
+                        idContext,
+                        context.getImageUrl(),
+                        e
+                );
+            }
+        }
+
+        if (context.getImageBackup() == null || context.getImageBackup().isBlank()) {
+            throw new ObjectNotFoundException("Imagem do Context nao encontrada. Id: " + idContext);
+        }
+
+        try {
+            return Base64.getDecoder().decode(context.getImageBackup());
+        } catch (IllegalArgumentException e) {
+            throw new ObjectNotFoundException("Imagem de backup do Context invalida. Id: " + idContext, e);
+        }
+    }
+
     private void updateData(Context newObj, Context obj) {
         newObj.setName(obj.getName());
-        newObj.setImageUrl(obj.getImageUrl());
+        if (obj.getImageUrl() != null && !obj.getImageUrl().isBlank()) {
+            newObj.setImageUrl(obj.getImageUrl());
+        }
         newObj.setSoundUrl(obj.getSoundUrl());
         newObj.setVideoUrl(obj.getVideoUrl());
     }
@@ -139,6 +354,69 @@ public class ContextService {
         }
 
         return userOptional.get();
+    }
+
+    private void generateBackupFromExternalUrl(Context context, String operation) {
+        try {
+            byte[] imageBytes = uploadImageService.downloadImageFromUrl(context.getImageUrl());
+            String imageBackup = uploadImageService.generateBase64Thumbnail(imageBytes);
+            context.setImageBackup(imageBackup);
+        } catch (Exception e) {
+            logger.warn("Nao foi possivel gerar backup da imageUrl externa do Context. operation={}, url={}",
+                    operation, context.getImageUrl(), e);
+        }
+    }
+
+    private void deleteOldContextImage(String oldImageUrl, String newImageUrl) {
+        if (oldImageUrl == null || oldImageUrl.isBlank() || oldImageUrl.equals(newImageUrl)) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(oldImageUrl);
+        } catch (RuntimeException e) {
+            logger.warn("Nao foi possivel remover imagem antiga do Context no MinIO. imageUrl={}", oldImageUrl, e);
+        }
+    }
+
+    private void deleteUploadedContextImageAfterFailure(String imageUrl, String operation) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(imageUrl);
+        } catch (RuntimeException e) {
+            logger.warn(
+                    "Nao foi possivel remover imagem recem-enviada do Context no MinIO apos falha no {}. imageUrl={}",
+                    operation,
+                    imageUrl,
+                    e
+            );
+        }
+    }
+
+    private void deleteImageFromMinio(String imageUrl, String entityName, Long entityId) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            uploadImageService.deleteFileByUrl(imageUrl);
+        } catch (RuntimeException e) {
+            logger.warn(
+                    "Nao foi possivel remover imagem do {} no MinIO. id={}, imageUrl={}",
+                    entityName,
+                    entityId,
+                    imageUrl,
+                    e
+            );
+        }
+    }
+
+    private String buildContextFolder(User user, Context context) {
+        return "user_" + user.getId()
+                + "/context_" + context.getId();
     }
 
 }
